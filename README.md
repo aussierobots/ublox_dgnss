@@ -19,7 +19,7 @@ It implements a subset of the specification related to achieving high precision 
 
 There are multiple ways to start the node. Its been built using composition. An executable is provider. An example follows which turns off NMEA output at startup.
 ```
-ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p CFG_USBOUTPUT_NMEA:=False
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p CFG_USBOUTPROT_NMEA:=False
 ```
 Parameters can be set at launch and some examples are provided to launch high precision pos ecef|llh 
 ```
