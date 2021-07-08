@@ -5,7 +5,7 @@ It will only work with later generation ublox devices. Testing and development w
 
 You may need to create a udev rule as follows:
 
-/etc/udev/rules.s/99-ublox-gnss.rules
+/etc/udev/rules.d/99-ublox-gnss.rules
 ```
   #UBLOX ZED-F9P
   ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
