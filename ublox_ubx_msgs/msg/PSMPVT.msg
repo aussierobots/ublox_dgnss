@@ -1,0 +1,8 @@
+# Power Save Mode for PVT
+uint8 PSM_STATE_NOT_ACTIVE = 0
+uint8 PSM_STATE_ENABLED = 1
+uint8 PSM_STATE_ACQUISITION = 2
+uint8 PSM_STATE_TRACKING = 3
+uint8 PSM_STATE_POWER_OPTIMIZED_TRACKING = 4
+uint8 PSM_STATE_INACTIVE = 5
+uint8 state       # power save mode state

@@ -1,0 +1,5 @@
+uint8 SPOOF_DET_UNKNOWN = 0
+uint8 SPOOF_DET_NO_SPOOFING = 1
+uint8 SPOOF_DET_SPOOFING = 2
+uint8 SPOOF_DET_MULTIPLE_SPOOFING = 3
+uint8 state   # spoofing det state

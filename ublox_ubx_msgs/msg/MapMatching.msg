@@ -1,0 +1,5 @@
+uint8 MAP_MATCHING_NONE = 0
+uint8 MAP_MATCHING_VALID_NOT_USED = 1
+uint8 MAP_MATCHING_VALID_AND_USED = 2
+uint8 MAP_MATCHING_VALID_DEAD_RECKONING = 3
+uint8 status    # map matching status

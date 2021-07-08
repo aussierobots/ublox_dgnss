@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.5)
+project(ublox_dgnss)
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(ublox_ubx_msgs REQUIRED)
+find_package(ublox_ubx_interfaces REQUIRED)
+
+install(
+  DIRECTORY launch 
+  DESTINATION share/${PROJECT_NAME}
+)
+
+ament_package()

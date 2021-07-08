@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ublox_dgnss_node</name>
+  <version>0.1.0</version>
+  <description>Provides a ublox_gnss node for a u-blox GPS GNSS receiver using Gen 9 UBX Protocol</description>
+  <author>Nick Hortovanyi</author>
+  <maintainer email="nick@arst.com.au">nick</maintainer>
+  <license>GNU General Public License</license>
+
+  <url>https://github.com/aussierobots/ublox_dgnss</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>ublox_ubx_msgs</exec_depend>
+  <exec_depend>ublox_ubx_interfaces</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_cppcheck</test_depend>
+  <test_depend>ament_cmake_copyright</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
