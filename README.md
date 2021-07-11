@@ -1,4 +1,4 @@
-# ublox_dgnss
+# ublox-dgnss-release
 This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a rover for DGNSS. Its assumed that RTCM messages are being delivered externally. High precision data is available.
 
 It will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P connected via USB, under Ubuntu 20.04. The driver uses libusb api 1.0.
