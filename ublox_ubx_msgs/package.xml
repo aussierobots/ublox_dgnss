@@ -6,7 +6,7 @@
   <description>UBLOX UBX ROS2 Msgs</description>
   <author>Nick Hortovanyi</author>
   <maintainer email="nick@arst.com.au">nick</maintainer>
-  <license>GNU General Public License</license>
+  <license>Apache License, Version 2.0</license>
 
   <url>https://github.com/aussierobots/ublox_dgnss</url>
 
