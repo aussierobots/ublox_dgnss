@@ -1,4 +1,4 @@
-# ublox-dgnss-release
+# ublox-dgnss
 This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a rover for DGNSS. Its assumed that RTCM messages are being delivered externally. High precision data is available.
 
 It will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P connected via USB, under Ubuntu 20.04. The driver uses libusb api 1.0.
@@ -39,10 +39,10 @@ ros2 service call /ublox_dgnss/reset_odo ublox_ubx_interfaces/srv/ResetODO
 ros2 service call /ublox_dgnss/cold_start ublox_ubx_interfaces/srv/ColdStart '{reset_type: 1}' 
 ```
 ```
-ros2 service call /ublox_dgnss/warm_start ublox_ubx_interfaces/srv/ColdStart '{reset_type: 1}' 
+ros2 service call /ublox_dgnss/warm_start ublox_ubx_interfaces/srv/WarmStart '{reset_type: 1}' 
 ```
 ```
-ros2 service call /ublox_dgnss/hot_start ublox_ubx_interfaces/srv/ColdStart '{reset_type: 1}' 
+ros2 service call /ublox_dgnss/hot_start ublox_ubx_interfaces/srv/HotStart '{reset_type: 1}' 
 ```
 
 ## Parameters
@@ -65,6 +65,7 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_INFMSG_NMEA_USB
   CFG_INFMSG_UBX_USB
   CFG_MSGOUT_UBX_NAV_CLOCK_USB
+  CFG_MSGOUT_UBX_NAV_COV_USB
   CFG_MSGOUT_UBX_NAV_DOP_USB
   CFG_MSGOUT_UBX_NAV_EOE_USB
   CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB
@@ -115,6 +116,7 @@ Values will be as described in the integration manual (without scaling applied).
 The following messages may be outputed. They included a `std_msgs/Header header` with the remainder of the fields matching the UBX output. Note that field names use different notation as the UBX field name notation is not compliant with the ROS IDL field names.
 ```
 /ubx_nav_clock
+/ubx_nav_cov
 /ubx_nav_dop
 /ubx_nav_eoe
 /ubx_nav_hp_pos_ecef
