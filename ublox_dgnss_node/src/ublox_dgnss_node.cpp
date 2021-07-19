@@ -27,6 +27,7 @@
 #include "ublox_dgnss_node/ubx/ubx_ack.hpp"
 #include "ublox_dgnss_node/ubx/ubx_nav.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
+#include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_eoe.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_hp_pos_ecef.hpp"
@@ -124,6 +125,7 @@ public:
     auto qos = rclcpp::SensorDataQoS();
     frame_id_ = "ubx";
     ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>("ubx_nav_clock", qos);
+    ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>("ubx_nav_cov", qos);
     ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>("ubx_nav_dop", qos);
     ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>("ubx_nav_eoe", qos);
     ubx_nav_hp_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>("ubx_nav_hp_pos_ecef", qos);
@@ -249,6 +251,7 @@ private:
   std::string frame_id_;
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;  
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavCov>::SharedPtr ubx_nav_cov_pub_;  
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavDOP>::SharedPtr ubx_nav_dop_pub_;  
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavEOE>::SharedPtr ubx_nav_eoe_pub_;  
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>::SharedPtr ubx_nav_hp_pos_ecef_pub_;  
@@ -869,6 +872,9 @@ private:
       case ubx::UBX_NAV_CLOCK:
         RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav clock poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );
         break;
+      case ubx::UBX_NAV_COV:
+        RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav cov poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );
+        break;
       case ubx::UBX_NAV_DOP:
         RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav dop poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );
         break;
@@ -996,6 +1002,9 @@ private:
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_NAV_CLOCK:
         ubx_nav_clock_pub(f,ubx_nav_->clock()->payload());
+        break;
+      case ubx::UBX_NAV_COV:
+        ubx_nav_cov_pub(f,ubx_nav_->cov()->payload());
         break;
       case ubx::UBX_NAV_DOP:
         ubx_nav_dop_pub(f,ubx_nav_->dop()->payload());
@@ -1346,6 +1355,33 @@ private:
     msg->e_dop = payload->eDOP;
 
     ubx_nav_dop_pub_->publish(*msg);
+  } 
+  
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_nav_cov_pub(ubx_queue_frame_t *f, std::shared_ptr<ubx::nav::cov::NavCovPayload> payload){
+    RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav cov payload - %s", f->ubx_frame->msg_class, f->ubx_frame->msg_id, payload->to_string().c_str());
+    
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXNavCov>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->itow = payload->iTOW;
+    msg->version = payload->version;
+    msg->pos_cor_valid = (bool)payload->posCorValid;
+    msg->vel_cor_valid = (bool)payload->velCorValid;
+    msg->pos_cov_nn = payload->posCovNN;
+    msg->pos_cov_ne = payload->posCovNE;
+    msg->pos_cov_nd = payload->posCovND;
+    msg->pos_cov_ee = payload->posCovEE;
+    msg->pos_cov_ed = payload->posCovED;
+    msg->pos_cov_dd = payload->posCovDD;
+    msg->vel_cov_nn = payload->velCovNN;
+    msg->vel_cov_ne = payload->velCovNE;
+    msg->vel_cov_nd = payload->velCovND;
+    msg->vel_cov_ee = payload->velCovEE;
+    msg->vel_cov_ed = payload->velCovED;
+    msg->vel_cov_dd = payload->velCovDD;
+
+    ubx_nav_cov_pub_->publish(*msg);
   } 
 
   UBLOX_DGNSS_NODE_LOCAL
