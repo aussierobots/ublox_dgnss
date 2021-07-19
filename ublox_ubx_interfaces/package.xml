@@ -2,10 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ublox_ubx_interfaces</name>
-  <version>0.1.0</version>
-  <description>UBLOX GNSS Interfaces</description>
+  <version>0.2.0</version>
+  <description>UBLOX UBX Interfaces</description>
   <author>Nick Hortovanyi</author>
-  <maintainer email="nick@arst.com.au">nick</maintainer>
+  <maintainer email="nick@aussierobots.com.au">nick</maintainer>
   <license>GNU General Public License</license>
 
   <url>https://github.com/aussierobots/ublox_dgnss</url>
