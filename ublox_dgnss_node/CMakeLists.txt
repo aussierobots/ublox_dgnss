@@ -45,8 +45,6 @@ ament_target_dependencies(ublox_dgnss_components
   rclcpp
   rclcpp_components
   std_msgs
-  sensor_msgs
-  geometry_msgs
   ublox_ubx_msgs
   ublox_ubx_interfaces
 )
