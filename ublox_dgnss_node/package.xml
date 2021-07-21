@@ -11,6 +11,8 @@
   <url>https://github.com/aussierobots/ublox_dgnss</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>libusb-1.0-dev</depend>
   <exec_depend>ublox_ubx_msgs</exec_depend>
   <exec_depend>ublox_ubx_interfaces</exec_depend>
 
