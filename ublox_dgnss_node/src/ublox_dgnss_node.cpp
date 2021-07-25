@@ -597,6 +597,8 @@ public:
   void reset_odo_callback (const std::shared_ptr<ublox_ubx_interfaces::srv::ResetODO::Request> request,
                              std::shared_ptr<ublox_ubx_interfaces::srv::ResetODO::Response> response) {
     RCLCPP_WARN(get_logger(), "reset_odo service");
+    RCLCPP_DEBUG(get_logger(), "ubx_nav_redoodo poll_async ...");
+    ubx_nav_->resetodo()->poll_async();
     (void)request;
     (void)response; 
   }
@@ -897,6 +899,9 @@ private:
         break;
       case ubx::UBX_NAV_ODO:
         RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav odo poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );
+        break;
+      case ubx::UBX_NAV_RESETODO:
+        RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav reset odo poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );
         break;
       case ubx::UBX_NAV_PVT:
         RCLCPP_INFO(get_logger(), "ubx class: 0x%02x id: 0x%02x nav pvt poll sent to usb device", f->ubx_frame->msg_class, f->ubx_frame->msg_id );

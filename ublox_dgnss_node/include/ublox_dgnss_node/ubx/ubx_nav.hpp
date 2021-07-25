@@ -29,6 +29,7 @@
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_hpposecef.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_hpposllh.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_odo.hpp"
+#include "ublox_dgnss_node/ubx/nav/ubx_nav_resetodo.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_pvt.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_status.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_relposned.hpp"
@@ -48,6 +49,7 @@ namespace ubx {
     typedef UBXFrameComms<nav::posllh::NavPosLLHPayload,usb::Connection> UbxNavPosLLHFrameComms; 
     typedef UBXFrameComms<nav::hpposllh::NavHPPosLLHPayload,usb::Connection> UbxNavHPPosLLHFrameComms; 
     typedef UBXFrameComms<nav::odo::NavOdoPayload,usb::Connection> UbxNavOdoFrameComms; 
+    typedef UBXFrameComms<nav::resetodo::NavResetOdoPayload,usb::Connection> UbxNavResetOdoFrameComms; 
     typedef UBXFrameComms<nav::pvt::NavPvtPayload,usb::Connection> UbxNavPvtFrameComms; 
     typedef UBXFrameComms<nav::status::NavStatusPayload,usb::Connection> UbxNavStatusFrameComms; 
     typedef UBXFrameComms<nav::relposned::NavRelPosNedPayload,usb::Connection> UbxNavRelPosNedFrameComms; 
@@ -69,6 +71,7 @@ namespace ubx {
       std::shared_ptr<UbxNavPosLLHFrameComms> posllh_;
       std::shared_ptr<UbxNavHPPosLLHFrameComms> hpposllh_;
       std::shared_ptr<UbxNavOdoFrameComms> odo_;
+      std::shared_ptr<UbxNavResetOdoFrameComms> resetodo_;
       std::shared_ptr<UbxNavPvtFrameComms> pvt_;
       std::shared_ptr<UbxNavStatusFrameComms> status_;
       std::shared_ptr<UbxNavRelPosNedFrameComms> relposned_;
@@ -88,6 +91,7 @@ namespace ubx {
         posllh_ = std::make_shared<UbxNavPosLLHFrameComms>(usbc_);
         hpposllh_ = std::make_shared<UbxNavHPPosLLHFrameComms>(usbc_);
         odo_ = std::make_shared<UbxNavOdoFrameComms>(usbc_);
+        resetodo_ = std::make_shared<UbxNavResetOdoFrameComms>(usbc_);
         pvt_ = std::make_shared<UbxNavPvtFrameComms>(usbc_);
         status_ = std::make_shared<UbxNavStatusFrameComms>(usbc_);
         relposned_ = std::make_shared<UbxNavRelPosNedFrameComms>(usbc_);
@@ -122,6 +126,9 @@ namespace ubx {
       }
       std::shared_ptr<UbxNavOdoFrameComms> odo(){
         return odo_;
+      }
+      std::shared_ptr<UbxNavResetOdoFrameComms> resetodo(){
+        return resetodo_;
       }
       std::shared_ptr<UbxNavPvtFrameComms> pvt(){
         return pvt_;
@@ -169,6 +176,9 @@ namespace ubx {
             break;
           case ubx::UBX_NAV_ODO:
             odo_->frame(frame);
+            break;
+          case ubx::UBX_NAV_RESETODO:
+            resetodo_->frame(frame);
             break;
           case ubx::UBX_NAV_PVT:
             pvt_->frame(frame);
