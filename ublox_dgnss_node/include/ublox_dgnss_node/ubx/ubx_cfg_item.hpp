@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_UBX_CFG_ITEM_HPP
-#define UBLOX_DGNSS_NODE_UBX_CFG_ITEM_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX_CFG_ITEM_HPP
+#define UBLOX_DGNSS_NODE__UBX_CFG_ITEM_HPP
 #include "ublox_dgnss_node/ubx/ubx_types.hpp"
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include <unistd.h>
@@ -276,5 +276,4 @@ namespace ubx
   }
 }
 
-
-#endif
+#endif // UBLOX_DGNSS_NODE__UBX_CFG_ITEM_HPP

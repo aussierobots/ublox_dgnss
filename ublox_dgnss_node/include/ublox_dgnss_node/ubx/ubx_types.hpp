@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_UBX_TYPES_HPP
-#define UBLOX_DGNSS_NODE_UBX_TYPES_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX_TYPES_HPP
+#define UBLOX_DGNSS_NODE__UBX_TYPES_HPP
 
 #include <cstdint>
 #include <cmath>
@@ -81,4 +81,4 @@ namespace ubx {
     r8_t r8;
   };
 }
-#endif
+#endif // UBLOX_DGNSS_NODE__UBX_TYPES_HPP

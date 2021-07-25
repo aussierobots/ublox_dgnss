@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_UBX_CFG_HPP
-#define UBLOX_DGNSS_NODE_UBX_CFG_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX_CFG_HPP
+#define UBLOX_DGNSS_NODE__UBX_CFG_HPP
 
 #include <unistd.h>
 #include <memory>
@@ -351,7 +351,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.l=(bool)value});
+        value_t v;
+        v.l =(bool)value; 
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.l=(bool)value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_u1(ubx_cfg_item_t ubx_cfg_item, u1_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -359,7 +362,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u1 = value});
+        value_t v;
+        v.u1 = value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u1 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_i1(ubx_cfg_item_t ubx_cfg_item, i1_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -367,7 +373,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i1 = value});
+        value_t v;
+        v.i1 = value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i1 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_x1(ubx_cfg_item_t ubx_cfg_item, x1_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -375,7 +384,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x1 = value});
+        value_t v;
+        v.x1 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x1 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_u2(ubx_cfg_item_t ubx_cfg_item, u2_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -383,7 +395,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u2 = value});
+        value_t v;
+        v.u2 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u2 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_i2(ubx_cfg_item_t ubx_cfg_item, i2_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -391,7 +406,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i2 = value});
+        value_t v;
+        v.i2 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i2 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_x2(ubx_cfg_item_t ubx_cfg_item, x2_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -399,7 +417,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x2 = value});
+        value_t v;
+        v.x2 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x2 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_u4(ubx_cfg_item_t ubx_cfg_item, u4_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -407,7 +428,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u4 = value});
+        value_t v;
+        v.u4 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u4 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_i4(ubx_cfg_item_t ubx_cfg_item, i4_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -415,7 +439,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i4 = value});
+        value_t v;
+        v.i4 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i4 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_x4(ubx_cfg_item_t ubx_cfg_item, x4_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -423,7 +450,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x4 = value});
+        value_t v;
+        v.x4 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.x4 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_r4(ubx_cfg_item_t ubx_cfg_item, r4_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -431,7 +461,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.r4 = value});
+        value_t v;
+        v.r4 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.r4 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_u8(ubx_cfg_item_t ubx_cfg_item, u8_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -439,7 +472,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u8 = value});
+        value_t v;
+        v.u8 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.u8 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_i8(ubx_cfg_item_t ubx_cfg_item, i8_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -447,7 +483,10 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i8 = value});
+        value_t v;
+        v.i8 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.i8 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_r8(ubx_cfg_item_t ubx_cfg_item, r8_t value) {
         if (sizeof(value) != ubx_cfg_item.ubx_key_id.storage_size()) {
@@ -455,10 +494,14 @@ namespace ubx
           msg.append(ubx_cfg_item.ubx_key_id.to_hex());
           throw UbxValueException(msg);
         }
-        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.r8 = value});
+        value_t v;
+        v.r8 =value;
+        // cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value_t {.r8 = value});
+        cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, v);
       }
       void cfg_val_set_key_append_binary(ubx_cfg_item_t ubx_cfg_item, u1_t *value_p){
         value_t value;
+        memset(value.bytes,0x00, sizeof(value.bytes));
         memcpy(&value.bytes[0], value_p, ubx_cfg_item.ubx_key_id.storage_size());
         cfg_val_set_key_append(ubx_cfg_item.ubx_key_id, value);
       }
@@ -563,4 +606,4 @@ namespace ubx
   }
 }
 
-#endif // UBLOX_DGNSS_NODE_UBX_CFG
+#endif // UBLOX_DGNSS_NODE__UBX_CFG

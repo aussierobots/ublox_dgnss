@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_UBX_NAV_POSECEF_HPP
-#define UBLOX_DGNSS_NODE_UBX_NAV_POSECEF_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX_NAV_POSECEF_HPP
+#define UBLOX_DGNSS_NODE__UBX_NAV_POSECEF_HPP
 
 #include <unistd.h>
 #include <memory>
@@ -64,4 +64,4 @@ namespace ubx {
     };
   }
 }
-#endif
+#endif // UBLOX_DGNSS_NODE__UBX_NAV_POSECEF_HPP

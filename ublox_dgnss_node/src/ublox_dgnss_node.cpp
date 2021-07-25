@@ -110,7 +110,6 @@ public:
       RCLCPP_INFO(get_logger(), "parameter supplied: %s", name.c_str());
       bool valid = false;
       for (const auto &kv : ubx::cfg::ubxKeyCfgItemMap){
-        auto ubx_key_id  = kv.first;
         auto ubx_cfg_item = kv.second;
         if (strcmp(ubx_cfg_item.ubx_config_item, name.c_str()) == 0){
           valid = true;
@@ -571,6 +570,7 @@ public:
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_HOT_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
     ubx_cfg_->cfg_rst_command_async();
+    (void)response;
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -580,6 +580,7 @@ public:
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_WARM_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
     ubx_cfg_->cfg_rst_command_async();
+    (void)response;
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -589,12 +590,15 @@ public:
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_COLD_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
     ubx_cfg_->cfg_rst_command_async();
+    (void)response;
   }
 
   UBLOX_DGNSS_NODE_LOCAL
   void reset_odo_callback (const std::shared_ptr<ublox_ubx_interfaces::srv::ResetODO::Request> request,
                              std::shared_ptr<ublox_ubx_interfaces::srv::ResetODO::Response> response) {
     RCLCPP_WARN(get_logger(), "reset_odo service");
+    (void)request;
+    (void)response; 
   }
 
   // handle host in from ublox gps to host callback
@@ -681,6 +685,7 @@ public:
 
   UBLOX_DGNSS_NODE_PUBLIC
   void ublox_exception_callback(usb::UsbException e, void *user_data) {
+    (void)user_data;
     RCLCPP_ERROR(this->get_logger(),"ublox exception: %s", e.what());
   }
   
@@ -1450,7 +1455,6 @@ private:
     size_t i = 0;
     size_t n = 10; // every n output a request
     for (auto ci: ubx::cfg::ubxKeyCfgItemMap) {
-      auto ubx_key_id = ci.first;
       auto ubx_ci = ci.second;
       ubx::value_t value {0x0000000000000000};
       RCLCPP_DEBUG(get_logger(), "init %lu cfg param: %s", i, ubx_ci.ubx_config_item);
@@ -1527,7 +1531,6 @@ private:
     size_t n = 1; // every n output a request
     for (auto ci: ubx::cfg::ubxKeyCfgItemMap) {
       trans_start = true;
-      auto ubx_key_id = ci.first;
       auto ubx_ci = ci.second;
 
       auto p_state = cfg_param_cache_map_[ubx_ci.ubx_config_item];

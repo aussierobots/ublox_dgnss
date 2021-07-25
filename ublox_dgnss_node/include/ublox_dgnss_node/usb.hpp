@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_USB_HPP
-#define  UBLOX_DGNSS_NODE_USB_HPP
+#ifndef UBLOX_DGNSS_NODE__USB_HPP
+#define UBLOX_DGNSS_NODE__USB_HPP
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -159,4 +160,4 @@ namespace usb
   };
 } // end namespace usb 
 
-#endif
+#endif // UBLOX_DGNSS_NODE__USB_HPP

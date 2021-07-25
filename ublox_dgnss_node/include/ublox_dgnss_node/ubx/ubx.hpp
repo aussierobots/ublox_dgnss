@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE_UBX_HPP
-#define UBLOX_DGNSS_NODE_UBX_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX_HPP
+#define UBLOX_DGNSS_NODE__UBX_HPP
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -334,4 +334,4 @@ namespace ubx {
   };
 }
 
-#endif // UBLOX_DGNSS_NODE_UBX_HPP
+#endif // UBLOX_DGNSS_NODE__UBX_HPP

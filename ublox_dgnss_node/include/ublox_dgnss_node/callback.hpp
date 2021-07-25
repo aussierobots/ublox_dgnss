@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_CALLBACK_HPP
-#define UBLOX_CALLBACK_HPP
+#ifndef UBLOX_DGNSS_NODE__CALLBACK_HPP
+#define UBLOX_DGNSS_NODE__CALLBACK_HPP
 #include <stdio.h>
 #include <functional>
 
@@ -77,4 +77,4 @@ struct hotplug_attach_callback_t<Ret(Params...)> {
 template <typename Ret, typename... Params>
 std::function<Ret(Params...)> hotplug_attach_callback_t<Ret(Params...)>::func;
 
-#endif
+#endif // UBLOX_DGNSS_NODE__CALLBACK_HPP
