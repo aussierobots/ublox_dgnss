@@ -5,6 +5,7 @@ project(ublox_dgnss)
 find_package(ament_cmake REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
+find_package(ublox_dgnss_node REQUIRED)
 
 install(
   DIRECTORY launch 

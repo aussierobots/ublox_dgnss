@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ublox_dgnss_node</name>
-  <version>0.2.2</version>
+  <version>0.2.3</version>
   <description>Provides a ublox_gnss node for a u-blox GPS GNSS receiver using Gen 9 UBX Protocol</description>
   <author>Nick Hortovanyi</author>
   <maintainer email="nick@aussierobots.com.au">nick</maintainer>
@@ -15,8 +15,8 @@
   <depend>rclcpp_components</depend>
   <depend>libusb-1.0-dev</depend>
   <exec_depend>std_msgs</exec_depend>
-  <exec_depend>ublox_ubx_msgs</exec_depend>
-  <exec_depend>ublox_ubx_interfaces</exec_depend>
+  <depend>ublox_ubx_msgs</depend>
+  <depend>ublox_ubx_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
