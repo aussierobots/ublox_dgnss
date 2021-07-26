@@ -111,13 +111,13 @@ public:
     oss << "version: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +version;
     oss << " layer: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +layer;
     oss << " position: 0x" << std::setfill('0') << std::setw(4) << std::right << std::hex <<
-        +position;
+      +position;
     oss << " cfg_data - key values(" << cfg_data.size() << "):";
     for (auto kv : cfg_data) {
       oss << " " << kv.ubx_key_id.to_hex() << ":0x";
       for (size_t i = 0; i < kv.ubx_key_id.storage_size(); i++) {
         oss << std::setfill('0') << std::setw(2) << std::right << std::hex <<
-            +kv.ubx_value.bytes[i];
+          +kv.ubx_value.bytes[i];
       }
     }
     return oss.str();

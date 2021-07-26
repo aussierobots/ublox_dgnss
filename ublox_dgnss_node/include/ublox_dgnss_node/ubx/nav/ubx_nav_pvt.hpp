@@ -63,7 +63,7 @@ struct gnss_fix_status_flags_t
       l_t diffSoln : 1;         // 1 = differential corrections were applied
       psm_state_pvt_t psmState : 3;   // power save mode state
       l_t headVehValid : 1;      // 1 = heading of vehicle is valid,
-                                // only set if the receiver is in sensor fusion mode
+                                 // only set if the receiver is in sensor fusion mode
       pvt_carrier_solution_status_t carrSoln : 2;        // carrier phase range solution status
     } bits;
   };
@@ -135,7 +135,7 @@ public:
                     // otherwise the output is set to the heading of motion
   i2_t magDec;     // deg scale 1e-2 - Magnetic declination. Only supported in ADR 4.10 and later
   u2_t magAcc;     // deg scale ie-2 - Mangetic declination accuracy.
-                  // Only supported in ADR 4.10 and later
+                   // Only supported in ADR 4.10 and later
 
 public:
   NavPvtPayload()
@@ -191,9 +191,9 @@ public:
     oss << "iTOW: " << iTOW;
     oss << std::setfill('0');
     oss << " date time: " << std::setw(2) << +year << "/" << std::setw(2) << +month << "/" <<
-        std::setw(2) << +day;
+      std::setw(2) << +day;
     oss << " " << std::setw(2) << +hour << ":" << std::setw(2) << +min << ":" << std::setw(2) <<
-        +sec;
+      +sec;
     oss << " validDate: " << +valid.bits.validDate;
     oss << " validTime: " << +valid.bits.validTime;
     oss << " fullyResolved: " << +valid.bits.fullyResolved;

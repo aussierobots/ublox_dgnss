@@ -94,7 +94,7 @@ public:
   UBLOX_DGNSS_NODE_PUBLIC
   explicit UbloxDGNSSNode(const rclcpp::NodeOptions & options)
   : Node("ublox_dgnss", rclcpp::NodeOptions(options)
-                       .automatically_declare_parameters_from_overrides(true))
+      .automatically_declare_parameters_from_overrides(true))
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
@@ -317,9 +317,9 @@ private:
   void log_usbc()
   {
     RCLCPP_INFO(
-      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x bus: %03d address: %03d "\
-                          "port_number: %d speed: %s num_interfaces: %u "\
-                          "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
+      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x bus: %03d address: %03d " \
+      "port_number: %d speed: %s num_interfaces: %u " \
+      "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
       usbc_->vendor_id(),
       usbc_->product_id(),
       usbc_->bus_number(),
@@ -538,8 +538,8 @@ public:
           }
           RCLCPP_DEBUG(
             get_logger(), "cfg_item: %s appending to queue cfg_val_set_key: %s value: %s " \
-                          "storage_size: %lu",
-                          ubx_cfg_item.ubx_config_item,
+            "storage_size: %lu",
+            ubx_cfg_item.ubx_config_item,
             ubx_key_id.to_hex().c_str(), voss.str().c_str(), ubx_key_id.storage_size());
 
           ubx_cfg_->cfg_val_set_key_append(ubx_key_id, value);
@@ -548,7 +548,8 @@ public:
           {parameter.get_parameter_value(), PARAM_VALSET};
         } catch (const rclcpp::ParameterTypeException & e) {
           valid = false;
-          RCLCPP_DEBUG(get_logger(), "cfg_val_set_from_parameter ParamterTypeException: %s",
+          RCLCPP_DEBUG(
+            get_logger(), "cfg_val_set_from_parameter ParamterTypeException: %s",
             e.what());
           result.reason = e.what();
           result.reason += " ";
@@ -606,11 +607,13 @@ public:
         }
 
         if (!result.successful) {
-          RCLCPP_WARN(get_logger(), "parameter %s not set - %s",
+          RCLCPP_WARN(
+            get_logger(), "parameter %s not set - %s",
             parameter.get_name().c_str(), result.reason.c_str());
           break;
         } else {
-          RCLCPP_INFO(get_logger(), "parameter set %s: %s",
+          RCLCPP_INFO(
+            get_logger(), "parameter set %s: %s",
             parameter.get_name().c_str(), parameter.value_to_string().c_str());
         }
       }
@@ -643,7 +646,8 @@ public:
     const std::shared_ptr<ublox_ubx_interfaces::srv::HotStart::Request> request,
     std::shared_ptr<ublox_ubx_interfaces::srv::HotStart::Response> response)
   {
-    RCLCPP_WARN(get_logger(), "hot_start service called reset_type: %s",
+    RCLCPP_WARN(
+      get_logger(), "hot_start service called reset_type: %s",
       ubx::to_hex(request->reset_type).c_str());
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_HOT_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
@@ -656,7 +660,8 @@ public:
     const std::shared_ptr<ublox_ubx_interfaces::srv::WarmStart::Request> request,
     std::shared_ptr<ublox_ubx_interfaces::srv::WarmStart::Response> response)
   {
-    RCLCPP_WARN(get_logger(), "warm_start service called reset_type: %s",
+    RCLCPP_WARN(
+      get_logger(), "warm_start service called reset_type: %s",
       ubx::to_hex(request->reset_type).c_str());
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_WARM_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
@@ -669,7 +674,8 @@ public:
     const std::shared_ptr<ublox_ubx_interfaces::srv::ColdStart::Request> request,
     std::shared_ptr<ublox_ubx_interfaces::srv::ColdStart::Response> response)
   {
-    RCLCPP_WARN(get_logger(), "cold_start service called reset_type: %s",
+    RCLCPP_WARN(
+      get_logger(), "cold_start service called reset_type: %s",
       ubx::to_hex(request->reset_type).c_str());
     ubx_cfg_->cfg_rst_set_nav_bbr_mask(ubx::cfg::NAV_BBR_COLD_START);
     ubx_cfg_->cfg_rst_set_reset_mode(request->reset_type);
@@ -1116,16 +1122,18 @@ private:
     std::shared_ptr<ubx::ack::AckNakPayload> payload_ack_nak;
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_ACK_ACK:
-        payload_ack_ack = std::make_shared<ubx::ack::AckAckPayload>(f->ubx_frame->payload,
-            f->ubx_frame->length);
+        payload_ack_ack = std::make_shared<ubx::ack::AckAckPayload>(
+          f->ubx_frame->payload,
+          f->ubx_frame->length);
         RCLCPP_INFO(
           get_logger(), "ubx class: 0x%02x id: 0x%02x ack ack payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           payload_ack_ack->to_string().c_str());
         break;
       case ubx::UBX_ACK_NAK:
-        payload_ack_nak = std::make_shared<ubx::ack::AckNakPayload>(f->ubx_frame->payload,
-            f->ubx_frame->length);
+        payload_ack_nak = std::make_shared<ubx::ack::AckNakPayload>(
+          f->ubx_frame->payload,
+          f->ubx_frame->length);
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x id: 0x%02x ack nak payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
@@ -1293,7 +1301,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_vel_ecef_pub(ubx_queue_frame_t * f,
+  void ubx_nav_vel_ecef_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::velecef::NavVelECEFPayload> payload)
   {
     RCLCPP_INFO(
@@ -1314,7 +1323,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_vel_ned_pub(ubx_queue_frame_t * f,
+  void ubx_nav_vel_ned_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::velned::NavVelNEDPayload> payload)
   {
     RCLCPP_INFO(
@@ -1339,7 +1349,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_time_utc_pub(ubx_queue_frame_t * f,
+  void ubx_nav_time_utc_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::timeutc::NavTimeUTCPayload> payload)
   {
     RCLCPP_INFO(
@@ -1368,7 +1379,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_rel_pos_ned_pub(ubx_queue_frame_t * f,
+  void ubx_nav_rel_pos_ned_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::relposned::NavRelPosNedPayload> payload)
   {
     RCLCPP_INFO(
@@ -1464,7 +1476,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_pos_llh_pub(ubx_queue_frame_t * f,
+  void ubx_nav_pos_llh_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::posllh::NavPosLLHPayload> payload)
   {
     RCLCPP_INFO(
@@ -1486,7 +1499,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_pos_ecef_pub(ubx_queue_frame_t * f,
+  void ubx_nav_pos_ecef_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::posecef::NavPosECEFPayload> payload)
   {
     RCLCPP_INFO(
@@ -1506,8 +1520,9 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_odo_pub(ubx_queue_frame_t * f,
-  std::shared_ptr<ubx::nav::odo::NavOdoPayload> payload)
+  void ubx_nav_odo_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::odo::NavOdoPayload> payload)
   {
     RCLCPP_INFO(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav odo polled payload - %s",
@@ -1527,7 +1542,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_hp_pos_llh_pub(ubx_queue_frame_t * f,
+  void ubx_nav_hp_pos_llh_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::hpposllh::NavHPPosLLHPayload> payload)
   {
     RCLCPP_INFO(
@@ -1562,7 +1578,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_hp_pos_ecef_pub(ubx_queue_frame_t * f,
+  void ubx_nav_hp_pos_ecef_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::hpposecef::NavHPPosECEFPayload> payload)
   {
     RCLCPP_INFO(
@@ -1593,7 +1610,8 @@ private:
 
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_status_pub(ubx_queue_frame_t * f,
+  void ubx_nav_status_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::status::NavStatusPayload> payload)
   {
     RCLCPP_INFO(
@@ -1623,8 +1641,9 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_eoe_pub(ubx_queue_frame_t * f,
-  std::shared_ptr<ubx::nav::eoe::NavEOEPayload> payload)
+  void ubx_nav_eoe_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::eoe::NavEOEPayload> payload)
   {
     RCLCPP_INFO(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav eoe payload - %s",
@@ -1640,8 +1659,9 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_dop_pub(ubx_queue_frame_t * f,
-  std::shared_ptr<ubx::nav::dop::NavDOPPayload> payload)
+  void ubx_nav_dop_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::dop::NavDOPPayload> payload)
   {
     RCLCPP_INFO(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav dop payload - %s",
@@ -1664,8 +1684,9 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_cov_pub(ubx_queue_frame_t * f,
-  std::shared_ptr<ubx::nav::cov::NavCovPayload> payload)
+  void ubx_nav_cov_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::cov::NavCovPayload> payload)
   {
     RCLCPP_INFO(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav cov payload - %s",
@@ -1696,7 +1717,8 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_nav_clock_pub(ubx_queue_frame_t * f,
+  void ubx_nav_clock_pub(
+    ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::clock::NavClockPayload> payload)
   {
     RCLCPP_INFO(
@@ -1828,7 +1850,8 @@ private:
     }
 
     if (trans_start) {
-      RCLCPP_INFO(get_logger(), "cfg_val_set_poll_async ... end transaction ... %s",
+      RCLCPP_INFO(
+        get_logger(), "cfg_val_set_poll_async ... end transaction ... %s",
         item_list.c_str());
       ubx_cfg_->cfg_val_set_transaction(3);
       ubx_cfg_->cfg_val_set_poll_async();

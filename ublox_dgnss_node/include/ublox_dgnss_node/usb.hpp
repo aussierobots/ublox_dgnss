@@ -34,46 +34,53 @@
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
 
-#define IN_BUFFER_SIZE 64*10
+#define IN_BUFFER_SIZE 64 * 10
 
-namespace usb {
+namespace usb
+{
 using UCharVector = std::vector<u_char>;
 enum TransferType {USB_IN, USB_OUT};
-struct transfer_t {
-  struct libusb_transfer *transfer;
+struct transfer_t
+{
+  struct libusb_transfer * transfer;
   std::shared_ptr<UCharVector> buffer;
   bool completed;
   TransferType type;
-  transfer_t() {
+  transfer_t()
+  {
     buffer = std::make_shared<UCharVector>();
   }
 };
 
-class TimeoutException : public std::exception {
-  public:
-  const char * what () const throw() {
+class TimeoutException : public std::exception
+{
+public:
+  const char * what() const throw()
+  {
     return "Timeout";
   }
 };
 
-class UsbException : public std::runtime_error {
-  public:
-    explicit UsbException(std::string msg):std::runtime_error(msg) {}
+class UsbException : public std::runtime_error
+{
+public:
+  explicit UsbException(std::string msg)
+  : std::runtime_error(msg) {}
 };
 
 // external function callback definitions for the connection class
-typedef std::function<void(struct libusb_transfer *transfer)> connection_out_cb_fn;
-typedef std::function<void(struct libusb_transfer *transfer)> connection_in_cb_fn;
-typedef std::function<void(UsbException e, void *user_data)> connection_exception_cb_fn;
-typedef std::function<void()> hotplug_attach_cb_fn;
-typedef std::function<void()> hotplug_detach_cb_fn;
+typedef std::function<void (struct libusb_transfer * transfer)> connection_out_cb_fn;
+typedef std::function<void (struct libusb_transfer * transfer)> connection_in_cb_fn;
+typedef std::function<void (UsbException e, void * user_data)> connection_exception_cb_fn;
+typedef std::function<void ()> hotplug_attach_cb_fn;
+typedef std::function<void ()> hotplug_detach_cb_fn;
 
 class Connection
 {
 private:
-  libusb_context *ctx_;
-  libusb_device_handle *devh_;
-  libusb_device *dev_;
+  libusb_context * ctx_;
+  libusb_device_handle * devh_;
+  libusb_device * dev_;
 
   // hotplug
   hotplug_attach_cb_fn hp_attach_cb_fn_;
@@ -104,21 +111,24 @@ private:
 
 private:
   // this is called after the out transfer to USB from HOST has been received by libusb
-  void callback_out(struct libusb_transfer *transfer);
+  void callback_out(struct libusb_transfer * transfer);
   // this is called when the stat for in is available - from USB in HOST
-  void callback_in(struct libusb_transfer *transfer);
+  void callback_in(struct libusb_transfer * transfer);
 
-  int hotplug_attach_callback(libusb_context *ctx, libusb_device *dev,
-                              libusb_hotplug_event event, void *user_data);
-  int hotplug_detach_callback(libusb_context *ctx, libusb_device *dev,
-                              libusb_hotplug_event event, void *user_data);
+  int hotplug_attach_callback(
+    libusb_context * ctx, libusb_device * dev,
+    libusb_hotplug_event event, void * user_data);
+  int hotplug_detach_callback(
+    libusb_context * ctx, libusb_device * dev,
+    libusb_hotplug_event event, void * user_data);
 
 
   std::shared_ptr<transfer_t> make_transfer_in();
-  std::shared_ptr<transfer_t> make_transer_out(u_char* buf, size_t size);
-  void submit_transfer(std::shared_ptr<transfer_t> transfer,
-                       const std::string msg = "Error submit transfer: ",
-                       bool wait_for_completed = true);
+  std::shared_ptr<transfer_t> make_transer_out(u_char * buf, size_t size);
+  void submit_transfer(
+    std::shared_ptr<transfer_t> transfer,
+    const std::string msg = "Error submit transfer: ",
+    bool wait_for_completed = true);
   void cleanup_transfer_queue();
   void close_devh();
 
@@ -131,22 +141,22 @@ public:
   void set_in_callback(connection_in_cb_fn in_cb_fn) {in_cb_fn_ = in_cb_fn;}
   void set_out_callback(connection_out_cb_fn out_cb_fn) {out_cb_fn_ = out_cb_fn;}
   void set_exception_callback(connection_exception_cb_fn exception_fb_fn)
-          {exception_cb_fn_ = exception_fb_fn;}
+  {exception_cb_fn_ = exception_fb_fn;}
   void set_hotplug_attach_callback(hotplug_attach_cb_fn hp_attach_cb_fn)
-          {hp_attach_cb_fn_ = hp_attach_cb_fn;}
+  {hp_attach_cb_fn_ = hp_attach_cb_fn;}
   void set_hotplug_detach_callback(hotplug_detach_cb_fn hp_detach_cb_fn)
-          {hp_detach_cb_fn_ = hp_detach_cb_fn;}
+  {hp_detach_cb_fn_ = hp_detach_cb_fn;}
   int vendor_id() {return vendor_id_;}
   int product_id() {return product_id_;}
   int bus_number() {return dev_ ? libusb_get_bus_number(dev_) : 0;}
   int device_address() {return dev_ ? libusb_get_device_address(dev_) : 0;}
   int device_speed() {return dev_ ? libusb_get_device_speed(dev_) : 0;}
-  char* device_speed_txt();
-  u_int8_t port_number() {return dev_ ? libusb_get_port_number(dev_): 0;}
-  int read_chars(u_char* data, size_t size);
+  char * device_speed_txt();
+  u_int8_t port_number() {return dev_ ? libusb_get_port_number(dev_) : 0;}
+  int read_chars(u_char * data, size_t size);
   void write_char(u_char c);
-  void write_buffer(u_char* buf, size_t size);
-  void write_buffer_async(u_char* buf, size_t size, void *user_data);
+  void write_buffer(u_char * buf, size_t size);
+  void write_buffer_async(u_char * buf, size_t size, void * user_data);
   u_int8_t num_interfaces() {return num_interfaces_;}
   int ep_data_out_addr() {return ep_data_out_addr_;}
   int ep_data_in_addr() {return ep_data_in_addr_;}

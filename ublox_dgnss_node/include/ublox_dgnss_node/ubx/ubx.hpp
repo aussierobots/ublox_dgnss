@@ -156,13 +156,13 @@ std::shared_ptr<FramePolled> get_polled_frame(
           std::ostringstream msg_oss;
           msg_oss << "UBX_ACK_NAK fail";
           msg_oss << " sent poll_frame.msg_class: " << "0x" << std::setfill('0') << std::setw(2) <<
-              std::right << std::hex << +poll_frame->msg_class;
+            std::right << std::hex << +poll_frame->msg_class;
           msg_oss << " poll_frame.msg_id: " << "0x" << std::setfill('0') << std::setw(2) <<
-              std::right << std::hex << +poll_frame->msg_id;
+            std::right << std::hex << +poll_frame->msg_id;
           msg_oss << " repsonse polled_frame.msg_class: " << "0x" << std::setfill('0') << std::setw(
             2) << std::right << std::hex << +polled_frame->msg_class;
           msg_oss << " polled_frame.msg_id: " << "0x" << std::setfill('0') << std::setw(2) <<
-              std::right << std::hex << +polled_frame->msg_id;
+            std::right << std::hex << +polled_frame->msg_id;
           throw UbxAckNackException(msg_oss.str());
         }
 
@@ -176,9 +176,9 @@ std::shared_ptr<FramePolled> get_polled_frame(
     std::ostringstream msg_oss;
     msg_oss << "UBX_ACK_NAK wasnt received after " << i << " tries";
     msg_oss << " sent poll_frame.msg_class: " << "0x" << std::setfill('0') << std::setw(2) <<
-        std::right << std::hex << +poll_frame->msg_class;
+      std::right << std::hex << +poll_frame->msg_class;
     msg_oss << " poll_frame.msg_id: " << "0x" << std::setfill('0') << std::setw(2) << std::right <<
-        std::hex << +poll_frame->msg_id;
+      std::hex << +poll_frame->msg_id;
 
     throw UbxAckNackException(msg_oss.str());
   }

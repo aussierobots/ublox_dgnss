@@ -103,9 +103,9 @@ public:
     oss << " tAcc: " << +tAcc;
     oss << " nano: " << +nano;
     oss << " date time: " << std::setw(2) << +year << "/" << std::setw(2) << +month << "/" <<
-        std::setw(2) << +day;
+      std::setw(2) << +day;
     oss << " " << std::setw(2) << +hour << ":" << std::setw(2) << +min << ":" << std::setw(2) <<
-        +sec;
+      +sec;
     oss << " validTOW: " << +valid.bits.validTOW;
     oss << " validWKN: " << +valid.bits.validWKN;
     oss << " validUTC: " << +valid.bits.validUTC;
