@@ -35,7 +35,7 @@ add_library(ublox_dgnss_components SHARED
   src/ublox_dgnss_node.cpp
 )
 
-target_compile_definitions(ublox_dgnss_components 
+target_compile_definitions(ublox_dgnss_components
   PRIVATE "UBLOX_DGNSS_NODE_BUILDING_DLL"
 )
 
@@ -61,7 +61,7 @@ install(TARGETS
 )
 
 # install(
-#   DIRECTORY launch 
+#   DIRECTORY launch
 #   DESTINATION share/${PROJECT_NAME}
 # )
 
