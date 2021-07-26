@@ -489,9 +489,12 @@ void Connection::cleanup_transfer_queue()
   if (transfer_queue_.size() == 0) {return;}
 
   // remove all completed transfer entries
-  for (auto it = transfer_queue_.begin(); it != transfer_queue_.end(); ++it) {
-    if (it->get()->completed) {
-      transfer_queue_.erase(it);
+  auto it = transfer_queue_.begin();
+  while (it != transfer_queue_.end()) {
+    if ((*it)->completed) {
+      transfer_queue_.erase(it++);
+    } else {
+      ++it;
     }
   }
 }
