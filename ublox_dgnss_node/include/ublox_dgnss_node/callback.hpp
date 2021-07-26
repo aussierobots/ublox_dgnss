@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__CALLBACK_HPP
-#define UBLOX_DGNSS_NODE__CALLBACK_HPP
+#ifndef UBLOX_DGNSS_NODE__CALLBACK_HPP_
+#define UBLOX_DGNSS_NODE__CALLBACK_HPP_
 #include <stdio.h>
 #include <functional>
 
@@ -22,11 +22,11 @@ struct callback_in_t;
 
 template <typename Ret, typename... Params>
 struct callback_in_t<Ret(Params...)> {
-   template <typename... Args> 
-   static Ret callback(Args... args) {                    
-      return func(args...);  
+   template <typename... Args>
+   static Ret callback(Args... args) {
+      return func(args...);
    }
-   static std::function<Ret(Params...)> func; 
+   static std::function<Ret(Params...)> func;
 };
 
 template <typename Ret, typename... Params>
@@ -37,11 +37,11 @@ struct callback_out_t;
 
 template <typename Ret, typename... Params>
 struct callback_out_t<Ret(Params...)> {
-   template <typename... Args> 
-   static Ret callback(Args... args) {                    
-      return func(args...);  
+   template <typename... Args>
+   static Ret callback(Args... args) {
+      return func(args...);
    }
-   static std::function<Ret(Params...)> func; 
+   static std::function<Ret(Params...)> func;
 };
 
 template <typename Ret, typename... Params>
@@ -52,11 +52,11 @@ struct hotplug_detach_callback_t;
 
 template <typename Ret, typename... Params>
 struct hotplug_detach_callback_t<Ret(Params...)> {
-   template <typename... Args> 
-   static Ret callback(Args... args) {                    
-      return func(args...);  
+   template <typename... Args>
+   static Ret callback(Args... args) {
+      return func(args...);
    }
-   static std::function<Ret(Params...)> func; 
+   static std::function<Ret(Params...)> func;
 };
 
 template <typename Ret, typename... Params>
@@ -67,14 +67,14 @@ struct hotplug_attach_callback_t;
 
 template <typename Ret, typename... Params>
 struct hotplug_attach_callback_t<Ret(Params...)> {
-   template <typename... Args> 
-   static Ret callback(Args... args) {                    
-      return func(args...);  
+   template <typename... Args>
+   static Ret callback(Args... args) {
+      return func(args...);
    }
-   static std::function<Ret(Params...)> func; 
+   static std::function<Ret(Params...)> func;
 };
 
 template <typename Ret, typename... Params>
 std::function<Ret(Params...)> hotplug_attach_callback_t<Ret(Params...)>::func;
 
-#endif // UBLOX_DGNSS_NODE__CALLBACK_HPP
+#endif  // UBLOX_DGNSS_NODE__CALLBACK_HPP_

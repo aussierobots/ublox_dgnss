@@ -55,4 +55,4 @@ extern "C"
 }
 #endif
 
-#endif // UBLOX_DGNSS_NODE__VISIBILITY_CONTROL_H_
+#endif  // UBLOX_DGNSS_NODE__VISIBILITY_CONTROL_H_

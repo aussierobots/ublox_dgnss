@@ -12,26 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__UBX_EXCEPTIONS_HPP
-#define UBLOX_DGNSS_NODE__UBX_EXCEPTIONS_HPP
+#ifndef UBLOX_DGNSS_NODE__UBX__UBX_EXCEPTIONS_HPP_
+#define UBLOX_DGNSS_NODE__UBX__UBX_EXCEPTIONS_HPP_
 #include <stdexcept>
 #include <string>
-namespace ubx {
-  class UbxAckNackException : public std::runtime_error {
-    public:
-      UbxAckNackException(std::string msg):std::runtime_error(msg){} 
-  };
+namespace ubx
+{
+class UbxAckNackException : public std::runtime_error
+{
+public:
+  explicit UbxAckNackException(std::string msg)
+  : std::runtime_error(msg) {}
+};
 
-  class UbxValueException : public std::runtime_error {
-    public:
-      UbxValueException(std::string msg):std::runtime_error(msg){}
-  };
-  
-  class UbxPayloadException : public std::runtime_error {
-    public:
-      UbxPayloadException(std::string msg):std::runtime_error(msg){}
-  };
+class UbxValueException : public std::runtime_error
+{
+public:
+  explicit UbxValueException(std::string msg)
+  : std::runtime_error(msg) {}
+};
 
-}
+class UbxPayloadException : public std::runtime_error
+{
+public:
+  explicit UbxPayloadException(std::string msg)
+  : std::runtime_error(msg) {}
+};
 
-#endif // UBLOX_DGNSS_NODE__UBX_EXCEPTIONS_HPP
+}  // namespace ubx
+
+#endif  // UBLOX_DGNSS_NODE__UBX__UBX_EXCEPTIONS_HPP_
