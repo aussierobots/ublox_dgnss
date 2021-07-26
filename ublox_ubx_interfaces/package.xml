@@ -4,8 +4,7 @@
   <name>ublox_ubx_interfaces</name>
   <version>0.2.3</version>
   <description>UBLOX UBX Interfaces</description>
-  <author>Nick Hortovanyi</author>
-  <maintainer email="nick@aussierobots.com.au">nick</maintainer>
+  <maintainer email="nick@aussierobots.com.au">Nick Hortovanyi</maintainer>
   <license>Apache License, Version 2.0</license>
 
   <url>https://github.com/aussierobots/ublox_dgnss</url>

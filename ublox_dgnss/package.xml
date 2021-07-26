@@ -4,8 +4,7 @@
   <name>ublox_dgnss</name>
   <version>0.2.3</version>
   <description>Provides a ublox_dgnss node for a u-blox GPS DGNSS receiver using Gen 9 UBX Protocol</description>
-  <author>Nick Hortovanyi</author>
-  <maintainer email="nick@aussierobots.com">nick</maintainer>
+  <maintainer email="nick@aussierobots.com">Nick Hortovanyi</maintainer>
   <license>Apache License, Version 2.0</license>
 
   <url>https://github.com/aussierobots/ublox_dgnss</url>
