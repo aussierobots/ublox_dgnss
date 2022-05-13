@@ -98,6 +98,9 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
+    callback_group_ubx_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    callback_group_usb_events_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
     // this flag is used to control if certain parameters can be updated
     is_initialising_ = true;
 
@@ -214,7 +217,8 @@ public:
     log_usbc();
 
     ubx_queue_.clear();
-    ubx_timer_ = create_wall_timer(10ns, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this));
+    ubx_timer_ = create_wall_timer(10ns, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
+      callback_group_ubx_timer_);
 
     ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
     ubx_cfg_->cfg_val_set_cfgdata_clear();
@@ -244,7 +248,7 @@ public:
         ;
         RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
       };
-    handle_usb_events_timer_ = create_wall_timer(10ns, handle_usb_events_callback);
+    handle_usb_events_timer_ = create_wall_timer(10ns, handle_usb_events_callback, callback_group_usb_events_timer_);
 
     if (!async_initialised_) {
       RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async start");
@@ -267,6 +271,9 @@ public:
 
 private:
   bool is_initialising_;
+
+  rclcpp::CallbackGroup::SharedPtr callback_group_usb_events_timer_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_ubx_timer_;
 
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<ubx::cfg::UbxCfg> ubx_cfg_;
