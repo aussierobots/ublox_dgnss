@@ -2,8 +2,8 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2022-05-13)
+------------------
 * updated CMAKE_CXX_STANDARD 17
 * Contributors: Nick Hortovanyi
 
