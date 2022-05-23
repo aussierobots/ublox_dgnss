@@ -2,6 +2,9 @@
 Changelog for package ublox_ubx_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.2 (2022-05-13)
 ------------------
 * updated CMAKE_CXX_STANDARD 17

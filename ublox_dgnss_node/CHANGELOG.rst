@@ -2,6 +2,11 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added <build_depend>pkg-configi</build_depend>
+* Contributors: Nick Hortovanyi
+
 0.3.2 (2022-05-13)
 ------------------
 * updated CMAKE_CXX_STANDARD 17
