@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.3 (2022-05-24)
+------------------
 * added <build_depend>pkg-configi</build_depend>
 * Contributors: Nick Hortovanyi
 
