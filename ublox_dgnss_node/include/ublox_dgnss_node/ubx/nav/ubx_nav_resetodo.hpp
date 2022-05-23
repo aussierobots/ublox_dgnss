@@ -28,34 +28,35 @@ namespace ubx::nav::resetodo
 class NavResetOdoPayload : UBXPayload
 {
 public:
-static const msg_class_t MSG_CLASS = UBX_NAV;
-static const msg_id_t MSG_ID = UBX_NAV_RESETODO;
+  static const msg_class_t MSG_CLASS = UBX_NAV;
+  static const msg_id_t MSG_ID = UBX_NAV_RESETODO;
 
 // no payload for a command
 
 public:
-NavResetOdoPayload()
-	: UBXPayload(MSG_CLASS, MSG_ID) {
-}
-NavResetOdoPayload(ch_t * payload_polled, u2_t size)
-	: UBXPayload(MSG_CLASS, MSG_ID)
-{
-	payload_.clear();
-	payload_.reserve(size);
-	payload_.resize(size);
-	memcpy(payload_.data(), payload_polled, size);
-}
-std::tuple<u1_t *, size_t> make_poll_payload()
-{
-	payload_.clear();
-	return std::make_tuple(payload_.data(), payload_.size());
-}
-std::string to_string()
-{
-	std::ostringstream oss;
-	oss << " command only - no payload";
-	return oss.str();
-}
+  NavResetOdoPayload()
+  : UBXPayload(MSG_CLASS, MSG_ID)
+  {
+  }
+  NavResetOdoPayload(ch_t * payload_polled, u2_t size)
+  : UBXPayload(MSG_CLASS, MSG_ID)
+  {
+    payload_.clear();
+    payload_.reserve(size);
+    payload_.resize(size);
+    memcpy(payload_.data(), payload_polled, size);
+  }
+  std::tuple<u1_t *, size_t> make_poll_payload()
+  {
+    payload_.clear();
+    return std::make_tuple(payload_.data(), payload_.size());
+  }
+  std::string to_string()
+  {
+    std::ostringstream oss;
+    oss << " command only - no payload";
+    return oss.str();
+  }
 };
 }  // namespace ubx::nav::resetodo
 #endif  // UBLOX_DGNSS_NODE__UBX__NAV__UBX_NAV_RESETODO_HPP_

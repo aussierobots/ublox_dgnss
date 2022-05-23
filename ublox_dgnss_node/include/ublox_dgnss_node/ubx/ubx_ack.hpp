@@ -27,60 +27,60 @@ namespace ubx::ack
 class AckPayload : UBXPayload
 {
 public:
-msg_class_t msg_class;
-msg_id_t msg_id;
+  msg_class_t msg_class;
+  msg_id_t msg_id;
 
 public:
-AckPayload()
-{
-	msg_class = 0;
-	msg_id = 0;
-}
-AckPayload(ch_t * payload, u2_t size)
-{
-	if (size == 2) {
-		msg_class = payload[0];
-		msg_id = payload[1];
-	}
-}
-std::tuple<const u1_t *, size_t> Payload()
-{
-	payload_.clear();
-	payload_.push_back(msg_class);
-	payload_.push_back(msg_id);
-	return std::make_tuple(payload_.data(), payload_.size());
-}
+  AckPayload()
+  {
+    msg_class = 0;
+    msg_id = 0;
+  }
+  AckPayload(ch_t * payload, u2_t size)
+  {
+    if (size == 2) {
+      msg_class = payload[0];
+      msg_id = payload[1];
+    }
+  }
+  std::tuple<const u1_t *, size_t> Payload()
+  {
+    payload_.clear();
+    payload_.push_back(msg_class);
+    payload_.push_back(msg_id);
+    return std::make_tuple(payload_.data(), payload_.size());
+  }
 
-std::string to_string()
-{
-	std::ostringstream os;
-	os << "class: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +msg_class;
-	os << " id: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +msg_id;
-	return os.str();
-}
+  std::string to_string()
+  {
+    std::ostringstream os;
+    os << "class: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +msg_class;
+    os << " id: 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << +msg_id;
+    return os.str();
+  }
 };
 
 class AckAckPayload : public AckPayload, public UBXPayloadOutputPrint
 {
 public:
-AckAckPayload(ch_t * payload, u2_t size)
-{
-	if (size == 2) {
-		msg_class = payload[0];
-		msg_id = payload[1];
-	}
-}
+  AckAckPayload(ch_t * payload, u2_t size)
+  {
+    if (size == 2) {
+      msg_class = payload[0];
+      msg_id = payload[1];
+    }
+  }
 };
 class AckNakPayload : public AckPayload, public UBXPayloadOutputPrint
 {
 public:
-AckNakPayload(ch_t * payload, u2_t size)
-{
-	if (size == 2) {
-		msg_class = payload[0];
-		msg_id = payload[1];
-	}
-}
+  AckNakPayload(ch_t * payload, u2_t size)
+  {
+    if (size == 2) {
+      msg_class = payload[0];
+      msg_id = payload[1];
+    }
+  }
 };
 }  // namespace ubx::ack
 
