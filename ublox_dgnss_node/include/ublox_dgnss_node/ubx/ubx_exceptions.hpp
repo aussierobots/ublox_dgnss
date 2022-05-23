@@ -21,22 +21,25 @@ namespace ubx
 class UbxAckNackException : public std::runtime_error
 {
 public:
-  explicit UbxAckNackException(std::string msg)
-  : std::runtime_error(msg) {}
+explicit UbxAckNackException(std::string msg)
+	: std::runtime_error(msg) {
+}
 };
 
 class UbxValueException : public std::runtime_error
 {
 public:
-  explicit UbxValueException(std::string msg)
-  : std::runtime_error(msg) {}
+explicit UbxValueException(std::string msg)
+	: std::runtime_error(msg) {
+}
 };
 
 class UbxPayloadException : public std::runtime_error
 {
 public:
-  explicit UbxPayloadException(std::string msg)
-  : std::runtime_error(msg) {}
+explicit UbxPayloadException(std::string msg)
+	: std::runtime_error(msg) {
+}
 };
 
 }  // namespace ubx

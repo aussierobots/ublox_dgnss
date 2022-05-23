@@ -23,12 +23,12 @@ struct callback_in_t;
 template<typename Ret, typename ... Params>
 struct callback_in_t<Ret(Params...)>
 {
-  template<typename ... Args>
-  static Ret callback(Args... args)
-  {
-    return func(args ...);
-  }
-  static std::function<Ret(Params...)> func;
+	template<typename ... Args>
+	static Ret callback(Args... args)
+	{
+		return func(args ...);
+	}
+	static std::function<Ret(Params...)> func;
 };
 
 template<typename Ret, typename ... Params>
@@ -40,12 +40,12 @@ struct callback_out_t;
 template<typename Ret, typename ... Params>
 struct callback_out_t<Ret(Params...)>
 {
-  template<typename ... Args>
-  static Ret callback(Args... args)
-  {
-    return func(args ...);
-  }
-  static std::function<Ret(Params...)> func;
+	template<typename ... Args>
+	static Ret callback(Args... args)
+	{
+		return func(args ...);
+	}
+	static std::function<Ret(Params...)> func;
 };
 
 template<typename Ret, typename ... Params>
@@ -57,12 +57,12 @@ struct hotplug_detach_callback_t;
 template<typename Ret, typename ... Params>
 struct hotplug_detach_callback_t<Ret(Params...)>
 {
-  template<typename ... Args>
-  static Ret callback(Args... args)
-  {
-    return func(args ...);
-  }
-  static std::function<Ret(Params...)> func;
+	template<typename ... Args>
+	static Ret callback(Args... args)
+	{
+		return func(args ...);
+	}
+	static std::function<Ret(Params...)> func;
 };
 
 template<typename Ret, typename ... Params>
@@ -74,12 +74,12 @@ struct hotplug_attach_callback_t;
 template<typename Ret, typename ... Params>
 struct hotplug_attach_callback_t<Ret(Params...)>
 {
-  template<typename ... Args>
-  static Ret callback(Args... args)
-  {
-    return func(args ...);
-  }
-  static std::function<Ret(Params...)> func;
+	template<typename ... Args>
+	static Ret callback(Args... args)
+	{
+		return func(args ...);
+	}
+	static std::function<Ret(Params...)> func;
 };
 
 template<typename Ret, typename ... Params>

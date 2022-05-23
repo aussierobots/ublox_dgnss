@@ -28,34 +28,35 @@ namespace ubx::nav::eoe
 class NavEOEPayload : UBXPayload
 {
 public:
-  static const msg_class_t MSG_CLASS = UBX_NAV;
-  static const msg_id_t MSG_ID = UBX_NAV_EOE;
+static const msg_class_t MSG_CLASS = UBX_NAV;
+static const msg_id_t MSG_ID = UBX_NAV_EOE;
 
-  u4_t iTOW;      // ms - GPS Time of week of the navigation epoch.
+u4_t iTOW;        // ms - GPS Time of week of the navigation epoch.
 
 public:
-  NavEOEPayload()
-  : UBXPayload(MSG_CLASS, MSG_ID) {}
-  NavEOEPayload(ch_t * payload_polled, u2_t size)
-  : UBXPayload(MSG_CLASS, MSG_ID)
-  {
-    payload_.clear();
-    payload_.reserve(size);
-    payload_.resize(size);
-    memcpy(payload_.data(), payload_polled, size);
-    iTOW = buf_offset<u4_t>(&payload_, 0);
-  }
-  std::tuple<u1_t *, size_t> make_poll_payload()
-  {
-    throw UbxPayloadException("NavEOEPayload is periodic only and cant be pulled!");
-    return std::make_tuple(nullptr, 0);
-  }
-  std::string to_string()
-  {
-    std::ostringstream oss;
-    oss << "iTOW: " << iTOW;
-    return oss.str();
-  }
+NavEOEPayload()
+	: UBXPayload(MSG_CLASS, MSG_ID) {
+}
+NavEOEPayload(ch_t * payload_polled, u2_t size)
+	: UBXPayload(MSG_CLASS, MSG_ID)
+{
+	payload_.clear();
+	payload_.reserve(size);
+	payload_.resize(size);
+	memcpy(payload_.data(), payload_polled, size);
+	iTOW = buf_offset<u4_t>(&payload_, 0);
+}
+std::tuple<u1_t *, size_t> make_poll_payload()
+{
+	throw UbxPayloadException("NavEOEPayload is periodic only and cant be pulled!");
+	return std::make_tuple(nullptr, 0);
+}
+std::string to_string()
+{
+	std::ostringstream oss;
+	oss << "iTOW: " << iTOW;
+	return oss.str();
+}
 };
 
 }    // namespace ubx::nav::eoe
