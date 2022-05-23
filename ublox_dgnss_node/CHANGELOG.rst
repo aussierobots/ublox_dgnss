@@ -3,7 +3,7 @@ Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.3.4 (2022-05-24)
------------
+------------------
 * uncrustify
 * Contributors: Nick Hortovanyi
 
