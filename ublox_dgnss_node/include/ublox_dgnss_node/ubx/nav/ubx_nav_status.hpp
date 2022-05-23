@@ -30,9 +30,9 @@ enum gps_fix_t : u1_t {gps_no_fix = 0, gps_dead_reckoning_only = 1, gps_fix_2d =
   gps_plus_dead_reackoning = 4, gps_time_only = 5};
 
 enum map_matching_status_t : u1_t {none = 0,
-  valid_not_used = 0b01,                                  // valid but not used, ie map matching data was received, but was too old
-  valid_and_used = 0b10,                                  // valid and used, map matching data was applied
-  valid_dead_reckoning = 0b11                                  // valid and used, map matching data was applied.
+  valid_not_used = 0b01,  // valid but not used, ie map matching data was received, but was too old
+  valid_and_used = 0b10,  // valid and used, map matching data was applied
+  valid_dead_reckoning = 0b11  // valid and used, map matching data was applied.
     // In case of sensor unavailability mapmatching data enables dead reckoning.
     // This requires map matched latitude/longitude orheading data.
 };
@@ -54,10 +54,10 @@ struct navigation_status_flags_t
     x1_t all;
     struct
     {
-      l_t gpsFixOK : 1;                   // 1 = position and velocity valid and within DOP and ACCMasks.
-      l_t diffSoln : 1;                   // 1 = differential corrections were applied
-      l_t wknSet : 1;                   // 1 = Week Number valid
-      l_t towSet : 1;                   // 1 = Time of Week valid
+      l_t gpsFixOK : 1;     // 1 = position and velocity valid and within DOP and ACCMasks.
+      l_t diffSoln : 1;     // 1 = differential corrections were applied
+      l_t wknSet : 1;       // 1 = Week Number valid
+      l_t towSet : 1;       // 1 = Time of Week valid
     } bits;
   };
 };
@@ -69,8 +69,8 @@ struct navigation_fix_flags_t
     struct
     {
       l_t diffCorr : 1;                       // 1 = differential corrections available
-      l_t carrSolnValid : 1;                   // 1 = valid carrSoln
-      map_matching_status_t mapMatching : 2;                   // map matching status
+      l_t carrSolnValid : 1;                  // 1 = valid carrSoln
+      map_matching_status_t mapMatching : 2;  // map matching status
     } bits;
   };
 };
@@ -81,9 +81,9 @@ struct navigation_status_flags2_t
     x1_t all;
     struct
     {
-      psm_state_status_t psmState : 2;                   // power save mode state
-      spoof_det_state_t spoofDetState : 2;                   // spoofing detection state
-      carrier_solution_status_t carrSoln : 2;                   // carrier phase range solution status
+      psm_state_status_t psmState : 2;          // power save mode state
+      spoof_det_state_t spoofDetState : 2;      // spoofing detection state
+      carrier_solution_status_t carrSoln : 2;   // carrier phase range solution status
     } bits;
   };
 };

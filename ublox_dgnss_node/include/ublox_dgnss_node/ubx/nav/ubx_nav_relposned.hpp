@@ -36,19 +36,19 @@ struct status_flags_t
     x4_t all;
     struct
     {
-      l_t gnssFixOK : 1;                   // 1 = A valid fix (i.e within DOP & accuracy masks)
-      l_t diffSoln : 1;                   // 1 = differential corrections were applied
-      l_t relPosValid : 1;                   // 1 = relative position components and accuracies are valid
-                                             // and, in moving base mode only, if baseline is valid
-      carrier_solution_status_t carrSoln : 2;                   // carrier phase range solution
-      l_t isMoving : 1;                   // 1 if the received is operating in moving base mode
-      l_t refPosMiss : 1;                   // 1 if extrapolated reference position was used to compute moving
-                                            // base solution this epoch.
-      l_t refObsMiss : 1;                   // 1 if extrapolated reference observations were used to compute
-                                            // moving base solution this epoch.
-      l_t relPosHeadingValid : 1;                   // 1 = relPosHeading is valid
-      l_t relPosNormalized : 1;                   // 1 = components of the relative position vector
-                                                  // (including the high-precision parts) are normalized
+      l_t gnssFixOK : 1;                // 1 = A valid fix (i.e within DOP & accuracy masks)
+      l_t diffSoln : 1;                 // 1 = differential corrections were applied
+      l_t relPosValid : 1;              // 1 = relative position components and accuracies are valid
+                                        // and, in moving base mode only, if baseline is valid
+      carrier_solution_status_t carrSoln : 2;  // carrier phase range solution
+      l_t isMoving : 1;                 // 1 if the received is operating in moving base mode
+      l_t refPosMiss : 1;               // 1 if extrapolated reference position was used to compute
+                                        // moving base solution this epoch.
+      l_t refObsMiss : 1;               // 1 if extrapolated reference observations were used to
+                                        // compute moving base solution this epoch.
+      l_t relPosHeadingValid : 1;       // 1 = relPosHeading is valid
+      l_t relPosNormalized : 1;         // 1 = components of the relative position vector
+                                        // (including the high-precision parts) are normalized
     } bits;
   };
 };

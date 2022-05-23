@@ -76,9 +76,10 @@ public:
     size_t idx = 4;
     // exttract key value data -
     // key will be 4 bytes + at least 1 byte for value
-    while (idx < (size_t)size - 4) {
+    while (idx < static_cast<size_t>(size) - 4) {
       // create key and increment payload ptr index
-      auto ubx_key_id = ubx_key_id_t {*reinterpret_cast<u4_t *>(&payload_[idx])};
+      u4_t key_id = *reinterpret_cast<u4_t *>(&payload_[idx]);
+      auto ubx_key_id = ubx_key_id_t {key_id};
       idx += sizeof(u4_t);
 
       // extract packed value and increment payload ptr index by its storage size
@@ -194,8 +195,8 @@ struct transaction_t
     u1_t all;
     struct
     {
-      u1_t action : 2;                   // refer UBX Protocol 0=transactionless, 1 = restart, 2 = ongoing,
-                                         // 3 = apply and end a set transaction
+      u1_t action : 2;  // refer UBX Protocol 0=transactionless, 1 = restart, 2 = ongoing,
+                        // 3 = apply and end a set transaction
     } bits;
   };
 };

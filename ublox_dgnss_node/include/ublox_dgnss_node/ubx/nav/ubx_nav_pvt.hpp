@@ -31,10 +31,10 @@ struct validity_flags_t
     x1_t all;
     struct
     {
-      l_t validDate : 1;                   // 1 = valid UTC date
-      l_t validTime : 1;                   // 1 = valid UTC time of day
-      l_t fullyResolved : 1;                   // 1 = UTC Time of day has been fully resolved
-                                               // (no seconds uncertainty)
+      l_t validDate : 1;                  // 1 = valid UTC date
+      l_t validTime : 1;                  // 1 = valid UTC time of day
+      l_t fullyResolved : 1;              // 1 = UTC Time of day has been fully resolved
+                                          // (no seconds uncertainty)
       l_t validMag : 1;                   // 1 = valid magnetic declination
     } bits;
   };
@@ -59,12 +59,12 @@ struct gnss_fix_status_flags_t
     x1_t all;
     struct
     {
-      l_t gnssFixOK : 1;                   // 1 = valid fix (ie within DOP & accruacy masks)
+      l_t gnssFixOK : 1;                  // 1 = valid fix (ie within DOP & accruacy masks)
       l_t diffSoln : 1;                   // 1 = differential corrections were applied
-      psm_state_pvt_t psmState : 3;                   // power save mode state
-      l_t headVehValid : 1;                   // 1 = heading of vehicle is valid,
-                                              // only set if the receiver is in sensor fusion mode
-      pvt_carrier_solution_status_t carrSoln : 2;                   // carrier phase range solution status
+      psm_state_pvt_t psmState : 3;       // power save mode state
+      l_t headVehValid : 1;               // 1 = heading of vehicle is valid,
+                                          // only set if the receiver is in sensor fusion mode
+      pvt_carrier_solution_status_t carrSoln : 2;  // carrier phase range solution status
     } bits;
   };
 };
@@ -75,10 +75,10 @@ struct additional_flags_1_t
     x1_t all;
     struct
     {
-      l_t confirmedAvailable : 1;                   // 1 = information about UTC date and time of day
-                                                    //     validity confirmation is available
-      l_t confirmedDate : 1;                   // 1 = UTC Date validity could be confirmed
-      l_t confirmedTime : 1;                   // 1 = UTC Time of Day validity could be confirmed
+      l_t confirmedAvailable : 1;          // 1 = information about UTC date and time of day
+                                           //     validity confirmation is available
+      l_t confirmedDate : 1;               // 1 = UTC Date validity could be confirmed
+      l_t confirmedTime : 1;               // 1 = UTC Time of Day validity could be confirmed
     } bits;
   };
 };
