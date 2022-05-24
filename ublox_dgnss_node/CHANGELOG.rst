@@ -2,6 +2,13 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.5 (2022-05-24)
+------------------
+* uncrustify changes
+* reverted uncrustify to ros ament default
+* fixed title underline
+* Contributors: Nick Hortovanyi
+
 0.3.4 (2022-05-24)
 ------------------
 * uncrustify

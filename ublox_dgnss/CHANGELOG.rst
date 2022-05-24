@@ -2,6 +2,11 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.5 (2022-05-24)
+------------------
+* fixed title underline
+* Contributors: Nick Hortovanyi
+
 0.3.4 (2022-05-24)
 ------------------
 
