@@ -77,7 +77,7 @@ public:
   std::string to_string()
   {
     std::ostringstream oss;
-    oss << "version: " << version;
+    oss << "version: " << +version;
     oss << " crcFailed: " << +flags.bits.crcFailed;
     oss << " msgUsed: " << +flags.bits.msgUsed;
     oss << " subType: " << +subType;
