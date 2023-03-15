@@ -31,6 +31,7 @@
 #include "ublox_dgnss_node/ubx/ubx_inf.hpp"
 #include "ublox_dgnss_node/ubx/ubx_ack.hpp"
 #include "ublox_dgnss_node/ubx/ubx_nav.hpp"
+#include "ublox_dgnss_node/ubx/ubx_rxm.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
@@ -46,6 +47,7 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_time_utc.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_rtcm.hpp"
 #include "ublox_ubx_interfaces/srv/hot_start.hpp"
 #include "ublox_ubx_interfaces/srv/warm_start.hpp"
 #include "ublox_ubx_interfaces/srv/cold_start.hpp"
@@ -166,6 +168,7 @@ public:
       "ubx_nav_vel_ecef", qos);
     ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(
       "ubx_nav_vel_ned", qos);
+    ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>("ubx_rxm_rtcm", qos);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
@@ -229,6 +232,7 @@ public:
     ubx_mon_ = std::make_shared<ubx::mon::UbxMon>(usbc_);
     ubx_inf_ = std::make_shared<ubx::inf::UbxInf>(usbc_);
     ubx_nav_ = std::make_shared<ubx::nav::UbxNav>(usbc_);
+    ubx_rxm_ = std::make_shared<ubx::rxm::UbxRxm>(usbc_);
 
     async_initialised_ = false;
 
@@ -284,6 +288,7 @@ private:
   std::shared_ptr<ubx::mon::UbxMon> ubx_mon_;
   std::shared_ptr<ubx::inf::UbxInf> ubx_inf_;
   std::shared_ptr<ubx::nav::UbxNav> ubx_nav_;
+  std::shared_ptr<ubx::rxm::UbxRxm> ubx_rxm_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
 // specific to libusb to to process events asynchronously
@@ -317,6 +322,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>::SharedPtr ubx_nav_time_utc_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -937,6 +943,9 @@ private:
       case ubx::UBX_NAV:
         ubx_nav_in_frame(f);
         break;
+      case ubx::UBX_RXM:
+        ubx_rxm_in_frame(f);
+        break;
       default:
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x unknown ... doing nothing", f->ubx_frame->msg_class);
@@ -1302,6 +1311,22 @@ private:
         break;
       case ubx::UBX_NAV_VELNED:
         ubx_nav_vel_ned_pub(f, ubx_nav_->velned()->payload());
+        break;
+      default:
+        RCLCPP_WARN(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_in_frame(ubx_queue_frame_t * f)
+  {
+    ubx_rxm_->rtcm()->frame(f->ubx_frame);
+    switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_RXM_RTCM:
+        ubx_rxm_rtcm_pub(f, ubx_rxm_->rtcm()->payload());
         break;
       default:
         RCLCPP_WARN(
@@ -1749,6 +1774,27 @@ private:
     ubx_nav_clock_pub_->publish(*msg);
   }
 
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_rtcm_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::rxm::rtcm::RxmRTCMPayload> payload)
+  {
+    RCLCPP_INFO(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmRTCM>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->version = payload->version;
+    msg->crc_failed = payload->flags.bits.crcFailed;
+    msg->msg_used = payload->flags.bits.msgUsed;
+    msg->sub_type = payload->subType;
+    msg->ref_station = payload->refStation;
+    msg->msg_type = payload->msgType;
+
+    ubx_rxm_rtcm_pub_->publish(*msg);
+  }
 
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_init_all_cfg_items_async()

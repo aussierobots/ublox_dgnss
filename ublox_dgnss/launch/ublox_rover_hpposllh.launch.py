@@ -10,7 +10,8 @@ def generate_launch_description():
             {'CFG_RATE_MEAS': 100},
             {'CFG_RATE_NAV': 1},
             {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
-            {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5}]
+            {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
+            {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1}]
 
   container1 = ComposableNodeContainer(
     name='ublox_dgnss_container',

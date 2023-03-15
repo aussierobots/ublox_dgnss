@@ -4,7 +4,6 @@
 # input message, irrespective of whether the RTCM message is supported or not by the receiver.
 std_msgs/Header header # Header timestamp should be acquisition time
 
-uint32 itow             #  ms - GPS Time of week of the navigation epoch
 uint8 version           # message version (0x02 for this version)
 
 bool crc_failed         # 0 When RTCM received & CRC Ok, 1 when failed
