@@ -32,11 +32,13 @@ endif()
 
 rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/CarrSoln.msg"
+  "msg/ESFMeasDataItem.msg"
   "msg/GpsFix.msg"
   "msg/MapMatching.msg"
   "msg/PSMPVT.msg"
   "msg/PSMStatus.msg"
   "msg/SpoofDet.msg"
+  "msg/UBXESFMeas.msg"
   "msg/UBXNavEOE.msg"
   "msg/UBXNavClock.msg"
   "msg/UBXNavCov.msg"
