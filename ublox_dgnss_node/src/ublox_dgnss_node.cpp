@@ -222,7 +222,7 @@ public:
 
     ubx_queue_.clear();
     ubx_timer_ = create_wall_timer(
-      10ns, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
+      10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
       callback_group_ubx_timer_);
 
     ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
@@ -255,7 +255,7 @@ public:
         RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
       };
     handle_usb_events_timer_ = create_wall_timer(
-      10ns, handle_usb_events_callback,
+      10ms, handle_usb_events_callback,
       callback_group_usb_events_timer_);
 
     if (!async_initialised_) {
