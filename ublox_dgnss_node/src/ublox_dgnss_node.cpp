@@ -978,6 +978,9 @@ private:
       case ubx::UBX_NAV:
         ubx_nav_out_frame(f);
         break;
+      case ubx::UBX_RXM:
+        ubx_rxm_out_frame(f);
+        break;
       default:
         RCLCPP_WARN(
           get_logger(), "unkown class: 0x%02x unknown ... doing nothing", f->ubx_frame->msg_class);
@@ -1124,6 +1127,24 @@ private:
       case ubx::UBX_NAV_VELNED:
         RCLCPP_INFO(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav velned poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      default:
+        RCLCPP_WARN(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_out_frame(ubx_queue_frame_t * f)
+  {
+    switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_RXM_RTCM:
+        RCLCPP_INFO(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
