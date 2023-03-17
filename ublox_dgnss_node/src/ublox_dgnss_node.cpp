@@ -32,6 +32,7 @@
 #include "ublox_dgnss_node/ubx/ubx_ack.hpp"
 #include "ublox_dgnss_node/ubx/ubx_nav.hpp"
 #include "ublox_dgnss_node/ubx/ubx_rxm.hpp"
+#include "ublox_dgnss_node/ubx/ubx_esf.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
@@ -48,6 +49,7 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rtcm.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
 #include "ublox_ubx_interfaces/srv/hot_start.hpp"
 #include "ublox_ubx_interfaces/srv/warm_start.hpp"
 #include "ublox_ubx_interfaces/srv/cold_start.hpp"
@@ -168,7 +170,10 @@ public:
       "ubx_nav_vel_ecef", qos);
     ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(
       "ubx_nav_vel_ned", qos);
-    ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>("ubx_rxm_rtcm", qos);
+    ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(
+      "ubx_rxm_rtcm", qos);
+    ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
+      "ubx_esf_status", qos);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
@@ -233,6 +238,7 @@ public:
     ubx_inf_ = std::make_shared<ubx::inf::UbxInf>(usbc_);
     ubx_nav_ = std::make_shared<ubx::nav::UbxNav>(usbc_);
     ubx_rxm_ = std::make_shared<ubx::rxm::UbxRxm>(usbc_);
+    ubx_esf_ = std::make_shared<ubx::esf::UbxEsf>(usbc_);
 
     async_initialised_ = false;
 
@@ -289,6 +295,7 @@ private:
   std::shared_ptr<ubx::inf::UbxInf> ubx_inf_;
   std::shared_ptr<ubx::nav::UbxNav> ubx_nav_;
   std::shared_ptr<ubx::rxm::UbxRxm> ubx_rxm_;
+  std::shared_ptr<ubx::esf::UbxEsf> ubx_esf_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
 // specific to libusb to to process events asynchronously
@@ -323,6 +330,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -706,7 +714,7 @@ public:
     std::shared_ptr<ublox_ubx_interfaces::srv::ResetODO::Response> response)
   {
     RCLCPP_WARN(get_logger(), "reset_odo service");
-    RCLCPP_DEBUG(get_logger(), "ubx_nav_redoodo poll_async ...");
+    RCLCPP_DEBUG(get_logger(), "ubx_nav_resetodo poll_async ...");
     ubx_nav_->resetodo()->poll_async();
     (void)request;
     (void)response;
@@ -946,6 +954,9 @@ private:
       case ubx::UBX_RXM:
         ubx_rxm_in_frame(f);
         break;
+      case ubx::UBX_ESF:
+        ubx_esf_in_frame(f);
+        break;
       default:
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x unknown ... doing nothing", f->ubx_frame->msg_class);
@@ -980,6 +991,9 @@ private:
         break;
       case ubx::UBX_RXM:
         ubx_rxm_out_frame(f);
+        break;
+      case ubx::UBX_ESF:
+        ubx_esf_out_frame(f);
         break;
       default:
         RCLCPP_WARN(
@@ -1145,6 +1159,24 @@ private:
       case ubx::UBX_RXM_RTCM:
         RCLCPP_INFO(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      default:
+        RCLCPP_WARN(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_out_frame(ubx_queue_frame_t * f)
+  {
+    switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_ESF_STATUS:
+        RCLCPP_INFO(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x esf status poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
@@ -1344,9 +1376,9 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_rxm_in_frame(ubx_queue_frame_t * f)
   {
-    ubx_rxm_->rtcm()->frame(f->ubx_frame);
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_RXM_RTCM:
+        ubx_rxm_->rtcm()->frame(f->ubx_frame);
         ubx_rxm_rtcm_pub(f, ubx_rxm_->rtcm()->payload());
         break;
       default:
@@ -1357,6 +1389,21 @@ private:
     }
   }
 
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_in_frame(ubx_queue_frame_t * f)
+  {
+    switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_ESF_STATUS:
+        ubx_esf_->status()->frame(f->ubx_frame);
+        ubx_esf_status_pub(f, ubx_esf_->status()->payload());
+        break;
+      default:
+        RCLCPP_WARN(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+    }
+  }
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_nav_vel_ecef_pub(
     ubx_queue_frame_t * f,
@@ -1815,6 +1862,47 @@ private:
     msg->msg_type = payload->msgType;
 
     ubx_rxm_rtcm_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_status_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::esf::status::ESFStatusPayload> payload)
+  {
+    RCLCPP_INFO(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x esf status polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXEsfStatus>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->itow = payload->iTOW;
+    msg->version = payload->version;
+    msg->wt_init_status = payload->init_status1.bits.wt_init_status;
+    msg->mnt_alg_status = payload->init_status1.bits.mnt_alg_status;
+    msg->ins_init_status = payload->init_status1.bits.ins_init_status;
+    msg->imu_init_status = payload->init_status2.bits.imu_init_status;
+    msg->fusion_mode = payload->fusion_mode;
+    msg->num_sens = payload->num_sens;
+
+    for (int i = 0; i < payload->num_sens; i++) {
+      auto s_msg = std::make_unique<ublox_ubx_msgs::msg::ESFSensorStatus>();
+      auto sensor = payload->sensor_statuses[i];
+      s_msg->sensor_data_type = sensor.bits.sens_status1.bits.type;
+      s_msg->used = sensor.bits.sens_status1.bits.used;
+      s_msg->ready = sensor.bits.sens_status1.bits.ready;
+      s_msg->calib_status = sensor.bits.sens_status2.bits.calib_status;
+      s_msg->time_status = sensor.bits.sens_status2.bits.time_status;
+      s_msg->freq = sensor.bits.freq;
+      s_msg->fault_bad_meas = sensor.bits.faults.bits.bad_meas;
+      s_msg->fault_bad_ttag = sensor.bits.faults.bits.bad_ttag;
+      s_msg->fault_missing_meas = sensor.bits.faults.bits.missing_meas;
+      s_msg->fault_noisy_meas = sensor.bits.faults.bits.noisy_meas;
+
+      msg->sensor_statuses.push_back(*s_msg);
+    }
+
+    ubx_esf_status_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

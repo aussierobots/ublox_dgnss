@@ -12,7 +12,8 @@ uint8 wt_init_status    # Wheel tick factor initialization status (0: off, 1:ini
 
 uint8 MBT_ALG_STATUS_OFF = 0
 uint8 MBT_ALG_STATUS_INITIALIZING = 1
-uint8 MBT_ALG_STATUS_INITIALIZED = 2
+uint8 MBT_ALG_STATUS_INITIALIZED0 = 2
+uint8 MBT_ALG_STATUS_INITIALIZED1 = 3
 uint8 mnt_alg_status    # Automatic IMU-mount alignment status (0: off, 1:initializing, 2: initialized, 3: initialized).
 
 uint8 INS_INIT_STATUS_OFF = 0
