@@ -248,8 +248,8 @@ const ubx_cfg_item_t CFG_SFODO_FACTOR=
 {"CFG_SFODO_FACTOR", 0x40070007, U4, 1e-6, NA};
 const ubx_cfg_item_t CFG_SFODO_QUANT_ERROR =
 {"CFG_SFODO_QUANT_ERROR", 0x40070008, U4, 1e-6, M};
-const ubx_cfg_item_t CFG_SFODO_QUANT_LATENCY =
-{"CFG_SFODO_QUANT_LATENCY", 0x40070009, U2, 0, MS};
+const ubx_cfg_item_t CFG_SFODO_LATENCY =
+{"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
 
 // cfg msgout - msg output rate configurations
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
