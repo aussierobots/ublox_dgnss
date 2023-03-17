@@ -28,8 +28,8 @@
 #include <vector>
 #include <memory>
 
-#define F9P_VENDOR_ID      0x1546   // U-Blox AG
-#define F9P_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
+#define F9_VENDOR_ID      0x1546   // U-Blox AG
+#define F9_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
 
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
