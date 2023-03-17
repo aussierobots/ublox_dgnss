@@ -191,6 +191,9 @@ enum CFG_NAVSPG_DYNMODEL_ENUM
   DYN_MODEL_AIR2 = 7,         // Airborne <2g acceleration
   DYN_MODEL_AIR4 = 8,         // Airborne <4g acceleration
   DYN_MODEL_WRIST = 9,        // Wrist-worn watch (not available in all products)
+  DYN_MODEL_BIKE = 10,        // Motorbike (not available in all products)
+  DYN_MODEL_MOWER = 11,       // Robotic lawn mower (not available in all products)
+  DYN_MODEL_ESCOOTER = 12,    // E-scooter (not available in all products)
 };
 
 // cfg odo
@@ -225,6 +228,13 @@ enum CFG_RATE_TIMEREF_ENUM
   ALIGN_BDS = 3,         // Align measurements to BeiDou time
   ALIGN_GAL = 4,         // Align measurements to Galileo time
 };
+
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_YAW
+  = {"CFG_SFIMU_IMU_MNTALG_YAW", 0x4006002d, U4, .001, DEG};
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_PITCH
+  = {"CFG_SFIMU_IMU_MNTALG_PITCH", 0x3006002e, I2, .001, DEG};
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_ROLL
+  = {"CFG_SFIMU_IMU_MNTALG_ROLL", 0x3006002f, I2, .001, DEG};
 
 // cfg msgout - msg output rate configurations
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
@@ -297,6 +307,10 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_RATE_MEAS.ubx_key_id, CFG_RATE_MEAS},
   {CFG_RATE_NAV.ubx_key_id, CFG_RATE_NAV},
   {CFG_RATE_TIMEREF.ubx_key_id, CFG_RATE_TIMEREF},
+
+  {CFG_SFIMU_IMU_MNTALG_YAW.ubx_key_id, CFG_SFIMU_IMU_MNTALG_YAW},
+  {CFG_SFIMU_IMU_MNTALG_PITCH.ubx_key_id, CFG_SFIMU_IMU_MNTALG_PITCH},
+  {CFG_SFIMU_IMU_MNTALG_ROLL.ubx_key_id, CFG_SFIMU_IMU_MNTALG_ROLL},
 
   {CFG_MSGOUT_UBX_NAV_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_STATUS_USB},
   {CFG_MSGOUT_UBX_NAV_CLOCK_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_CLOCK_USB},
