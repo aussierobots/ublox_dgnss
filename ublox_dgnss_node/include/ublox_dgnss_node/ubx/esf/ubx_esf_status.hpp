@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__UBX__ESF__UBX_ESF_RTCM_HPP_
-#define UBLOX_DGNSS_NODE__UBX__ESF__UBX_ESF_RTCM_HPP_
+#ifndef UBLOX_DGNSS_NODE__UBX__ESF__UBX_ESF_STATUS_HPP_
+#define UBLOX_DGNSS_NODE__UBX__ESF__UBX_ESF_STATUS_HPP_
 
 #include <unistd.h>
 #include <memory>
@@ -49,9 +49,9 @@ struct init_status1_t
     x1_t all;
     struct
     {
-      wt_init_status_t wt_init_status : 2;
-      mnt_alg_status_t mnt_alg_status : 3;
-      ins_init_status_t ins_init_status : 2;
+      wt_init_status_t wtInitStatus : 2;
+      mnt_alg_status_t mntAlgStatus : 3;
+      ins_init_status_t insInitStatus : 2;
     } bits;
   };
 };
@@ -64,7 +64,7 @@ struct init_status2_t
     x1_t all;
     struct
     {
-      imu_init_status_t imu_init_status : 2;
+      imu_init_status_t imuInitStatus : 2;
     } bits;
   };
 };
@@ -94,8 +94,8 @@ struct sens_status2_t
     x1_t all;
     struct
     {
-      calib_status_t calib_status : 2;
-      time_status_t time_status : 2;
+      calib_status_t calibStatus : 2;
+      time_status_t timeStatus : 2;
     } bits;
   };
 };
@@ -106,10 +106,10 @@ struct faults_t
     x1_t all;
     struct
     {
-      bool bad_meas : 1;
-      bool bad_ttag : 1;
-      bool missing_meas : 1;
-      bool noisy_meas : 1;
+      bool badMeas : 1;
+      bool badTtag : 1;
+      bool missingMeas : 1;
+      bool noisyMeas : 1;
     } bits;
   };
 
@@ -121,8 +121,8 @@ struct sensor_t
     x4_t all;
     struct
     {
-      sens_status1_t sens_status1;
-      sens_status2_t sens_status2 ;
+      sens_status1_t sensStatus1;
+      sens_status2_t sensStatus2 ;
       u1_t freq;
       faults_t faults;
     } bits;
@@ -137,12 +137,12 @@ public:
 
   u4_t iTOW;        // ms - GPS Time of week of the navigation epoch.
   u1_t version;     // message version (0x02 for this version)
-  init_status1_t init_status1;
-  init_status2_t init_status2;
-  fusion_mode_t fusion_mode;
-  u1_t num_sens;    // number of sensors
+  init_status1_t initStatus1;
+  init_status2_t initStatus2;
+  fusion_mode_t fusionMode;
+  u1_t numSens;    // number of sensors
 
- std::vector<sensor_t> sensor_statuses;
+ std::vector<sensor_t> sensorStatuses;
 
 public:
   ESFStatusPayload()
@@ -158,14 +158,14 @@ public:
     memcpy(payload_.data(), payload_polled, size);
     iTOW = buf_offset<u4_t>(&payload_, 0);
     version = buf_offset<u1_t>(&payload_, 4);
-    init_status1 = buf_offset<init_status1_t>(&payload_, 5);
-    init_status2 = buf_offset<init_status2_t>(&payload_, 6);
-    fusion_mode = buf_offset<fusion_mode_t>(&payload_, 12);
-    num_sens = buf_offset<u1_t>(&payload_, 15);
+    initStatus1 = buf_offset<init_status1_t>(&payload_, 5);
+    initStatus2 = buf_offset<init_status2_t>(&payload_, 6);
+    fusionMode = buf_offset<fusion_mode_t>(&payload_, 12);
+    numSens = buf_offset<u1_t>(&payload_, 15);
 
     // extract num_sens sensor status
-    for (int i = 0; i < num_sens; i++) {
-      sensor_statuses.push_back(buf_offset<sensor_t>(&payload_, 16+(i*4)));
+    for (int i = 0; i < numSens; i++) {
+      sensorStatuses.push_back(buf_offset<sensor_t>(&payload_, 16+(i*4)));
     };
   }
   std::tuple<u1_t *, size_t> make_poll_payload()
@@ -178,27 +178,27 @@ public:
     std::ostringstream oss;
     oss << "iTOW: " << iTOW;
     oss << " version: " << +version;
-    oss << " wt_init: " << +init_status1.bits.wt_init_status;
-    oss << " mnt_alg: " << +init_status1.bits.mnt_alg_status;
-    oss << " ins_init: " << +init_status1.bits.ins_init_status;
-    oss << " imu_init: " << +init_status2.bits.imu_init_status;
-    oss << " fusion_mode: " << +fusion_mode;
-    oss << " num_sens: " << +num_sens;
+    oss << " wtInit: " << +initStatus1.bits.wtInitStatus;
+    oss << " mntAlg: " << +initStatus1.bits.mntAlgStatus;
+    oss << " insInit: " << +initStatus1.bits.insInitStatus;
+    oss << " imuInit: " << +initStatus2.bits.imuInitStatus;
+    oss << " fusionMode: " << +fusionMode;
+    oss << " numSens: " << +numSens;
     oss << " [";
 
-    for (int i = 0; i < num_sens; i++) {
+    for (int i = 0; i < numSens; i++) {
       if (i > 0) oss << " |";
-      sensor_t& sensor = sensor_statuses[i];
-      oss << " type: " << +sensor.bits.sens_status1.bits.type;
-      oss << " used: " << +sensor.bits.sens_status1.bits.used;
-      oss << " ready: " << +sensor.bits.sens_status1.bits.ready;
-      oss << " calib: " << +sensor.bits.sens_status2.bits.calib_status;
-      oss << " time: " << +sensor.bits.sens_status2.bits.time_status;
+      sensor_t& sensor = sensorStatuses[i];
+      oss << " type: " << +sensor.bits.sensStatus1.bits.type;
+      oss << " used: " << +sensor.bits.sensStatus1.bits.used;
+      oss << " ready: " << +sensor.bits.sensStatus1.bits.ready;
+      oss << " calib: " << +sensor.bits.sensStatus2.bits.calibStatus;
+      oss << " time: " << +sensor.bits.sensStatus2.bits.timeStatus;
       oss << " Hz: " << +sensor.bits.freq;
-      oss << " bad_meas: " << +sensor.bits.faults.bits.bad_meas;
-      oss << " bad_ttag: " << +sensor.bits.faults.bits.bad_meas;
-      oss << " missing: " << +sensor.bits.faults.bits.missing_meas;
-      oss << " noisy: " << +sensor.bits.faults.bits.noisy_meas;
+      oss << " badMeas: " << +sensor.bits.faults.bits.badMeas;
+      oss << " badTtag: " << +sensor.bits.faults.bits.badMeas;
+      oss << " missing: " << +sensor.bits.faults.bits.missingMeas;
+      oss << " noisy: " << +sensor.bits.faults.bits.noisyMeas;
     };
 
     oss << " ]";

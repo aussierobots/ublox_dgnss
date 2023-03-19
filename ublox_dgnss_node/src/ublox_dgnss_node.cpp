@@ -1878,26 +1878,26 @@ private:
     msg->header.stamp = f->ts;
     msg->itow = payload->iTOW;
     msg->version = payload->version;
-    msg->wt_init_status = payload->init_status1.bits.wt_init_status;
-    msg->mnt_alg_status = payload->init_status1.bits.mnt_alg_status;
-    msg->ins_init_status = payload->init_status1.bits.ins_init_status;
-    msg->imu_init_status = payload->init_status2.bits.imu_init_status;
-    msg->fusion_mode = payload->fusion_mode;
-    msg->num_sens = payload->num_sens;
+    msg->wt_init_status = payload->initStatus1.bits.wtInitStatus;
+    msg->mnt_alg_status = payload->initStatus1.bits.mntAlgStatus;
+    msg->ins_init_status = payload->initStatus1.bits.insInitStatus;
+    msg->imu_init_status = payload->initStatus2.bits.imuInitStatus;
+    msg->fusion_mode = payload->fusionMode;
+    msg->num_sens = payload->numSens;
 
-    for (int i = 0; i < payload->num_sens; i++) {
+    for (int i = 0; i < payload->numSens; i++) {
       auto s_msg = std::make_unique<ublox_ubx_msgs::msg::ESFSensorStatus>();
-      auto sensor = payload->sensor_statuses[i];
-      s_msg->sensor_data_type = sensor.bits.sens_status1.bits.type;
-      s_msg->used = sensor.bits.sens_status1.bits.used;
-      s_msg->ready = sensor.bits.sens_status1.bits.ready;
-      s_msg->calib_status = sensor.bits.sens_status2.bits.calib_status;
-      s_msg->time_status = sensor.bits.sens_status2.bits.time_status;
+      auto sensor = payload->sensorStatuses[i];
+      s_msg->sensor_data_type = sensor.bits.sensStatus1.bits.type;
+      s_msg->used = sensor.bits.sensStatus1.bits.used;
+      s_msg->ready = sensor.bits.sensStatus1.bits.ready;
+      s_msg->calib_status = sensor.bits.sensStatus2.bits.calibStatus;
+      s_msg->time_status = sensor.bits.sensStatus2.bits.timeStatus;
       s_msg->freq = sensor.bits.freq;
-      s_msg->fault_bad_meas = sensor.bits.faults.bits.bad_meas;
-      s_msg->fault_bad_ttag = sensor.bits.faults.bits.bad_ttag;
-      s_msg->fault_missing_meas = sensor.bits.faults.bits.missing_meas;
-      s_msg->fault_noisy_meas = sensor.bits.faults.bits.noisy_meas;
+      s_msg->fault_bad_meas = sensor.bits.faults.bits.badMeas;
+      s_msg->fault_bad_ttag = sensor.bits.faults.bits.badTtag;
+      s_msg->fault_missing_meas = sensor.bits.faults.bits.missingMeas;
+      s_msg->fault_noisy_meas = sensor.bits.faults.bits.noisyMeas;
 
       msg->sensor_statuses.push_back(*s_msg);
     }
