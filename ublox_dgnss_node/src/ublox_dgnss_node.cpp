@@ -178,6 +178,8 @@ public:
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "ubx_esf_meas", qos);
 
+    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
+      "in/ubx_esf_meas", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
     // ros2 parameter call backs
     parameters_callback_handle_ =
       this->add_on_set_parameters_callback(
@@ -335,6 +337,8 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
+
+  rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -722,6 +726,18 @@ public:
     ubx_nav_->resetodo()->poll_async();
     (void)request;
     (void)response;
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas &msg) const
+  {
+
+    ubx_esf_->meas_full()->payload()->load_from_msg(msg);
+
+    RCLCPP_INFO( get_logger(), "ubx_esf_meas_callback sending payload - %s",
+      ubx_esf_->meas_full()->payload()->to_string().c_str());
+
+    ubx_esf_->meas_full()->poll_async();
   }
 
 // handle host in from ublox gps to host callback
@@ -1939,7 +1955,8 @@ private:
     msg->num_meas = payload->flags.bits.numMeas;
     msg->id = payload->id;
 
-    for (int i = 0; i++; i < msg->num_meas) {
+    uint numMeas = static_cast<uint>(payload->flags.bits.numMeas);
+    for (uint i = 0; i < numMeas; i++) {
       auto data = payload->datum[i];
       auto data_msg = std::make_unique<ublox_ubx_msgs::msg::ESFMeasDataItem>();
       data_msg->data_field = data.bits.dataField;
@@ -1948,7 +1965,7 @@ private:
     }
 
     if (msg->calib_ttag_valid) {
-      for (int i = 0; i++; i < msg->num_meas) {
+      for (uint i = 0; i < numMeas; i++) {
         msg->calib_ttag.push_back(payload->calibTtags[i]);
       }
     }

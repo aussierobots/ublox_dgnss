@@ -21,6 +21,7 @@
 #include <string>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 
 namespace ubx::esf::meas
 {
@@ -81,9 +82,9 @@ public:
     id = buf_offset<u2_t>(&payload_, 6);
 
     // data fields numMeas times
-    auto numMeas = flags.bits.numMeas;
+    uint numMeas = static_cast<uint>(flags.bits.numMeas);
     datum.clear();
-    for (int i = 0; i < numMeas; i++) {
+    for (uint i = 0; i < numMeas; i++) {
       datum.push_back(buf_offset<data_t>(&payload_, 8+(i*4)));
     };
 
@@ -92,18 +93,19 @@ public:
     // make sure the calibTTags are there
     uint calibTtags_start = 8+(numMeas*4);
     if (flags.bits.calibTtagValid && calibTtags_start+(numMeas*4) <= size) {
-      for (int i = 0; i < numMeas; i++) {
+      for (uint i = 0; i < numMeas; i++) {
         calibTtags.push_back(buf_offset<u4_t>(&payload_, calibTtags_start=(i*4)));
       };
     }
   }
 
-
+  // this payload is used to poll for output from device
   std::tuple<u1_t *, size_t> make_poll_payload()
   {
     payload_.clear();
     return std::make_tuple(payload_.data(), payload_.size());
   }
+
   std::string to_string()
   {
     std::ostringstream oss;
@@ -114,9 +116,9 @@ public:
     oss << " numMeas: " << +flags.bits.numMeas;
     oss << " data: [";
 
-    auto numMeas = flags.bits.numMeas;
+    uint numMeas = static_cast<uint>(flags.bits.numMeas);
 
-    for (int i = 0; i < numMeas; i++) {
+    for (uint i = 0; i < numMeas; i++) {
       if (i > 0) oss << " |";
       data_t& data = datum[i];
       oss << " field: " << +data.bits.dataField;
@@ -126,7 +128,108 @@ public:
 
     if (flags.bits.calibTtagValid) {
       oss << " calibTtag [";
-      for (int i = 0; i < numMeas; i++) {
+      for (uint i = 0; i < numMeas; i++) {
+        if (i > 0) oss << ", ";
+        oss << +calibTtags[i];
+      };
+
+      oss << "]";
+    }
+
+    return oss.str();
+  }
+};
+
+// this is the full payload - ubx_esf_meas has input & output
+// it is an exception to UBX where other cfg items are set via val set
+// it uses the local values to create the full payload
+class ESFMeasFullPayload : UBXPayload
+{
+public:
+  static const msg_class_t MSG_CLASS = UBX_ESF;
+  static const msg_id_t MSG_ID = UBX_ESF_MEAS;
+
+  u4_t timeTag;        // ms - GPS Time of week of the navigation epoch.
+  flags_t flags;
+  u2_t id;
+  std::vector<data_t> datum;
+  std::vector<u4_t> calibTtags;    // number of sensors
+
+public:
+  ESFMeasFullPayload()
+  : UBXPayload(MSG_CLASS, MSG_ID)
+  {
+  }
+
+  void load_from_msg(const ublox_ubx_msgs::msg::UBXEsfMeas &msg)
+  {
+    timeTag = msg.time_tag;
+    flags.bits.timeMarkSent = msg.time_mark_sent;
+    flags.bits.timeMarkEdge = msg.time_mark_edge;
+    flags.bits.calibTtagValid = msg.calib_ttag_valid;
+    flags.bits.numMeas = msg.num_meas;
+    id = msg.id;
+
+    datum.clear();
+    calibTtags.clear();
+
+    data_t data;
+    for (uint i = 0; i < msg.num_meas; i++) {
+      data.bits.dataField = msg.data[i].data_field;
+      data.bits.dataType = msg.data[i].data_type;
+      datum.push_back(data);
+
+      if (msg.calib_ttag_valid) {
+        calibTtags.push_back(msg.calib_ttag[i]);
+      }
+    }
+  }
+ // this payload is used as input to the device
+  std::tuple<u1_t *, size_t> make_poll_payload()
+  {
+    payload_.clear();
+
+    buf_append_u4(&payload_, timeTag);
+    buf_append_x2(&payload_, flags.all);
+    buf_append_u2(&payload_, id);
+
+    auto numMeas = flags.bits.numMeas;
+    for (uint i = 0; i < numMeas; i++) {
+      buf_append_x4(&payload_, datum[i].all);
+    }
+
+    if (flags.bits.calibTtagValid) {
+      for (uint i = 0; i < numMeas; i++) {
+        buf_append_u4(&payload_, calibTtags[i]);
+      }
+    }
+
+    return std::make_tuple(payload_.data(), payload_.size());
+  }
+
+  std::string to_string()
+  {
+    std::ostringstream oss;
+    oss << "timeTag: " << +timeTag;
+    oss << " timeMarkSent: " << +flags.bits.timeMarkSent;
+    oss << " timeMarkEdge: " << +flags.bits.timeMarkEdge;
+    oss << " calibTragValid: " << +flags.bits.calibTtagValid;
+    oss << " numMeas: " << +flags.bits.numMeas;
+    oss << " data: [";
+
+    uint numMeas = static_cast<uint>(flags.bits.numMeas);
+
+    for (uint i = 0; i < numMeas; i++) {
+      if (i > 0) oss << " |";
+      data_t& data = datum[i];
+      oss << " field: " << +data.bits.dataField;
+      oss << " type: " << +data.bits.dataType;
+    };
+    oss << " ]";
+
+    if (flags.bits.calibTtagValid) {
+      oss << " calibTtag [";
+      for (uint i = 0; i < numMeas; i++) {
         if (i > 0) oss << ", ";
         oss << +calibTtags[i];
       };
