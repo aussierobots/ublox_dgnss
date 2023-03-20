@@ -142,7 +142,7 @@ public:
   fusion_mode_t fusionMode;
   u1_t numSens;    // number of sensors
 
- std::vector<sensor_t> sensorStatuses;
+  std::vector<sensor_t> sensorStatuses;
 
 public:
   ESFStatusPayload()
@@ -164,6 +164,7 @@ public:
     numSens = buf_offset<u1_t>(&payload_, 15);
 
     // extract num_sens sensor status
+    sensorStatuses.clear();
     for (int i = 0; i < numSens; i++) {
       sensorStatuses.push_back(buf_offset<sensor_t>(&payload_, 16+(i*4)));
     };

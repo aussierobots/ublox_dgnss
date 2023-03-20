@@ -50,6 +50,7 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rtcm.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 #include "ublox_ubx_interfaces/srv/hot_start.hpp"
 #include "ublox_ubx_interfaces/srv/warm_start.hpp"
 #include "ublox_ubx_interfaces/srv/cold_start.hpp"
@@ -174,6 +175,8 @@ public:
       "ubx_rxm_rtcm", qos);
     ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
       "ubx_esf_status", qos);
+    ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
+      "ubx_esf_meas", qos);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
@@ -331,6 +334,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -1180,6 +1184,12 @@ private:
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
+      case ubx::UBX_ESF_MEAS:
+        RCLCPP_INFO(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x esf meas poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
       default:
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
@@ -1396,6 +1406,10 @@ private:
       case ubx::UBX_ESF_STATUS:
         ubx_esf_->status()->frame(f->ubx_frame);
         ubx_esf_status_pub(f, ubx_esf_->status()->payload());
+        break;
+      case ubx::UBX_ESF_MEAS:
+        ubx_esf_->status()->frame(f->ubx_frame);
+        ubx_esf_meas_pub(f, ubx_esf_->meas()->payload());
         break;
       default:
         RCLCPP_WARN(
@@ -1903,6 +1917,42 @@ private:
     }
 
     ubx_esf_status_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_meas_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::esf::meas::ESFMeasPayload> payload)
+  {
+    RCLCPP_INFO(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x esf status polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXEsfMeas>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    msg->time_tag = payload->timeTag;
+    msg->time_mark_sent = payload->flags.bits.timeMarkSent;
+    msg->time_mark_edge = payload->flags.bits.timeMarkEdge;
+    msg->calib_ttag_valid = payload->flags.bits.calibTtagValid;
+    msg->num_meas = payload->flags.bits.numMeas;
+    msg->id = payload->id;
+
+    for (int i = 0; i++; i < msg->num_meas) {
+      auto data = payload->datum[i];
+      auto data_msg = std::make_unique<ublox_ubx_msgs::msg::ESFMeasDataItem>();
+      data_msg->data_field = data.bits.dataField;
+      data_msg->data_type = data.bits.dataType;
+      msg->data.push_back(*data_msg);
+    }
+
+    if (msg->calib_ttag_valid) {
+      for (int i = 0; i++; i < msg->num_meas) {
+        msg->calib_ttag.push_back(payload->calibTtags[i]);
+      }
+    }
+    ubx_esf_meas_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

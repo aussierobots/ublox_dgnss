@@ -23,27 +23,35 @@
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
 #include "ublox_dgnss_node/ubx/esf/ubx_esf_status.hpp"
+#include "ublox_dgnss_node/ubx/esf/ubx_esf_meas.hpp"
 
 namespace ubx::esf
 {
 
 typedef UBXFrameComms<esf::status::ESFStatusPayload, usb::Connection> UbxESFStatusFrameComms;
+typedef UBXFrameComms<esf::meas::ESFMeasPayload, usb::Connection> UbxESFMeasFrameComms;
 
 class UbxEsf
 {
 private:
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<UbxESFStatusFrameComms> status_;
+  std::shared_ptr<UbxESFMeasFrameComms> meas_;
 
 public:
   explicit UbxEsf(std::shared_ptr<usb::Connection> usbc)
   {
     usbc_ = usbc;
     status_ = std::make_shared<UbxESFStatusFrameComms>(usbc_);
+    meas_ = std::make_shared<UbxESFMeasFrameComms>(usbc_);
   }
   std::shared_ptr<UbxESFStatusFrameComms> status()
   {
     return status_;
+  }
+  std::shared_ptr<UbxESFMeasFrameComms> meas()
+  {
+    return meas_;
   }
 };
 }  // namespace ubx::esf
