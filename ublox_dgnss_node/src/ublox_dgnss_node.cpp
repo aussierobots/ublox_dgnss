@@ -1445,7 +1445,7 @@ private:
         ubx_esf_status_pub(f, ubx_esf_->status()->payload());
         break;
       case ubx::UBX_ESF_MEAS:
-        ubx_esf_->status()->frame(f->ubx_frame);
+        ubx_esf_->meas()->frame(f->ubx_frame);
         ubx_esf_meas_pub(f, ubx_esf_->meas()->payload());
         break;
       default:
