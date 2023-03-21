@@ -33,8 +33,8 @@ struct flags_t
     x1_t all;
     struct
     {
-       l_t crcFailed : 1;
-       msg_used_t msgUsed : 2;
+      l_t crcFailed : 1;
+      msg_used_t msgUsed : 2;
     } bits;
   };
 };
@@ -56,7 +56,7 @@ public:
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
   }
-   RxmRTCMPayload(ch_t * payload_polled, u2_t size)
+  RxmRTCMPayload(ch_t * payload_polled, u2_t size)
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
     payload_.clear();

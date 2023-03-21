@@ -64,7 +64,7 @@ const msg_id_t UBX_ESF_ALG = 0x14;
 const msg_id_t UBX_ESF_INS = 0x15;
 const msg_id_t UBX_ESF_MEAS = 0x02;
 const msg_id_t UBX_ESF_RAW = 0x03;
-const msg_id_t UBX_ESF_STATUS = 0x10;  
+const msg_id_t UBX_ESF_STATUS = 0x10;
 }  // namespace ubx
 
 #endif  // UBLOX_DGNSS_NODE__UBX__UBX_MSG_HPP_

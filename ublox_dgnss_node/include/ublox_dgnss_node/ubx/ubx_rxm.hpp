@@ -46,5 +46,5 @@ public:
     return rtcm_;
   }
 };
-}  // namespace ubx::rbx
+}  // namespace ubx::rxm
 #endif  // UBLOX_DGNSS_NODE__UBX__UBX_RXM_HPP_

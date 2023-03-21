@@ -19,37 +19,38 @@
 #include <memory>
 #include <tuple>
 #include <string>
+#include <vector>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 
 namespace ubx::esf::meas
 {
-  struct flags_t
-  {
-    union {
-      x2_t all;
-      struct
-      {
-        u8_t timeMarkSent : 2;
-        bool timeMarkEdge : 1;
-        bool calibTtagValid : 1;
-        u8_t numMeas : 5;
-      } bits;
-    };
+struct flags_t
+{
+  union {
+    x2_t all;
+    struct
+    {
+      u8_t timeMarkSent : 2;
+      bool timeMarkEdge : 1;
+      bool calibTtagValid : 1;
+      u8_t numMeas : 5;
+    } bits;
   };
+};
 
-  struct data_t
-  {
-    union {
-      x4_t all;
-      struct
-      {
-        u4_t dataField : 24;
-        u8_t dataType : 6;
-      } bits;
-    };
+struct data_t
+{
+  union {
+    x4_t all;
+    struct
+    {
+      u4_t dataField : 24;
+      u8_t dataType : 6;
+    } bits;
   };
+};
 
 
 class ESFMeasPayload : UBXPayload
@@ -64,13 +65,12 @@ public:
   std::vector<data_t> datum;
   std::vector<u4_t> calibTtags;    // number of sensors
 
-
 public:
   ESFMeasPayload()
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
   }
-   ESFMeasPayload(ch_t * payload_polled, u2_t size)
+  ESFMeasPayload(ch_t * payload_polled, u2_t size)
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
     payload_.clear();
@@ -85,17 +85,17 @@ public:
     uint numMeas = static_cast<uint>(flags.bits.numMeas);
     datum.clear();
     for (uint i = 0; i < numMeas; i++) {
-      datum.push_back(buf_offset<data_t>(&payload_, 8+(i*4)));
-    };
+      datum.push_back(buf_offset<data_t>(&payload_, 8 + (i * 4)));
+    }
 
     // calibTtags fiel
     calibTtags.clear();
     // make sure the calibTTags are there
-    uint calibTtags_start = 8+(numMeas*4);
-    if (flags.bits.calibTtagValid && calibTtags_start+(numMeas*4) <= size) {
+    uint calibTtags_start = 8 + (numMeas * 4);
+    if (flags.bits.calibTtagValid && calibTtags_start + (numMeas * 4) <= size) {
       for (uint i = 0; i < numMeas; i++) {
-        calibTtags.push_back(buf_offset<u4_t>(&payload_, calibTtags_start=(i*4)));
-      };
+        calibTtags.push_back(buf_offset<u4_t>(&payload_, calibTtags_start = (i * 4)));
+      }
     }
   }
 
@@ -119,19 +119,19 @@ public:
     uint numMeas = static_cast<uint>(flags.bits.numMeas);
 
     for (uint i = 0; i < numMeas; i++) {
-      if (i > 0) oss << " |";
-      data_t& data = datum[i];
+      if (i > 0) {oss << " |";}
+      data_t & data = datum[i];
       oss << " field: " << +data.bits.dataField;
       oss << " type: " << +data.bits.dataType;
-    };
+    }
     oss << " ]";
 
     if (flags.bits.calibTtagValid) {
       oss << " calibTtag [";
       for (uint i = 0; i < numMeas; i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0) {oss << ", ";}
         oss << +calibTtags[i];
-      };
+      }
 
       oss << "]";
     }
@@ -161,7 +161,7 @@ public:
   {
   }
 
-  void load_from_msg(const ublox_ubx_msgs::msg::UBXEsfMeas &msg)
+  void load_from_msg(const ublox_ubx_msgs::msg::UBXEsfMeas & msg)
   {
     timeTag = msg.time_tag;
     flags.bits.timeMarkSent = msg.time_mark_sent;
@@ -184,7 +184,7 @@ public:
       }
     }
   }
- // this payload is used as input to the device
+  // this payload is used as input to the device
   std::tuple<u1_t *, size_t> make_poll_payload()
   {
     payload_.clear();
@@ -220,19 +220,19 @@ public:
     uint numMeas = static_cast<uint>(flags.bits.numMeas);
 
     for (uint i = 0; i < numMeas; i++) {
-      if (i > 0) oss << " |";
-      data_t& data = datum[i];
+      if (i > 0) {oss << " |";}
+      data_t & data = datum[i];
       oss << " field: " << +data.bits.dataField;
       oss << " type: " << +data.bits.dataType;
-    };
+    }
     oss << " ]";
 
     if (flags.bits.calibTtagValid) {
       oss << " calibTtag [";
       for (uint i = 0; i < numMeas; i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0) {oss << ", ";}
         oss << +calibTtags[i];
-      };
+      }
 
       oss << "]";
     }

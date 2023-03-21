@@ -734,24 +734,24 @@ public:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas &msg) const
+  void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas & msg) const
   {
-
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
 
-    RCLCPP_INFO( get_logger(), "ubx_esf_meas_callback sending payload - %s",
+    RCLCPP_INFO(
+      get_logger(), "ubx_esf_meas_callback sending payload - %s",
       ubx_esf_->meas_full()->payload()->to_string().c_str());
 
     ubx_esf_->meas_full()->poll_async();
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void rtcm_callback(const mavros_msgs::msg::RTCM &msg) const
+  void rtcm_callback(const mavros_msgs::msg::RTCM & msg) const
   {
     std::ostringstream oss;
     std::vector<u_char> data_out;
     data_out.resize(msg.data.size());
-    for (auto b: msg.data) {
+    for (auto b : msg.data) {
       oss << std::hex << std::setfill('0') << std::setw(2) << +b;
       data_out.push_back(b);
     }

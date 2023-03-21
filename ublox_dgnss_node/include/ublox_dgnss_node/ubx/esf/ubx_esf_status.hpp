@@ -19,6 +19,7 @@
 #include <memory>
 #include <tuple>
 #include <string>
+#include <vector>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
 
@@ -33,14 +34,15 @@ struct flags_t
     x1_t all;
     struct
     {
-       l_t crcFailed : 1;
-       msg_used_t msgUsed : 2;
+      l_t crcFailed : 1;
+      msg_used_t msgUsed : 2;
     } bits;
   };
 };
 
 enum wt_init_status_t : u1_t {wt_off = 0, wt_initializing = 1, wt_initialized = 2};
-enum mnt_alg_status_t : u1_t {ma_off = 0, ma_initializing = 1, ma_initialized0 = 2, ma_initialized1 = 3};
+enum mnt_alg_status_t : u1_t {ma_off = 0, ma_initializing = 1, ma_initialized0 = 2,
+  ma_initialized1 = 3};
 enum ins_init_status_t : u1_t {ins_off = 0, ins_initializing = 1, ins_initialized = 2};
 
 struct init_status1_t
@@ -70,7 +72,7 @@ struct init_status2_t
 };
 
 enum  fusion_mode_t : u1_t {fusion_initialization = 0, fusion_working = 1,
-                            fusion_suspended = 2, fusion_disabled = 3};
+  fusion_suspended = 2, fusion_disabled = 3};
 
 struct sens_status1_t
 {
@@ -85,7 +87,8 @@ struct sens_status1_t
   };
 };
 
-enum calib_status_t : u1_t {not_calibrated = 0b00, calibrating = 0b01, calibrated0 = 0b01, calibrated1 = 0b11};
+enum calib_status_t : u1_t {not_calibrated = 0b00, calibrating = 0b01, calibrated0 = 0b01,
+  calibrated1 = 0b11};
 enum time_status_t : u1_t {ts_no_data = 0b00, ts_first_byte_used = 0b01, ts_ttag_provided = 0b11};
 
 struct sens_status2_t
@@ -112,7 +115,6 @@ struct faults_t
       bool noisyMeas : 1;
     } bits;
   };
-
 };
 
 struct sensor_t
@@ -122,7 +124,7 @@ struct sensor_t
     struct
     {
       sens_status1_t sensStatus1;
-      sens_status2_t sensStatus2 ;
+      sens_status2_t sensStatus2;
       u1_t freq;
       faults_t faults;
     } bits;
@@ -149,7 +151,7 @@ public:
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
   }
-   ESFStatusPayload(ch_t * payload_polled, u2_t size)
+  ESFStatusPayload(ch_t * payload_polled, u2_t size)
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
     payload_.clear();
@@ -166,8 +168,8 @@ public:
     // extract num_sens sensor status
     sensorStatuses.clear();
     for (int i = 0; i < numSens; i++) {
-      sensorStatuses.push_back(buf_offset<sensor_t>(&payload_, 16+(i*4)));
-    };
+      sensorStatuses.push_back(buf_offset<sensor_t>(&payload_, 16 + (i * 4)));
+    }
   }
   std::tuple<u1_t *, size_t> make_poll_payload()
   {
@@ -188,8 +190,8 @@ public:
     oss << " [";
 
     for (int i = 0; i < numSens; i++) {
-      if (i > 0) oss << " |";
-      sensor_t& sensor = sensorStatuses[i];
+      if (i > 0) {oss << " |";}
+      sensor_t & sensor = sensorStatuses[i];
       oss << " type: " << +sensor.bits.sensStatus1.bits.type;
       oss << " used: " << +sensor.bits.sensStatus1.bits.used;
       oss << " ready: " << +sensor.bits.sensStatus1.bits.ready;
@@ -200,7 +202,7 @@ public:
       oss << " badTtag: " << +sensor.bits.faults.bits.badMeas;
       oss << " missing: " << +sensor.bits.faults.bits.missingMeas;
       oss << " noisy: " << +sensor.bits.faults.bits.noisyMeas;
-    };
+    }
 
     oss << " ]";
     return oss.str();

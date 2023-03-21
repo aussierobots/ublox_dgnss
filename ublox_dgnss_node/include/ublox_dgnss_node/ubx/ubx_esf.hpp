@@ -60,7 +60,6 @@ public:
   {
     return meas_full_;
   }
-
 };
 }  // namespace ubx::esf
 #endif  // UBLOX_DGNSS_NODE__UBX__UBX_ESF_HPP_
