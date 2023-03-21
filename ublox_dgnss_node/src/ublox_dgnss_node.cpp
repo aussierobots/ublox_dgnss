@@ -56,6 +56,8 @@
 #include "ublox_ubx_interfaces/srv/cold_start.hpp"
 #include "ublox_ubx_interfaces/srv/reset_odo.hpp"
 
+#include "mavros_msgs/msg/rtcm.hpp"
+
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -180,6 +182,8 @@ public:
 
     ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "in/ubx_esf_meas", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
+    rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(
+      "/ntrip_client/rtcm", 10, std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1));
     // ros2 parameter call backs
     parameters_callback_handle_ =
       this->add_on_set_parameters_callback(
@@ -339,6 +343,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
 
   rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
+  rclcpp::Subscription<mavros_msgs::msg::RTCM>::SharedPtr rtcm_sub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -738,6 +743,22 @@ public:
       ubx_esf_->meas_full()->payload()->to_string().c_str());
 
     ubx_esf_->meas_full()->poll_async();
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void rtcm_callback(const mavros_msgs::msg::RTCM &msg) const
+  {
+    std::ostringstream oss;
+    std::vector<u_char> data_out;
+    data_out.resize(msg.data.size());
+    for (auto b: msg.data) {
+      oss << std::hex << std::setfill('0') << std::setw(2) << +b;
+      data_out.push_back(b);
+    }
+
+    RCLCPP_INFO(get_logger(), "rtcm_callback msg.data: 0x%s", oss.str().c_str());
+
+    usbc_->write_buffer(data_out.data(), data_out.size());
   }
 
 // handle host in from ublox gps to host callback

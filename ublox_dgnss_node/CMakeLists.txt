@@ -24,6 +24,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
+find_package(mavros_msgs REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
@@ -45,6 +46,7 @@ ament_target_dependencies(ublox_dgnss_components
   std_msgs
   ublox_ubx_msgs
   ublox_ubx_interfaces
+  mavros_msgs
 )
 
 target_link_libraries(ublox_dgnss_components
