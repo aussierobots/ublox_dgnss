@@ -181,7 +181,7 @@ public:
       "ubx_esf_meas", qos);
 
     ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "in/ubx_esf_meas", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
+      "/ubx_esf_meas_to_device", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
     rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(
       "/ntrip_client/rtcm", 10, std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1));
     // ros2 parameter call backs
