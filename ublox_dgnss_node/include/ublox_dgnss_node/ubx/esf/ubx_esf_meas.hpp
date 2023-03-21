@@ -63,7 +63,7 @@ public:
   flags_t flags;
   u2_t id;
   std::vector<data_t> datum;
-  std::vector<u4_t> calibTtags;    // number of sensors
+  u4_t calibTtags;    // number of sensors
 
 public:
   ESFMeasPayload()
@@ -88,14 +88,10 @@ public:
       datum.push_back(buf_offset<data_t>(&payload_, 8 + (i * 4)));
     }
 
-    // calibTtags fiel
-    calibTtags.clear();
     // make sure the calibTTags are there
-    uint calibTtags_start = 8 + (numMeas * 4);
-    if (flags.bits.calibTtagValid && calibTtags_start + (numMeas * 4) <= size) {
-      for (uint i = 0; i < numMeas; i++) {
-        calibTtags.push_back(buf_offset<u4_t>(&payload_, calibTtags_start = (i * 4)));
-      }
+    if (flags.bits.calibTtagValid) {
+      uint calibTtags_start = 8 + (numMeas * 4);
+      calibTtags = buf_offset<u4_t>(&payload_, calibTtags_start);
     }
   }
 
@@ -125,15 +121,9 @@ public:
       oss << " type: " << +data.bits.dataType;
     }
     oss << " ]";
-
+    oss << +calibTtags;
     if (flags.bits.calibTtagValid) {
-      oss << " calibTtag [";
-      for (uint i = 0; i < numMeas; i++) {
-        if (i > 0) {oss << ", ";}
-        oss << +calibTtags[i];
-      }
-
-      oss << "]";
+      oss << " " << +calibTtags;
     }
 
     return oss.str();
@@ -153,7 +143,7 @@ public:
   flags_t flags;
   u2_t id;
   std::vector<data_t> datum;
-  std::vector<u4_t> calibTtags;    // number of sensors
+  u4_t calibTtag;    // number of sensors
 
 public:
   ESFMeasFullPayload()
@@ -170,18 +160,16 @@ public:
     flags.bits.numMeas = msg.num_meas;
     id = msg.id;
 
-    datum.clear();
-    calibTtags.clear();
-
     data_t data;
+    datum.clear();
     for (uint i = 0; i < msg.num_meas; i++) {
       data.bits.dataField = msg.data[i].data_field;
       data.bits.dataType = msg.data[i].data_type;
       datum.push_back(data);
+    }
 
-      if (msg.calib_ttag_valid) {
-        calibTtags.push_back(msg.calib_ttag[i]);
-      }
+    if (msg.calib_ttag_valid) {
+      calibTtag = msg.calib_ttag;
     }
   }
   // this payload is used as input to the device
@@ -199,9 +187,7 @@ public:
     }
 
     if (flags.bits.calibTtagValid) {
-      for (uint i = 0; i < numMeas; i++) {
-        buf_append_u4(&payload_, calibTtags[i]);
-      }
+      buf_append_u4(&payload_, calibTtag);
     }
 
     return std::make_tuple(payload_.data(), payload_.size());
@@ -228,13 +214,7 @@ public:
     oss << " ]";
 
     if (flags.bits.calibTtagValid) {
-      oss << " calibTtag [";
-      for (uint i = 0; i < numMeas; i++) {
-        if (i > 0) {oss << ", ";}
-        oss << +calibTtags[i];
-      }
-
-      oss << "]";
+      oss << " calibTtag: " << +calibTtag;
     }
 
     return oss.str();

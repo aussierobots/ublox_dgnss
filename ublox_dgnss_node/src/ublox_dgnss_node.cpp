@@ -1986,9 +1986,7 @@ private:
     }
 
     if (msg->calib_ttag_valid) {
-      for (uint i = 0; i < numMeas; i++) {
-        msg->calib_ttag.push_back(payload->calibTtags[i]);
-      }
+      msg->calib_ttag = payload->calibTtags;
     }
     ubx_esf_meas_pub_->publish(*msg);
   }

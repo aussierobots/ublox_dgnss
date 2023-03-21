@@ -9,4 +9,4 @@ bool calib_ttag_valid   # calibration time tag available. Always set to Zero
 uint8 num_meas          # Number of measurements contained in this message (optional, can be obtained from message size)
 uint16 id               # identification number of data provideer
 ESFMeasDataItem[] data  # data array  of data_field & data_type
-uint32[] calib_ttag       # receiver local time calibrated. This field must not be supplied when calb_ttag_valid is 0
+uint32 calib_ttag       # receiver local time calibrated. This field must not be supplied when calb_ttag_valid is 0
