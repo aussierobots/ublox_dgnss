@@ -21,7 +21,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_cmake_test REQUIRED)
-
+find_package(ament_cmake_uncrustify REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -58,10 +58,6 @@ target_link_libraries(ublox_dgnss_components
 
 rclcpp_components_register_node(ublox_dgnss_components PLUGIN "ublox_dgnss::UbloxDGNSSNode" EXECUTABLE ublox_dgnss_node)
 
-ament_package(
-  CONFIG_EXTRAS "ament_cmake_uncrustify-extras.cmake"
-)
-
 install(TARGETS
   ublox_dgnss_components
   ARCHIVE DESTINATION lib
@@ -82,12 +78,6 @@ if(BUILD_TESTING)
   # uncomment the line when this package is not in a git repo
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
-
-  find_package(ament_cmake_copyright REQUIRED)
-  ament_copyright()
-
-  find_package(ament_cmake_lint_cmake REQUIRED)
-  ament_lint_cmake()
 endif()
 
 ament_package()
