@@ -756,7 +756,7 @@ public:
       data_out.push_back(b);
     }
 
-    RCLCPP_INFO(get_logger(), "rtcm_callback msg.data: 0x%s", oss.str().c_str());
+    RCLCPP_DEBUG(get_logger(), "rtcm_callback msg.data: 0x%s", oss.str().c_str());
 
     usbc_->write_buffer(data_out.data(), data_out.size());
   }
@@ -1898,7 +1898,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::rxm::rtcm::RxmRTCMPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
