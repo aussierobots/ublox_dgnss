@@ -737,7 +737,6 @@ public:
   void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas & msg) const
   {
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
-
     RCLCPP_INFO(
       get_logger(), "ubx_esf_meas_callback sending payload - %s",
       ubx_esf_->meas_full()->payload()->to_string().c_str());

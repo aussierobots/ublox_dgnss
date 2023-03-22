@@ -319,6 +319,7 @@ public:
   FrameContainer()
   {
     payload_poll_ = std::make_shared<PayloadPoll<T>>();
+    payload_ = std::make_shared<Payload<T>>();
     this->msg_class_ = payload_poll_->msg_class();
     this->msg_id_ = payload_poll_->msg_id();
   }
