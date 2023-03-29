@@ -738,6 +738,7 @@ public:
   {
     if (msg.num_meas > 0 && msg.data.size() != msg.num_meas) {
       RCLCPP_WARN(get_logger(), "ubx_esf_meas_callback num_meas %d != data array size %ld - not sending to usb", msg.num_meas, msg.data.size());
+      return;
     }
 
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
