@@ -153,16 +153,22 @@ public:
 
   void load_from_msg(const ublox_ubx_msgs::msg::UBXEsfMeas & msg)
   {
+
+    // assign number of measurements if 0 use data array size
+    u8_t num_meas = msg.num_meas;
+    if (num_meas == 0) {
+      num_meas = msg.data.size();
+    }
     timeTag = msg.time_tag;
     flags.bits.timeMarkSent = msg.time_mark_sent;
     flags.bits.timeMarkEdge = msg.time_mark_edge;
     flags.bits.calibTtagValid = msg.calib_ttag_valid;
-    flags.bits.numMeas = msg.num_meas;
+    flags.bits.numMeas = num_meas;
     id = msg.id;
 
     data_t data;
     datum.clear();
-    for (uint i = 0; i < msg.num_meas; i++) {
+    for (uint i = 0; i < msg.data.size(); i++) {
       data.bits.dataField = msg.data[i].data_field;
       data.bits.dataType = msg.data[i].data_type;
       datum.push_back(data);
@@ -170,6 +176,8 @@ public:
 
     if (msg.calib_ttag_valid) {
       calibTtag = msg.calib_ttag;
+    } else {
+      calibTtag = 0;
     }
   }
   // this payload is used as input to the device

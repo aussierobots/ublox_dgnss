@@ -736,6 +736,10 @@ public:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas & msg) const
   {
+    if (msg.num_meas > 0 && msg.data.size() != msg.num_meas) {
+      RCLCPP_WARN(get_logger(), "ubx_esf_meas_callback num_meas %d != data array size %ld - not sending to usb", msg.num_meas, msg.data.size());
+    }
+
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
     RCLCPP_INFO(
       get_logger(), "ubx_esf_meas_callback sending payload - %s",
