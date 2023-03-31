@@ -747,6 +747,11 @@ public:
       return;
     }
 
+    if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()){
+      RCLCPP_WARN(get_logger(), "usbc_ not valid. not sending ubx_esf_meas to device!");
+      return;
+    }
+
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
     RCLCPP_INFO(
       get_logger(), "ubx_esf_meas_callback sending payload - %s",
@@ -758,6 +763,10 @@ public:
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_callback(const mavros_msgs::msg::RTCM & msg) const
   {
+    if (usbc_ == nullptr || !usbc_->devh_valid()) {
+      RCLCPP_WARN(get_logger(), "usbc_ not valid. not sending rtcm to device!");
+      return;
+    }
     std::ostringstream oss;
     std::vector<u_char> data_out;
     data_out.resize(msg.data.size());
