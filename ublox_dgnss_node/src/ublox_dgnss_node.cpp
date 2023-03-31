@@ -180,10 +180,6 @@ public:
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "ubx_esf_meas", qos);
 
-    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "/ubx_esf_meas_to_device", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
-    rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(
-      "/ntrip_client/rtcm", 10, std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1));
     // ros2 parameter call backs
     parameters_callback_handle_ =
       this->add_on_set_parameters_callback(
@@ -223,6 +219,11 @@ public:
 
       usbc_->init();
       usbc_->init_async();
+
+      if (!usbc_->devh_valid()) {
+        RCLCPP_ERROR(get_logger(),"USBDevice handle not valid. USB device not connected?");
+        rclcpp::shutdown();
+      }
     } catch (const char * msg) {
       RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg);
       if (usbc_ != nullptr) {
@@ -279,6 +280,11 @@ public:
       RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async finished");
       async_initialised_ = true;
     }
+
+    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
+      "/ubx_esf_meas_to_device", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
+    rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(
+      "/ntrip_client/rtcm", 10, std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1));
 
     is_initialising_ = false;
   }

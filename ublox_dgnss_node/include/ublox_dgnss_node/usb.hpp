@@ -168,22 +168,26 @@ public:
   {
     return product_id_;
   }
+  bool inline devh_valid()
+  {
+    return dev_ != nullptr;
+  }
   int bus_number()
   {
-    return dev_ ? libusb_get_bus_number(dev_) : 0;
+    return devh_valid() ? libusb_get_bus_number(dev_) : 0;
   }
   int device_address()
   {
-    return dev_ ? libusb_get_device_address(dev_) : 0;
+    return devh_valid() ? libusb_get_device_address(dev_) : 0;
   }
   int device_speed()
   {
-    return dev_ ? libusb_get_device_speed(dev_) : 0;
+    return devh_valid() ? libusb_get_device_speed(dev_) : 0;
   }
   char * device_speed_txt();
   u_int8_t port_number()
   {
-    return dev_ ? libusb_get_port_number(dev_) : 0;
+    return devh_valid() ? libusb_get_port_number(dev_) : 0;
   }
   int read_chars(u_char * data, size_t size);
   void write_char(u_char c);
