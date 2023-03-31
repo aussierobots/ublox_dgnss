@@ -748,7 +748,12 @@ public:
     }
 
     if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()){
-      RCLCPP_WARN(get_logger(), "usbc_ not valid. not sending ubx_esf_meas to device!");
+      RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending ubx_esf_meas to device!");
+      return;
+    }
+
+    if (!ubx_esf_->usbc()->attached()){
+      RCLCPP_WARN(get_logger(), "USB device not attached - not sending ubx_esf_meas to device!");
       return;
     }
 
@@ -764,7 +769,11 @@ public:
   void rtcm_callback(const mavros_msgs::msg::RTCM & msg) const
   {
     if (usbc_ == nullptr || !usbc_->devh_valid()) {
-      RCLCPP_WARN(get_logger(), "usbc_ not valid. not sending rtcm to device!");
+      RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending rtcm to device!");
+      return;
+    }
+    if (!usbc_->attached()) {
+      RCLCPP_WARN(get_logger(), "USB device not attached - not sending rtcm to device!");
       return;
     }
     std::ostringstream oss;
