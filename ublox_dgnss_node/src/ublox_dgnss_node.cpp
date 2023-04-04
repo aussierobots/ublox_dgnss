@@ -56,7 +56,7 @@
 #include "ublox_ubx_interfaces/srv/cold_start.hpp"
 #include "ublox_ubx_interfaces/srv/reset_odo.hpp"
 
-#include "mavros_msgs/msg/rtcm.hpp"
+#include "rtcm_msgs/msg/message.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -283,7 +283,7 @@ public:
 
     ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "/ubx_esf_meas_to_device", 10, std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1));
-    rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(
+    rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
       "/ntrip_client/rtcm", 10, std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1));
 
     is_initialising_ = false;
@@ -349,7 +349,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
 
   rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
-  rclcpp::Subscription<mavros_msgs::msg::RTCM>::SharedPtr rtcm_sub_;
+  rclcpp::Subscription<rtcm_msgs::msg::Message>::SharedPtr rtcm_sub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -766,7 +766,7 @@ public:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
-  void rtcm_callback(const mavros_msgs::msg::RTCM & msg) const
+  void rtcm_callback(const rtcm_msgs::msg::Message & msg) const
   {
     if (usbc_ == nullptr || !usbc_->devh_valid()) {
       RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending rtcm to device!");
@@ -778,13 +778,13 @@ public:
     }
     std::ostringstream oss;
     std::vector<u_char> data_out;
-    data_out.resize(msg.data.size());
-    for (auto b : msg.data) {
+    data_out.resize(msg.message.size());
+    for (auto b : msg.message) {
       oss << std::hex << std::setfill('0') << std::setw(2) << +b;
       data_out.push_back(b);
     }
 
-    RCLCPP_DEBUG(get_logger(), "rtcm_callback msg.data: 0x%s", oss.str().c_str());
+    RCLCPP_DEBUG(get_logger(), "rtcm_callback msg.message: 0x%s", oss.str().c_str());
 
     usbc_->write_buffer(data_out.data(), data_out.size());
   }
