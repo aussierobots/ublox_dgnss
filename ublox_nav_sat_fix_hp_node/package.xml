@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>trot_navsatfix_node</name>
+  <name>ublox_nav_sat_fix_hp_node</name>
   <version>0.0.0</version>
   <description>Provides a NavSatFix node for a u-blox GPS GNSS receiver using Gen 9 UBX Protocol</description>
   <maintainer email="geoff.s@cmpeng.com.au">Geoff Sokoll</maintainer>
@@ -15,8 +15,6 @@
   <depend>sensor_msgs</depend>
   <depend>ublox_ubx_msgs</depend>
   <depend>ublox_ubx_interfaces</depend>
-
-  <!-- <depend>ublox_dgnss</depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

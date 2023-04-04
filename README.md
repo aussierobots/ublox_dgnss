@@ -131,3 +131,11 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 /ubx_nav_vel_ecef
 /ubx_nav_vel_ned
 ```
+
+# ROS2 NAVSATFIX Messages
+
+In addition to the UBX NAV messages shown above, [NavSatFix messages](https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatFix.html) can also be published on topic /fix.  Note that this node relies on (and hence subscribes to) three UBX Nav messages, namely /ubx_nav_hp_pos_llh, /ubx_nav_cov, /ubx_nav_status.  If the ublox device is not configured to publish these three messages, the navsatfix message will likewise not be published.
+
+```
+/fix
+```

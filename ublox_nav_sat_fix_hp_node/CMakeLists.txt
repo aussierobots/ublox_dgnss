@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(trot_navsatfix_node)
+project(ublox_nav_sat_fix_hp_node)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -22,22 +22,22 @@ find_package(ublox_ubx_interfaces REQUIRED)
 include_directories(include)
 
 # add executable
-add_executable(trot_navsatfix_node src/trot_navsatfix_node.cpp)
+add_executable(ublox_nav_sat_fix_hp_node src/ublox_nav_sat_fix_hp_node.cpp)
 
-ament_target_dependencies(trot_navsatfix_node 
+ament_target_dependencies(ublox_nav_sat_fix_hp_node
   rclcpp
   rclcpp_components
   std_msgs
-  sensor_msgs 
+  sensor_msgs
   ublox_ubx_msgs
-  ublox_ubx_interfaces  
+  ublox_ubx_interfaces
   ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # link libraries
-target_link_libraries(trot_navsatfix_node ${rclcpp_LIBRARIES} ${sensor_msgs_LIBRARIES})
+target_link_libraries(ublox_nav_sat_fix_hp_node ${rclcpp_LIBRARIES} ${sensor_msgs_LIBRARIES})
 
 # install executable
-install(TARGETS trot_navsatfix_node
+install(TARGETS ublox_nav_sat_fix_hp_node
         DESTINATION lib/${PROJECT_NAME})
 
 
