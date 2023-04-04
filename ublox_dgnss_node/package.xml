@@ -16,7 +16,7 @@
   <exec_depend>std_msgs</exec_depend>
   <depend>ublox_ubx_msgs</depend>
   <depend>ublox_ubx_interfaces</depend>
-  <depend>mavros_msgs</depend>
+  <depend>rtcm_msgs</depend>
   <build_depend>pkg-config</build_depend>
 
   <test_depend>ament_lint_auto</test_depend>
