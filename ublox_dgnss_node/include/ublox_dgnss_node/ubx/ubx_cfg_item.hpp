@@ -229,6 +229,9 @@ enum CFG_RATE_TIMEREF_ENUM
   ALIGN_GAL = 4,         // Align measurements to Galileo time
 };
 
+// cfg sfimu - sensor fusion IMU configuration
+const ubx_cfg_item_t CFG_SFIMU_AUTO_MNTALG_ENA =
+{"CFG_SFIMU_AUTO_MNTALG_ENA", 0x10060027, L, 0, NA};
 const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_YAW =
 {"CFG_SFIMU_IMU_MNTALG_YAW", 0x4006002d, U4, .001, DEG};
 const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_PITCH =
@@ -236,6 +239,7 @@ const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_PITCH =
 const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_ROLL =
 {"CFG_SFIMU_IMU_MNTALG_ROLL", 0x3006002f, I2, .001, DEG};
 
+// cfg sfodo - sensor fusion odometer configuration
 const ubx_cfg_item_t CFG_SFODO_COMBINE_TICKS =
 {"CFG_SFODO_COMBINE_TICKS", 0x10070001, L, 0, NA};
 const ubx_cfg_item_t CFG_SFODO_COUNT_MAX =
@@ -326,6 +330,7 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_RATE_NAV.ubx_key_id, CFG_RATE_NAV},
   {CFG_RATE_TIMEREF.ubx_key_id, CFG_RATE_TIMEREF},
 
+  {CFG_SFIMU_AUTO_MNTALG_ENA.ubx_key_id, CFG_SFIMU_AUTO_MNTALG_ENA},
   {CFG_SFIMU_IMU_MNTALG_YAW.ubx_key_id, CFG_SFIMU_IMU_MNTALG_YAW},
   {CFG_SFIMU_IMU_MNTALG_PITCH.ubx_key_id, CFG_SFIMU_IMU_MNTALG_PITCH},
   {CFG_SFIMU_IMU_MNTALG_ROLL.ubx_key_id, CFG_SFIMU_IMU_MNTALG_ROLL},
