@@ -1,12 +1,27 @@
 cmake_minimum_required(VERSION 3.8)
 project(ublox_nav_sat_fix_hp_node)
 
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_core REQUIRED)
+find_package(ament_cmake_test REQUIRED)
+find_package(ament_cmake_uncrustify REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 find_package(rclcpp REQUIRED)
@@ -19,26 +34,36 @@ find_package(ublox_ubx_interfaces REQUIRED)
 
 
 # include directories
-include_directories(include)
+include_directories(include SYSTEM)
 
-# add executable
-add_executable(ublox_nav_sat_fix_hp_node src/ublox_nav_sat_fix_hp_node.cpp)
+add_library(ublox_nav_sat_fix_hp_components SHARED
+  src/ublox_nav_sat_fix_hp_node.cpp
+)
 
-ament_target_dependencies(ublox_nav_sat_fix_hp_node
+# target_compile_definitions(ublox_nav_sat_fix_hp_components
+#   PRIVATE "UBLOX_NAV_SAT_FIX_HP_NODE_BUILDING_DLL"
+# )
+
+ament_target_dependencies(ublox_nav_sat_fix_hp_components
   rclcpp
   rclcpp_components
   std_msgs
   sensor_msgs
   ublox_ubx_msgs
   ublox_ubx_interfaces
-  ${THIS_PACKAGE_INCLUDE_DEPENDS})
+)
 
-# link libraries
-target_link_libraries(ublox_nav_sat_fix_hp_node ${rclcpp_LIBRARIES} ${sensor_msgs_LIBRARIES})
+rclcpp_components_register_node(ublox_nav_sat_fix_hp_components
+  PLUGIN "ublox_nav_sat_fix_hp::UbloxNavSatHpFixNode"
+  EXECUTABLE ublox_nav_sat_fix_hp)
 
 # install executable
-install(TARGETS ublox_nav_sat_fix_hp_node
-        DESTINATION lib/${PROJECT_NAME})
+install(TARGETS
+ublox_nav_sat_fix_hp_components
+ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib
+RUNTIME DESTINATION bin
+)
 
 
 if(BUILD_TESTING)

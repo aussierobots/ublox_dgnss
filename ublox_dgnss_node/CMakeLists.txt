@@ -56,7 +56,9 @@ target_link_libraries(ublox_dgnss_components
   usb-1.0
 )
 
-rclcpp_components_register_node(ublox_dgnss_components PLUGIN "ublox_dgnss::UbloxDGNSSNode" EXECUTABLE ublox_dgnss_node)
+rclcpp_components_register_node(ublox_dgnss_components
+  PLUGIN "ublox_dgnss::UbloxDGNSSNode"
+  EXECUTABLE ublox_dgnss_node)
 
 install(TARGETS
   ublox_dgnss_components
