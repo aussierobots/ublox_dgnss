@@ -2,8 +2,8 @@
 Changelog for package ublox_nav_sat_fix_hp_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.4 (2023-05-24)
+------------------
 * cmake uncrustify changes
 * Contributors: Nick Hortovanyi
 
