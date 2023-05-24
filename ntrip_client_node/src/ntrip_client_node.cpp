@@ -130,20 +130,21 @@ private:
   {
     NTRIPClientNode * node = reinterpret_cast<NTRIPClientNode *>(userdata);
 
-    if (node->get_logger().get_effective_level() == rclcpp::Logger::Level::Debug) {
-      // Convert the received data to a hexadecimal string
-      std::stringstream hexStream;
-      hexStream << std::hex << std::setfill('0');
-      for (size_t i = 0; i < size * nmemb; i++) {
-        hexStream << std::setw(2) << static_cast<int>(ptr[i]);
-      }
-      std::string hexString = hexStream.str();
-
-      // Log the hexadecimal string as a debug message
-      RCLCPP_DEBUG(
-        node->get_logger(), "Received size: %ld nmemb: %ld data: %s", size, nmemb,
-        hexString.c_str());
+    // code doesnt work in Humble
+    // if (node->get_logger().get_effective_level() == rclcpp::Logger::Level::Debug) {
+    // Convert the received data to a hexadecimal string
+    std::stringstream hexStream;
+    hexStream << std::hex << std::setfill('0');
+    for (size_t i = 0; i < size * nmemb; i++) {
+      hexStream << std::setw(2) << static_cast<int>(ptr[i]);
     }
+    std::string hexString = hexStream.str();
+
+    // Log the hexadecimal string as a debug message
+    RCLCPP_DEBUG(
+      node->get_logger(), "Received size: %ld nmemb: %ld data: %s", size, nmemb,
+      hexString.c_str());
+    // }
 
     // Create an instance of the message and populate
     auto message = std::make_unique<rtcm_msgs::msg::Message>();
