@@ -153,7 +153,6 @@ public:
 
   void load_from_msg(const ublox_ubx_msgs::msg::UBXEsfMeas & msg)
   {
-
     // assign number of measurements if 0 use data array size
     u8_t num_meas = msg.num_meas;
     if (num_meas == 0) {

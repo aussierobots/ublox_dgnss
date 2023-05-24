@@ -2,6 +2,59 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#10 <https://github.com/aussierobots/ublox_dgnss/issues/10>`_ from aussierobots/F9R-and-RTCM
+  F9 r and rtcm
+* changed verbosity of logging
+* Merge pull request `#9 <https://github.com/aussierobots/ublox_dgnss/issues/9>`_ from gsokoll/F9R-and-RTCM
+  Composable node version of navsatfix
+* Composable node version of navsatfix.  Added example launch file.
+* Merge pull request `#8 <https://github.com/aussierobots/ublox_dgnss/issues/8>`_ from gsokoll/F9R-and-RTCM
+  Change to rtcm_msgs instead of mavros_msgs.
+* Change to rtcm_msgs instead of mavros_msgs.
+  This is in keeping with a similar PR for the LORD MicrosStrain NTRIP client.
+  https://github.com/LORD-MicroStrain/ntrip_client/pull/34
+  where it is commented that
+  "rtcm_msgs is a smaller dependency with support for both ROS and ROS 2
+  now, and preferred by some downstream dependencies like ublox."
+  Format of the messages are strcturally identical, with the only difference
+  being the name of the payload ("data" in mavros vs "message" in rtcm_msgs)
+* Merge pull request `#6 <https://github.com/aussierobots/ublox_dgnss/issues/6>`_ from gsokoll/gsokoll-patch-1
+  Add CFG_SFIMU_AUTO_MNTALG_ENA
+* if usb detached warn not sending to device
+* added guards not send to device if usb devh null
+* usb connection changes
+* added return for esf_meas warnings to not send
+* added guards and warnings for ubx_esf_meas inbound
+* Add CFG_SFIMU_AUTO_MNTALG_ENA
+* fix to pub full ubx_esf_meas
+* changed some msgs from INFO to DEBUG
+* renamed ubx_esf_meas_sub topic
+* changed calibTtag from an array to single value
+* uncrustify changes
+* uncrustify format changes
+* fixed wrong esf msg
+* added rtcm msg processing
+* added ubx_esf_meas full poll payload to device
+* added ubx_esf_meas output publishing
+* fixed spelling mistake
+* notation and spelling fixes
+* added initial ubx esf status code
+* renamed F9P usb variable to F9
+* fixed CFG_SFDO_LATENCY naming
+* Added CFG_MSGOUT_UBX_ESF* items
+* Added CFG_SFODO\_* items
+* added new DYN_MODEL SFIMU_IMU_MNTALG\_* cfg items
+* changed USb and UBX event times from 10ns to 10ms
+* Merge pull request `#4 <https://github.com/aussierobots/ublox_dgnss/issues/4>`_ from gsokoll/patch-1
+  Add UBX_ESF message class and id's
+* Add UBX_ESF message class and id's
+* added ubx_rxm_out_frame for poll frame out
+* fixed version output
+* added ubx-rxm-rtcm publishing
+* Contributors: Geoff Sokoll, Nick Hortovanyi
+
 0.3.5 (2022-05-24)
 ------------------
 * uncrustify changes

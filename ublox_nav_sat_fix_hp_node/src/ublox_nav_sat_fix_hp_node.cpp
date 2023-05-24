@@ -38,7 +38,7 @@ public:
   UBLOX_NAV_SAT_FIX_HP_NODE_PUBLIC
   explicit UbloxNavSatHpFixNode(const rclcpp::NodeOptions & options)
   : Node("ublox_nav_sat_fix_hp",
-    rclcpp::NodeOptions(options).automatically_declare_parameters_from_overrides(true))
+      rclcpp::NodeOptions(options).automatically_declare_parameters_from_overrides(true))
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 

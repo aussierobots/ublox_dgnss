@@ -48,7 +48,8 @@ public:
     meas_ = std::make_shared<UbxESFMeasFrameComms>(usbc_);
     meas_full_ = std::make_shared<UbxESFMeasFullFrameComms>(usbc_);
   }
-  std::shared_ptr<usb::Connection> usbc(){
+  std::shared_ptr<usb::Connection> usbc()
+  {
     return usbc_;
   }
   std::shared_ptr<UbxESFStatusFrameComms> status()

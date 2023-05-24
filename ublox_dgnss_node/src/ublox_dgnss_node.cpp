@@ -221,7 +221,7 @@ public:
       usbc_->init_async();
 
       if (!usbc_->devh_valid()) {
-        RCLCPP_ERROR(get_logger(),"USBDevice handle not valid. USB device not connected?");
+        RCLCPP_ERROR(get_logger(), "USBDevice handle not valid. USB device not connected?");
         rclcpp::shutdown();
       }
     } catch (const char * msg) {
@@ -743,16 +743,20 @@ public:
   void ubx_esf_meas_callback(const ublox_ubx_msgs::msg::UBXEsfMeas & msg) const
   {
     if (msg.num_meas > 0 && msg.data.size() != msg.num_meas) {
-      RCLCPP_WARN(get_logger(), "ubx_esf_meas_callback num_meas %d != data array size %ld - not sending to usb", msg.num_meas, msg.data.size());
-      return;
+      RCLCPP_WARN(
+        get_logger(),
+        "ubx_esf_meas_callback num_meas %d != data array size %ld - not sending to usb",
+        msg.num_meas,
+        msg.data.size());
+      return;ß
     }
 
-    if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()){
+    if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()) {
       RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending ubx_esf_meas to device!");
       return;
     }
 
-    if (!ubx_esf_->usbc()->attached()){
+    if (!ubx_esf_->usbc()->attached()) {
       RCLCPP_WARN(get_logger(), "USB device not attached - not sending ubx_esf_meas to device!");
       return;
     }
