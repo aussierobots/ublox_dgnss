@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ntrip_client_node</name>
+  <version>0.1.0</version>
+  <description>Publishes RTCM ntrip messages from an external mountpoint</description>
+  <maintainer email="nick@aussierobots.com.au">Nick Hortovanyi</maintainer>
+  <license>Apache License, Version 2.0</license>
+
+  <url>https://github.com/aussierobots/ublox_dgnss</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>libcurl_vendor</depend>
+  <exec_depend>std_msgs</exec_depend>
+  <depend>rtcm_msgs</depend>
+  <build_depend>pkg-config</build_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_cppcheck</test_depend>
+  <test_depend>ament_cmake_copyright</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
