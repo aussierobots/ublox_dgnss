@@ -2,6 +2,11 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added ament_cmake_uncrustify
+* Contributors: Nick Hortovanyi
+
 0.4.2 (2023-05-24)
 ------------------
 
