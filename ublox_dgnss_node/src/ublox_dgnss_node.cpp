@@ -758,7 +758,7 @@ public:
     }
 
     ubx_esf_->meas_full()->payload()->load_from_msg(msg);
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx_esf_meas_callback sending payload - %s",
       ubx_esf_->meas_full()->payload()->to_string().c_str());
 
@@ -893,10 +893,10 @@ public:
     } else {
       RCLCPP_WARN(get_logger(), "usb hotplug attach");
       usbc_->init_async();
-      RCLCPP_INFO(get_logger(), "ubx_mon_ver poll_async ...");
+      RCLCPP_DEBUG(get_logger(), "ubx_mon_ver poll_async ...");
       ubx_mon_->ver()->poll_async();
 
-      RCLCPP_INFO(get_logger(), "ublox_val_set_all_cfg_items_async() ...");
+      RCLCPP_DEBUG(get_logger(), "ublox_val_set_all_cfg_items_async() ...");
       ublox_val_set_all_cfg_items_async();
       // ublox_val_get_all_cfg_items_async();
     }
@@ -1076,19 +1076,19 @@ private:
   {
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_CFG_VALGET:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x cfg val get poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_CFG_VALSET:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x cfg val set sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_CFG_RST:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x cfg rst sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
@@ -1106,7 +1106,7 @@ private:
   {
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_MON_VER:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x mon ver poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
@@ -1124,91 +1124,91 @@ private:
   {
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_NAV_CLOCK:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav clock poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_COV:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav cov poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_DOP:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav dop poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_POSECEF:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav pos ecef poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_HPPOSECEF:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav hp pos ecef poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_POSLLH:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav pos llh poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_HPPOSLLH:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav hp pos llh poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_ODO:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav odo poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_RESETODO:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav reset odo poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_PVT:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav pvt poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_STATUS:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav status poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_RELPOSNED:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav relposned poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_TIMEUTC:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav timeutc poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_VELECEF:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav velecef poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_NAV_VELNED:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav velned poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
@@ -1226,7 +1226,7 @@ private:
   {
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_RXM_RTCM:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
@@ -1244,13 +1244,13 @@ private:
   {
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_ESF_STATUS:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x esf status poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
       case ubx::UBX_ESF_MEAS:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x esf meas poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
@@ -1273,7 +1273,7 @@ private:
         payload_ack_ack = std::make_shared<ubx::ack::AckAckPayload>(
           f->ubx_frame->payload,
           f->ubx_frame->length);
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x ack ack payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           payload_ack_ack->to_string().c_str());
@@ -1314,7 +1314,7 @@ private:
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_CFG_VALGET:
         ubx_cfg_->set_cfg_val_get_frame(f->ubx_frame);
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x cfg polled payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_cfg_->cfg_val_get_payload()->to_string().c_str());
@@ -1334,7 +1334,7 @@ private:
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_MON_VER:
         ubx_mon_->ver()->frame(f->ubx_frame);
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x mon ver polled payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_mon_->ver()->payload()->to_string().c_str());
@@ -1353,31 +1353,31 @@ private:
     ubx_inf_->frame(f->ubx_frame);
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_INF_DEBUG:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x inf debug payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_inf_->debug()->payload()->to_string().c_str());
         break;
       case ubx::UBX_INF_ERROR:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x inf error payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_inf_->error()->payload()->to_string().c_str());
         break;
       case ubx::UBX_INF_NOTICE:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x inf notice payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_inf_->notice()->payload()->to_string().c_str());
         break;
       case ubx::UBX_INF_TEST:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x inf test payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_inf_->test()->payload()->to_string().c_str());
         break;
       case ubx::UBX_INF_WARNING:
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x inf warning payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_inf_->warning()->payload()->to_string().c_str());
@@ -1488,7 +1488,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::velecef::NavVelECEFPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav velecef polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1510,7 +1510,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::velned::NavVelNEDPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav velned polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1536,7 +1536,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::timeutc::NavTimeUTCPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav timeutc polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1566,7 +1566,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::relposned::NavRelPosNedPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav relposned polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1606,7 +1606,7 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_nav_pvt_pub(ubx_queue_frame_t * f, std::shared_ptr<ubx::nav::pvt::NavPvtPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav pvt polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1663,7 +1663,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::posllh::NavPosLLHPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav pos llh polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1686,7 +1686,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::posecef::NavPosECEFPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav pos ecef polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1707,7 +1707,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::odo::NavOdoPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav odo polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1729,7 +1729,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::hpposllh::NavHPPosLLHPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav hp pos llh polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1765,7 +1765,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::hpposecef::NavHPPosECEFPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav hp pos ecef polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1797,7 +1797,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::status::NavStatusPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav status payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1828,7 +1828,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::eoe::NavEOEPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav eoe payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1846,7 +1846,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::dop::NavDOPPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav dop payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1871,7 +1871,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::cov::NavCovPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav cov payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1904,7 +1904,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::clock::NavClockPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav clock payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1948,7 +1948,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::esf::status::ESFStatusPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x esf status polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -1989,7 +1989,7 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::esf::meas::ESFMeasPayload> payload)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x esf status polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
       payload->to_string().c_str());
@@ -2046,7 +2046,7 @@ private:
       // every n send a poll request and reset the keys
       if (++i % n == 0) {
         if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
-          RCLCPP_INFO(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+          RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
           item_list = "";
           ubx_cfg_->cfg_val_set_poll_async();
           ubx_cfg_->cfg_val_set_cfgdata_clear();
@@ -2055,7 +2055,7 @@ private:
     }
     // send the final sets
     if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
-      RCLCPP_INFO(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+      RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
       ubx_cfg_->cfg_val_set_poll_async();
       ubx_cfg_->cfg_val_set_cfgdata_clear();
     }
@@ -2081,14 +2081,14 @@ private:
       RCLCPP_DEBUG(get_logger(), "load %lu cfg param: %s", i, ubx_ci.ubx_config_item);
 
       if (++i % n == 0) {
-        RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+        RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
         item_list = "";
         ubx_cfg_->cfg_val_get_poll_async();
         ubx_cfg_->cfg_val_get_keys_clear();
       }
     }
     if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
-      RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+      RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
       ubx_cfg_->cfg_val_get_poll_async_all_layers();
       ubx_cfg_->cfg_val_get_keys_clear();
     }
@@ -2121,7 +2121,7 @@ private:
       RCLCPP_DEBUG(get_logger(), "set %lu cfg param: %s", i, ubx_ci.ubx_config_item);
 
       if (++i % n == 0) {
-        RCLCPP_INFO(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+        RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
         item_list = "";
         ubx_cfg_->cfg_val_set_poll_async();
         ubx_cfg_->cfg_val_set_cfgdata_clear();
@@ -2130,7 +2130,7 @@ private:
     }
 
     if (trans_start) {
-      RCLCPP_INFO(
+      RCLCPP_DEBUG(
         get_logger(), "cfg_val_set_poll_async ... end transaction ... %s",
         item_list.c_str());
       ubx_cfg_->cfg_val_set_transaction(3);
@@ -2143,7 +2143,7 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_dgnss_init_async()
   {
-    RCLCPP_INFO(get_logger(), "ubx_mon_ver poll_async ...");
+    RCLCPP_DEBUG(get_logger(), "ubx_mon_ver poll_async ...");
     ubx_mon_->ver()->poll_async();
 
     // RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async ...");
@@ -2164,9 +2164,9 @@ private:
     // // ubx_cfg_->cfg_val_set_key_append(ubx::cfg::CFG_USBOUTPROT_NMEA, true);
     // ubx_cfg_->cfg_val_set_poll_async();
 
-    RCLCPP_INFO(get_logger(), "ublox_init_all_cfg_items_async() ...");
+    RCLCPP_DEBUG(get_logger(), "ublox_init_all_cfg_items_async() ...");
     ublox_init_all_cfg_items_async();
-    RCLCPP_INFO(get_logger(), "ublox_val_get_all_cfg_items_async() ...");
+    RCLCPP_DEBUG(get_logger(), "ublox_val_get_all_cfg_items_async() ...");
     ublox_val_get_all_cfg_items_async();
     // RCLCPP_INFO(get_logger(), "ubx_nav_clock poll_async ...");
     // ubx_nav_->clock()->poll_async();
