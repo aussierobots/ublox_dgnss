@@ -2,8 +2,8 @@
 Changelog for package ublox_ubx_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2023-05-24)
+------------------
 * updates for release
 * Contributors: Nick Hortovanyi
 
