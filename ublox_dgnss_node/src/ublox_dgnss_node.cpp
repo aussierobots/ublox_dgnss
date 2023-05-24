@@ -748,7 +748,7 @@ public:
         "ubx_esf_meas_callback num_meas %d != data array size %ld - not sending to usb",
         msg.num_meas,
         msg.data.size());
-      return;ß
+      return;
     }
 
     if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()) {

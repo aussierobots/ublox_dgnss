@@ -21,9 +21,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_cmake_test REQUIRED)
-find_package(ament_cmake_uncrustify REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
+# find_package(ament_cmake_uncrustify REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
