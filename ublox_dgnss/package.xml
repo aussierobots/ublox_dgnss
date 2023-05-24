@@ -14,7 +14,7 @@
   <depend>ublox_ubx_interfaces</depend>
   <depend>ublox_dgnss_node</depend>
   <depend>ublox_nav_sat_fix_hp_node</depend>
-  <depend>rtcm_ntrip_castor_node</depend>
+  <depend>ntrip_client_node</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
