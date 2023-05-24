@@ -4,6 +4,13 @@ Changelog for package ntrip_client_node
 
 Forthcoming
 -----------
+* updates for release
+* reverted code for Humble logging
+* Merge pull request `#10 <https://github.com/aussierobots/ublox_dgnss/issues/10>`_ from aussierobots/F9R-and-RTCM
+  F9 r and rtcm
+* added a new ntrip_client node to pub rtcm msgs
+* Contributors: Nick Hortovanyi
+
 * reverted code for Humble logging
 * Merge pull request `#10 <https://github.com/aussierobots/ublox_dgnss/issues/10>`_ from aussierobots/F9R-and-RTCM
   F9 r and rtcm

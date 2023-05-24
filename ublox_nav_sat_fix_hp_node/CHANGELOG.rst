@@ -4,6 +4,17 @@ Changelog for package ublox_nav_sat_fix_hp_node
 
 Forthcoming
 -----------
+* updates for release
+* Merge pull request `#10 <https://github.com/aussierobots/ublox_dgnss/issues/10>`_ from aussierobots/F9R-and-RTCM
+  F9 r and rtcm
+* Merge pull request `#9 <https://github.com/aussierobots/ublox_dgnss/issues/9>`_ from gsokoll/F9R-and-RTCM
+  Composable node version of navsatfix
+* Composable node version of navsatfix.  Added example launch file.
+* Merge pull request `#7 <https://github.com/aussierobots/ublox_dgnss/issues/7>`_ from CMP-Engineers/navsatfix
+  Navsatfix
+* renamed node, clang formatted, updated README
+* Contributors: Geoff Sokoll, Nick Hortovanyi
+
 * Merge pull request `#10 <https://github.com/aussierobots/ublox_dgnss/issues/10>`_ from aussierobots/F9R-and-RTCM
   F9 r and rtcm
 * Merge pull request `#9 <https://github.com/aussierobots/ublox_dgnss/issues/9>`_ from gsokoll/F9R-and-RTCM
