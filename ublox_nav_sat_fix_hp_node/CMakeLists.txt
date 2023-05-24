@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.5)
-project(ublox_dgnss_node)
+cmake_minimum_required(VERSION 3.8)
+project(ublox_nav_sat_fix_hp_node)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,60 +22,55 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_cmake_test REQUIRED)
 find_package(ament_cmake_uncrustify REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
-find_package(rtcm_msgs REQUIRED)
+# find_package(ublox_dgnss REQUIRED)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(libusb REQUIRED libusb-1.0)
 
+# include directories
 include_directories(include SYSTEM)
 
-add_library(ublox_dgnss_components SHARED
-  src/usb.cpp
-  src/ublox_dgnss_node.cpp
+add_library(ublox_nav_sat_fix_hp_components SHARED
+  src/ublox_nav_sat_fix_hp_node.cpp
 )
 
-target_compile_definitions(ublox_dgnss_components
-  PRIVATE "UBLOX_DGNSS_NODE_BUILDING_DLL"
-)
+# target_compile_definitions(ublox_nav_sat_fix_hp_components
+#   PRIVATE "UBLOX_NAV_SAT_FIX_HP_NODE_BUILDING_DLL"
+# )
 
-ament_target_dependencies(ublox_dgnss_components
+ament_target_dependencies(ublox_nav_sat_fix_hp_components
   rclcpp
   rclcpp_components
   std_msgs
+  sensor_msgs
   ublox_ubx_msgs
   ublox_ubx_interfaces
-  rtcm_msgs
 )
 
-target_link_libraries(ublox_dgnss_components
-  usb-1.0
-)
+rclcpp_components_register_node(ublox_nav_sat_fix_hp_components
+  PLUGIN "ublox_nav_sat_fix_hp::UbloxNavSatHpFixNode"
+  EXECUTABLE ublox_nav_sat_fix_hp)
 
-rclcpp_components_register_node(ublox_dgnss_components
-  PLUGIN "ublox_dgnss::UbloxDGNSSNode"
-  EXECUTABLE ublox_dgnss_node)
-
+# install executable
 install(TARGETS
-  ublox_dgnss_components
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+ublox_nav_sat_fix_hp_components
+ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib
+RUNTIME DESTINATION bin
 )
-
-# install(
-#   DIRECTORY launch
-#   DESTINATION share/${PROJECT_NAME}
-# )
-
 
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
   # the following line skips cpplint (only works in a git repo)
   # uncomment the line when this package is not in a git repo
   #set(ament_cmake_cpplint_FOUND TRUE)

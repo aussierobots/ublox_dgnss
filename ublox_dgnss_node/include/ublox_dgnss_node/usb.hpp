@@ -28,8 +28,8 @@
 #include <vector>
 #include <memory>
 
-#define F9P_VENDOR_ID      0x1546   // U-Blox AG
-#define F9P_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
+#define F9_VENDOR_ID      0x1546   // U-Blox AG
+#define F9_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
 
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
@@ -168,22 +168,26 @@ public:
   {
     return product_id_;
   }
+  bool inline devh_valid()
+  {
+    return dev_ != nullptr;
+  }
   int bus_number()
   {
-    return dev_ ? libusb_get_bus_number(dev_) : 0;
+    return devh_valid() ? libusb_get_bus_number(dev_) : 0;
   }
   int device_address()
   {
-    return dev_ ? libusb_get_device_address(dev_) : 0;
+    return devh_valid() ? libusb_get_device_address(dev_) : 0;
   }
   int device_speed()
   {
-    return dev_ ? libusb_get_device_speed(dev_) : 0;
+    return devh_valid() ? libusb_get_device_speed(dev_) : 0;
   }
   char * device_speed_txt();
   u_int8_t port_number()
   {
-    return dev_ ? libusb_get_port_number(dev_) : 0;
+    return devh_valid() ? libusb_get_port_number(dev_) : 0;
   }
   int read_chars(u_char * data, size_t size);
   void write_char(u_char c);

@@ -55,6 +55,16 @@ const msg_id_t UBX_NAV_TIMEUTC = 0x21;
 const msg_id_t UBX_NAV_VELECEF = 0x11;
 const msg_id_t UBX_NAV_VELNED = 0x12;
 const msg_id_t UBX_NAV_RELPOSNED = 0x3c;
+
+const msg_class_t UBX_RXM = 0x02;
+const msg_id_t UBX_RXM_RTCM = 0x32;
+
+const msg_class_t UBX_ESF = 0x10;
+const msg_id_t UBX_ESF_ALG = 0x14;
+const msg_id_t UBX_ESF_INS = 0x15;
+const msg_id_t UBX_ESF_MEAS = 0x02;
+const msg_id_t UBX_ESF_RAW = 0x03;
+const msg_id_t UBX_ESF_STATUS = 0x10;
 }  // namespace ubx
 
 #endif  // UBLOX_DGNSS_NODE__UBX__UBX_MSG_HPP_

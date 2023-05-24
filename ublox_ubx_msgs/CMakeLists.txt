@@ -32,11 +32,15 @@ endif()
 
 rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/CarrSoln.msg"
+  "msg/ESFMeasDataItem.msg"
+  "msg/ESFSensorStatus.msg"
   "msg/GpsFix.msg"
   "msg/MapMatching.msg"
   "msg/PSMPVT.msg"
   "msg/PSMStatus.msg"
   "msg/SpoofDet.msg"
+  "msg/UBXEsfMeas.msg"
+  "msg/UBXEsfStatus.msg"
   "msg/UBXNavEOE.msg"
   "msg/UBXNavClock.msg"
   "msg/UBXNavCov.msg"
@@ -52,6 +56,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXNavTimeUTC.msg"
   "msg/UBXNavVelECEF.msg"
   "msg/UBXNavVelNED.msg"
+  "msg/UBXRxmRTCM.msg"
   "msg/UtcStd.msg"
   DEPENDENCIES builtin_interfaces std_msgs
 )

@@ -191,6 +191,9 @@ enum CFG_NAVSPG_DYNMODEL_ENUM
   DYN_MODEL_AIR2 = 7,         // Airborne <2g acceleration
   DYN_MODEL_AIR4 = 8,         // Airborne <4g acceleration
   DYN_MODEL_WRIST = 9,        // Wrist-worn watch (not available in all products)
+  DYN_MODEL_BIKE = 10,        // Motorbike (not available in all products)
+  DYN_MODEL_MOWER = 11,       // Robotic lawn mower (not available in all products)
+  DYN_MODEL_ESCOOTER = 12,    // E-scooter (not available in all products)
 };
 
 // cfg odo
@@ -226,6 +229,32 @@ enum CFG_RATE_TIMEREF_ENUM
   ALIGN_GAL = 4,         // Align measurements to Galileo time
 };
 
+// cfg sfimu - sensor fusion IMU configuration
+const ubx_cfg_item_t CFG_SFIMU_AUTO_MNTALG_ENA =
+{"CFG_SFIMU_AUTO_MNTALG_ENA", 0x10060027, L, 0, NA};
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_YAW =
+{"CFG_SFIMU_IMU_MNTALG_YAW", 0x4006002d, U4, .001, DEG};
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_PITCH =
+{"CFG_SFIMU_IMU_MNTALG_PITCH", 0x3006002e, I2, .001, DEG};
+const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_ROLL =
+{"CFG_SFIMU_IMU_MNTALG_ROLL", 0x3006002f, I2, .001, DEG};
+
+// cfg sfodo - sensor fusion odometer configuration
+const ubx_cfg_item_t CFG_SFODO_COMBINE_TICKS =
+{"CFG_SFODO_COMBINE_TICKS", 0x10070001, L, 0, NA};
+const ubx_cfg_item_t CFG_SFODO_COUNT_MAX =
+{"CFG_SFODO_COUNT_MAX", 0x40070009, U4, 0, NA};
+const ubx_cfg_item_t CFG_SFODO_DIS_AUTOCOUNTMAX =
+{"CFG_SFODO_DIS_AUTOCOUNTMAX", 0x10070004, L, 0, NA};
+const ubx_cfg_item_t CFG_SFODO_DIS_AUTODIRPINPOL =
+{"CFG_SFODO_DIS_AUTODIRPINPOL", 0x10070005, L, 0, NA};
+const ubx_cfg_item_t CFG_SFODO_FACTOR =
+{"CFG_SFODO_FACTOR", 0x40070007, U4, 1e-6, NA};
+const ubx_cfg_item_t CFG_SFODO_QUANT_ERROR =
+{"CFG_SFODO_QUANT_ERROR", 0x40070008, U4, 1e-6, M};
+const ubx_cfg_item_t CFG_SFODO_LATENCY =
+{"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
+
 // cfg msgout - msg output rate configurations
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
 {"CFG_MSGOUT_UBX_NAV_STATUS_USB", 0x2091001d, U1, 0, NA};
@@ -257,7 +286,12 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_VELECEF_USB =
 {"CFG_MSGOUT_UBX_NAV_VELECEF_USB", 0x20910040, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_VELNED_USB =
 {"CFG_MSGOUT_UBX_NAV_VELNED_USB", 0x20910045, U1, 0, NA};
-
+const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RTCM_USB =
+{"CFG_MSGOUT_UBX_RXM_RTCM_USB", 0x2091026b, U1, 0, NA};
+const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_MEAS_USB =
+{"CFG_MSGOUT_UBX_ESF_MEAS_USB", 0x2091027a, U1, 0, NA};
+const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_STATUS_USB =
+{"CFG_MSGOUT_UBX_ESF_STATUS_USB", 0x20910108, U1, 0, NA};
 
 std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_INFMSG_UBX_USB.ubx_key_id, CFG_INFMSG_UBX_USB},
@@ -296,6 +330,19 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_RATE_NAV.ubx_key_id, CFG_RATE_NAV},
   {CFG_RATE_TIMEREF.ubx_key_id, CFG_RATE_TIMEREF},
 
+  {CFG_SFIMU_AUTO_MNTALG_ENA.ubx_key_id, CFG_SFIMU_AUTO_MNTALG_ENA},
+  {CFG_SFIMU_IMU_MNTALG_YAW.ubx_key_id, CFG_SFIMU_IMU_MNTALG_YAW},
+  {CFG_SFIMU_IMU_MNTALG_PITCH.ubx_key_id, CFG_SFIMU_IMU_MNTALG_PITCH},
+  {CFG_SFIMU_IMU_MNTALG_ROLL.ubx_key_id, CFG_SFIMU_IMU_MNTALG_ROLL},
+
+  {CFG_SFODO_COMBINE_TICKS.ubx_key_id, CFG_SFODO_COMBINE_TICKS},
+  {CFG_SFODO_COUNT_MAX.ubx_key_id, CFG_SFODO_COUNT_MAX},
+  {CFG_SFODO_DIS_AUTOCOUNTMAX.ubx_key_id, CFG_SFODO_DIS_AUTOCOUNTMAX},
+  {CFG_SFODO_DIS_AUTODIRPINPOL.ubx_key_id, CFG_SFODO_DIS_AUTODIRPINPOL},
+  {CFG_SFODO_FACTOR.ubx_key_id, CFG_SFODO_FACTOR},
+  {CFG_SFODO_LATENCY.ubx_key_id, CFG_SFODO_LATENCY},
+  {CFG_SFODO_QUANT_ERROR.ubx_key_id, CFG_SFODO_QUANT_ERROR},
+
   {CFG_MSGOUT_UBX_NAV_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_STATUS_USB},
   {CFG_MSGOUT_UBX_NAV_CLOCK_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_CLOCK_USB},
   {CFG_MSGOUT_UBX_NAV_COV_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_COV_USB},
@@ -311,6 +358,9 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_MSGOUT_UBX_NAV_TIMEUTC_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_TIMEUTC_USB},
   {CFG_MSGOUT_UBX_NAV_VELECEF_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_VELECEF_USB},
   {CFG_MSGOUT_UBX_NAV_VELNED_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_VELNED_USB},
+  {CFG_MSGOUT_UBX_RXM_RTCM_USB.ubx_key_id, CFG_MSGOUT_UBX_RXM_RTCM_USB},
+  {CFG_MSGOUT_UBX_ESF_MEAS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_MEAS_USB},
+  {CFG_MSGOUT_UBX_ESF_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_STATUS_USB}
 };
 
 bool operator<(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2)
