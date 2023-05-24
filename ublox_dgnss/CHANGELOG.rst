@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.2 (2023-05-24)
+------------------
 * fixed dependc
 * Contributors: Nick Hortovanyi
 
