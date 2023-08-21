@@ -122,10 +122,24 @@ public:
       RCLCPP_WARN(get_logger(), "parameter client service not available, waiting again...");
     }
 
+    // check for device serial string parameter
+    check_for_device_serial_param(parameters_client);
+    // check for frame_id parameter
+    check_for_frame_id_param(parameters_client);
+
     // check that the CFG parameters are valid that have been supplied as args/yaml
     std::vector<std::string> prefixes;
     auto list_param_result = list_parameters(prefixes, 1);
     for (auto name : list_param_result.names) {
+      // check for specified serial number string, silently skip over it - already handled above
+      if (strcmp(name.c_str(), DEV_STRING_PARAM_NAME.c_str()) == 0) {
+        continue;
+      }
+      // check for specified frame_id string, silently skip over it - already handled above
+      if (strcmp(name.c_str(), FRAME_ID_PARAM_NAME.c_str()) == 0) {
+        continue;
+      }
+      // ignore other parameters that don't start with "CFG"
       if (strncmp(name.c_str(), "CFG", 3) != 0) {
         continue;
       }
@@ -146,7 +160,7 @@ public:
     }
 
     auto qos = rclcpp::SensorDataQoS();
-    frame_id_ = "ubx";
+
     ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>(
       "ubx_nav_clock",
       qos);
@@ -210,7 +224,7 @@ public:
       node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
 
     try {
-      usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID);
+      usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
       usbc_->set_in_callback(connection_in_callback);
       usbc_->set_out_callback(connection_out_callback);
       usbc_->set_exception_callback(connection_exception_callback);
@@ -328,6 +342,10 @@ private:
   std::map<std::string, param_state_t> cfg_param_cache_map_;
 
   std::string frame_id_;
+  const std::string FRAME_ID_PARAM_NAME = "FRAME_ID";
+
+  std::string serial_str_ ;
+  const std::string DEV_STRING_PARAM_NAME = "DEVICE_SERIAL_STRING";
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavCov>::SharedPtr ubx_nav_cov_pub_;
@@ -356,16 +374,49 @@ private:
   rclcpp::Service<ublox_ubx_interfaces::srv::ColdStart>::SharedPtr cold_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::ResetODO>::SharedPtr reset_odo_service_;
 
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_device_serial_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // default to empty string
+    serial_str_ = "";
+    // Check if the parameter exists
+    if (!param_client->has_parameter(DEV_STRING_PARAM_NAME)) {
+      RCLCPP_INFO(this->get_logger(), "Parameter %s not found, will use first ublox device.", DEV_STRING_PARAM_NAME.c_str());
+      return;
+    }
+
+    // Get the parameter value
+    serial_str_ = param_client->get_parameter<std::string>(DEV_STRING_PARAM_NAME);
+    RCLCPP_INFO(this->get_logger(), "Parameter %s found with value: %s", DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str());
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_frame_id_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // default to ubx
+    frame_id_ = "ubx";
+    // Check if the parameter exists
+    if (!param_client->has_parameter(FRAME_ID_PARAM_NAME)) {
+      RCLCPP_INFO(this->get_logger(), "Parameter %s not found, defaulting to 'ubx' frame_id", FRAME_ID_PARAM_NAME.c_str());
+      return;
+    }
+
+    // Get the parameter value
+    frame_id_ = param_client->get_parameter<std::string>(FRAME_ID_PARAM_NAME);
+    RCLCPP_INFO(this->get_logger(), "Parameter %s found with value: %s", FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
+  }
+
 
   UBLOX_DGNSS_NODE_LOCAL
   void log_usbc()
   {
     RCLCPP_INFO(
-      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x bus: %03d address: %03d " \
+      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x serial_str: %s bus: %03d address: %03d " \
       "port_number: %d speed: %s num_interfaces: %u " \
       "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
       usbc_->vendor_id(),
       usbc_->product_id(),
+      usbc_->serial_str().c_str(),
       usbc_->bus_number(),
       usbc_->device_address(),
       usbc_->port_number(),
