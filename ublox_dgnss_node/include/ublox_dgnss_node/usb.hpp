@@ -92,6 +92,7 @@ private:
   int log_level_;
   int vendor_id_;
   int product_id_;
+  std::string serial_str_;
   int class_id_;
   int ep_data_out_addr_;
   int ep_data_in_addr_;
@@ -112,6 +113,7 @@ private:
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
 
 private:
+  libusb_device_handle* open_device_with_serial_string(libusb_context* ctx, int vendor_id, int product_id, std::string serial_str);
 // this is called after the out transfer to USB from HOST has been received by libusb
   void callback_out(struct libusb_transfer * transfer);
 // this is called when the stat for in is available - from USB in HOST
@@ -136,9 +138,9 @@ private:
 
 public:
   void init();  // throws exception on failure
-  void open_device();  // throws exception on failure
+  bool open_device();  // returns false on failure
   void init_async();  // throws exception on failure
-  Connection(int vendor_id, int product_id, int log_level = LIBUSB_OPTION_LOG_LEVEL);
+  Connection(int vendor_id, int product_id, std::string serial_str, int log_level = LIBUSB_OPTION_LOG_LEVEL);
   ~Connection();
   void set_in_callback(connection_in_cb_fn in_cb_fn)
   {
@@ -167,6 +169,10 @@ public:
   int product_id()
   {
     return product_id_;
+  }
+  std::string serial_str()
+  {
+    return serial_str_;
   }
   bool inline devh_valid()
   {

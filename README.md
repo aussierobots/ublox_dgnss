@@ -138,6 +138,18 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_SFODO_LATENCY
   CFG_SFODO_QUANT_ERROR
 
+### Device Identification Parameters
+
+aka Use with Multiple Devices
+
+By default, the ublox_dgnss node will search for and connect to the first device which matches the ublox USB ID's (vendor ID of 0x1546 and product ID of 0x1546).  If multiple devices are connected simultaneously, the remaining devices will be ignored.  In this situation you have no control over which device is used, since the order in which they are found may depend on the order in which they were physically attached to the host.
+
+If you have multiple ublox devices attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING".  The node will then search for and connect to the first device with this matching serial string.  The device serial string itself should be programmed into the ublox device beforehand using u-center software.  
+
+The frame ID used in ROS2 messages for that device can also be specified using the launch parameter "FRAME_ID".
+
+Note: these parameters are not written to the device.  They only instruct the node on how to behave.
+
 # ROS2 UBX NAV Messages
 
 The following messages may be outputed. They included a `std_msgs/Header header` with the remainder of the fields matching the UBX output. Note that field names use different notation as the UBX field name notation is not compliant with the ROS IDL field names.
@@ -196,6 +208,20 @@ An example launch file is provided. You will need to set values appropriate for 
 ros2 launch ublox_dgnss ntrip_client.launch.py use_https:=true host:=ntrip.data.gnss.ga.gov.au port:=443 mountpoint:=MBCH00AUS0 username:=username password:=password
 ```
 Note the launch file has been configured to also use environment variables `NTRIP_USERNAME` & `NTRIP_PASSWORD` such that you dont need credentials in the launch scripts.
+
+# Moving Base and Rover
+
+The ZED-F9P devices support the "moving base and rover" mode of operation, using two devices on a mobile vehicle to provide both position and orientation data.  Further information on this mode, including physical connections between the two devices and the host machine are included in the following ublox application note.
+
+https://www.u-blox.com/sites/default/files/documents/ZED-F9P-MovingBase_AppNote_UBX-19009093.pdf
+
+Note: the ZED-F9R device does not support this mode.
+
+Example launch configuration files are included as "ublox_mb+r_base.launch.py" and "ublox_mb+r_rover.launch.py" for the base and rover devices respectively.  The base and rover are physically connected similar to that described in Section 2.2.1 "Wired connection between base and rover" in the ublox app note, with UART2 used for the wired connection between base and rover.  Both base and rover connect to the host machine via USB.  Device configuration is similar to that described in Section 2.3.2 "5 Hz navigation rate application" in the app note.
+
+Both base and rover will output position data which can be used to publish NavSatFix messages (as described above).  The rover also outputs heading data via UBX-NAV-RELPOSNED messages.  Refer to Section 2.4 "Using the heading output" in the app note for more information.
+
+Note: as this mode required two ZED-F9P devices connected simultaneously, you will need to configure each device with a different serial string and specify these in the launch files.  See description above on device identification parameters.
 
 # Helpful tips
 
