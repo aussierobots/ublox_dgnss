@@ -34,7 +34,7 @@
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
 
-#define IN_BUFFER_SIZE 64 * 10
+#define IN_BUFFER_SIZE 64 * 40
 
 namespace usb
 {
