@@ -365,7 +365,7 @@ private:
   std::string frame_id_;
   const std::string FRAME_ID_PARAM_NAME = "FRAME_ID";
 
-  std::string serial_str_ ;
+  std::string serial_str_;
   const std::string DEV_STRING_PARAM_NAME = "DEVICE_SERIAL_STRING";
 
   std::string unique_id_;
@@ -411,13 +411,17 @@ private:
     serial_str_ = "";
     // Check if the parameter exists
     if (!param_client->has_parameter(DEV_STRING_PARAM_NAME)) {
-      RCLCPP_INFO(this->get_logger(), "Parameter %s not found, will use first ublox device.", DEV_STRING_PARAM_NAME.c_str());
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, will use first ublox device.",
+        DEV_STRING_PARAM_NAME.c_str());
       return;
     }
 
     // Get the parameter value
     serial_str_ = param_client->get_parameter<std::string>(DEV_STRING_PARAM_NAME);
-    RCLCPP_INFO(this->get_logger(), "Parameter %s found with value: %s", DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str());
+    RCLCPP_INFO(
+      this->get_logger(), "Parameter %s found with value: %s",
+      DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str());
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -427,13 +431,17 @@ private:
     frame_id_ = "ubx";
     // Check if the parameter exists
     if (!param_client->has_parameter(FRAME_ID_PARAM_NAME)) {
-      RCLCPP_INFO(this->get_logger(), "Parameter %s not found, defaulting to 'ubx' frame_id", FRAME_ID_PARAM_NAME.c_str());
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, defaulting to 'ubx' frame_id",
+        FRAME_ID_PARAM_NAME.c_str());
       return;
     }
 
     // Get the parameter value
     frame_id_ = param_client->get_parameter<std::string>(FRAME_ID_PARAM_NAME);
-    RCLCPP_INFO(this->get_logger(), "Parameter %s found with value: %s", FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
+    RCLCPP_INFO(
+      this->get_logger(), "Parameter %s found with value: %s",
+      FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
   }
 
 
@@ -1675,7 +1683,7 @@ private:
               << std::setw(2) << static_cast<int>(unique_id[2])
               << std::setw(2) << static_cast<int>(unique_id[3])
               << std::setw(2) << static_cast<int>(unique_id[4]);
-          unique_id_=oss.str();
+          unique_id_ = oss.str();
           RCLCPP_INFO(
             get_logger(), "ubx sec unique_id: 0x%s",
             unique_id_.c_str());
