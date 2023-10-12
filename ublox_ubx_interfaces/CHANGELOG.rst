@@ -2,6 +2,9 @@
 Changelog for package ublox_ubx_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.4 (2023-05-24)
 ------------------
 

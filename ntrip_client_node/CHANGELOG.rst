@@ -2,6 +2,9 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.4 (2023-05-24)
 ------------------
 * cmake uncrustify changes

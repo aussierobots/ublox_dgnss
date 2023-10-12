@@ -2,6 +2,14 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge branch 'main' of github.com:aussierobots/ublox_dgnss
+* Merge pull request `#12 <https://github.com/aussierobots/ublox_dgnss/issues/12>`_ from gsokoll/main
+  Add multiple device support, and moving base+rover example
+* Add multiple device support, and moving base+rover example
+* Contributors: Geoff Sokoll, Nick Hortovanyi
+
 0.4.4 (2023-05-24)
 ------------------
 

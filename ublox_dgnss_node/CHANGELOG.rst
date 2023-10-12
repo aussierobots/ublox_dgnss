@@ -2,6 +2,18 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* code formatting issues
+* fixed line length
+* Merge branch 'main' of github.com:aussierobots/ublox_dgnss
+* Merge pull request `#12 <https://github.com/aussierobots/ublox_dgnss/issues/12>`_ from gsokoll/main
+  Add multiple device support, and moving base+rover example
+* Added new messages for satellite data & security
+* increase buffer size
+* Add multiple device support, and moving base+rover example
+* Contributors: Geoff Sokoll, Nick Hortovanyi
+
 0.4.4 (2023-05-24)
 ------------------
 * cmake uncrustify changes
