@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2023-10-13)
+------------------
 * code formatting issues
 * fixed line length
 * Merge branch 'main' of github.com:aussierobots/ublox_dgnss
