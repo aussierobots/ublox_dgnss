@@ -75,6 +75,9 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB
   CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB
   CFG_MSGOUT_UBX_NAV_ODO_USB
+  CFG_MSGOUT_UBX_NAV_ORB_USB
+  CFG_MSGOUT_UBX_NAV_SAT_USB
+  CFG_MSGOUT_UBX_NAV_SIG_USB
   CFG_MSGOUT_UBX_NAV_POSECEF_USB
   CFG_MSGOUT_UBX_NAV_POSLLH_USB
   CFG_MSGOUT_UBX_NAV_PVT_USB
@@ -84,8 +87,12 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_MSGOUT_UBX_NAV_VELECEF_USB
   CFG_MSGOUT_UBX_NAV_VELNED_USB
   CFG_MSGOUT_UBX_RXM_RTCM_USB
+  CFG_MSGOUT_UBX_RXM_MEASX_USB
+  CFG_MSGOUT_UBX_RXM_RAWX_USB
   CFG_MSGOUT_UBX_ESF_MEAS_USB
   CFG_MSGOUT_UBX_ESF_STATUS_USB
+  CFG_MSGOUT_UBX_SEC_SIG_USB
+  CFG_MSGOUT_UBX_SEC_SIGLOG_USB
   CFG_NAVHPG_DGNSSMODE
   CFG_NAVSPG_DYNMODEL
   CFG_NAVSPG_FIXMODE
@@ -145,6 +152,9 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 /ubx_nav_hp_pos_ecef
 /ubx_nav_hp_pos_llh
 /ubx_nav_odo
+/ubx_nav_orb
+/ubx_nav_sat
+/ubx_nav_sig
 /ubx_nav_pos_ecef
 /ubx_nav_pos_llh
 /ubx_nav_pvt
@@ -154,6 +164,11 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 /ubx_nav_vel_ecef
 /ubx_nav_vel_ned
 /ubx_rxm_rtcm
+/ubx_rxm_measx
+/ubx_rxm_rawx
+/ubx_sec_sig
+/ubx_sec_sig_log
+
 ```
 
 The following topics are subscribed to

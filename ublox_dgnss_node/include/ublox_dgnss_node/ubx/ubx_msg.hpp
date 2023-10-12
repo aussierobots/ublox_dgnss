@@ -50,6 +50,9 @@ const msg_id_t UBX_NAV_PVT = 0x07;
 const msg_id_t UBX_NAV_HPPOSECEF = 0x13;
 const msg_id_t UBX_NAV_HPPOSLLH = 0x14;
 const msg_id_t UBX_NAV_ODO = 0x09;
+const msg_id_t UBX_NAV_ORB = 0x34;
+const msg_id_t UBX_NAV_SAT = 0x35;
+const msg_id_t UBX_NAV_SIG = 0x43;
 const msg_id_t UBX_NAV_RESETODO = 0x10;
 const msg_id_t UBX_NAV_TIMEUTC = 0x21;
 const msg_id_t UBX_NAV_VELECEF = 0x11;
@@ -58,6 +61,13 @@ const msg_id_t UBX_NAV_RELPOSNED = 0x3c;
 
 const msg_class_t UBX_RXM = 0x02;
 const msg_id_t UBX_RXM_RTCM = 0x32;
+const msg_id_t UBX_RXM_MEASX = 0x14;
+const msg_id_t UBX_RXM_RAWX = 0x15;
+
+const msg_class_t UBX_SEC = 0x27;
+const msg_id_t UBX_SEC_SIG = 0x09;
+const msg_id_t UBX_SEC_SIGLOG = 0x10;
+const msg_id_t UBX_SEC_UNIQID = 0x03;
 
 const msg_class_t UBX_ESF = 0x10;
 const msg_id_t UBX_ESF_ALG = 0x14;

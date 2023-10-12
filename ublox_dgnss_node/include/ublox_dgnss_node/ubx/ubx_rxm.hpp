@@ -23,27 +23,43 @@
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_rtcm.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_measx.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_rawx.hpp"
 
 namespace ubx::rxm
 {
 
 typedef UBXFrameComms<rxm::rtcm::RxmRTCMPayload, usb::Connection> UbxRxmRTCMFrameComms;
+typedef UBXFrameComms<rxm::measx::RxmMeasxPayload, usb::Connection> UbxRxmMeasxFrameComms;
+typedef UBXFrameComms<rxm::rawx::RxmRawxPayload, usb::Connection> UbxRxmRawxFrameComms;
 
 class UbxRxm
 {
 private:
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<UbxRxmRTCMFrameComms> rtcm_;
+  std::shared_ptr<UbxRxmMeasxFrameComms> measx_;
+  std::shared_ptr<UbxRxmRawxFrameComms> rawx_;
 
 public:
   explicit UbxRxm(std::shared_ptr<usb::Connection> usbc)
   {
     usbc_ = usbc;
     rtcm_ = std::make_shared<UbxRxmRTCMFrameComms>(usbc_);
+    measx_ = std::make_shared<UbxRxmMeasxFrameComms>(usbc_);
+    rawx_ = std::make_shared<UbxRxmRawxFrameComms>(usbc_);
   }
   std::shared_ptr<UbxRxmRTCMFrameComms> rtcm()
   {
     return rtcm_;
+  }
+  std::shared_ptr<UbxRxmMeasxFrameComms> measx()
+  {
+    return measx_;
+  }
+  std::shared_ptr<UbxRxmRawxFrameComms> rawx()
+  {
+    return rawx_;
   }
 };
 }  // namespace ubx::rxm
