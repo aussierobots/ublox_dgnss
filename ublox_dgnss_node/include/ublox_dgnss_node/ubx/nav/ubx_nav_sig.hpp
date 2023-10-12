@@ -103,7 +103,7 @@ public:
       signal.sig_flags.all = buf_offset<x2_t>(&payload_, offset + 10);
 
       sig_data.push_back(signal);
-      offset += 16; // Size of each repeated group is 16 bytes
+      offset += 16;  // Size of each repeated group is 16 bytes
     }
   }
   std::string to_string()

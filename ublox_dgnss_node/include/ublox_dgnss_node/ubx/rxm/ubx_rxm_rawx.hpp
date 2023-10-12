@@ -155,9 +155,9 @@ public:
       oss << ", freq_id: " << static_cast<int>(meas_data[i].freq_id) << ", locktime: " <<
         meas_data[i].locktime;
       oss << ", cno: " << static_cast<int>(meas_data[i].cno);
-      oss << ", pr_stdev: " << +0.01*pow(2,meas_data[i].pr_stdev);
-      oss << ", cp_stdev: " << +0.004*meas_data[i].cp_stdev;
-      oss << ", do_stdev: " << +0.002*pow(2,meas_data[i].do_stdev);
+      oss << ", pr_stdev: " << +0.01 * pow(2, meas_data[i].pr_stdev);
+      oss << ", cp_stdev: " << +0.004 * meas_data[i].cp_stdev;
+      oss << ", do_stdev: " << +0.002 * pow(2, meas_data[i].do_stdev);
       oss << ", trk_stat: {pr_valid: " << static_cast<int>(meas_data[i].trk_stat.bits.pr_valid);
       oss << ", cp_valid: " << static_cast<int>(meas_data[i].trk_stat.bits.cp_valid);
       oss << ", half_cyc: " << static_cast<int>(meas_data[i].trk_stat.bits.half_cyc);

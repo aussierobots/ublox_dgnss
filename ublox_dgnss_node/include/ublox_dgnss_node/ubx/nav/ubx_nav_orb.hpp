@@ -149,13 +149,13 @@ public:
       oss << ", eph_source: " << static_cast<int>(sv_info[i].eph.bits.eph_source);
       oss << ", alm_usability: " << static_cast<int>(sv_info[i].alm.bits.alm_usability);
       oss << ", alm_source: " << static_cast<int>(sv_info[i].alm.bits.alm_source);
-      oss << ", ano_aop_usability: " << static_cast<int>(sv_info[i].other_orb.bits.ano_aop_usability);
+      oss << ", ano_aop_usability: " <<
+        static_cast<int>(sv_info[i].other_orb.bits.ano_aop_usability);
       oss << ", orb_type: " << static_cast<int>(sv_info[i].other_orb.bits.orb_type);
     }
 
     return oss.str();
   }
-
 };
 
 }  // namespace ubx::nav::orb

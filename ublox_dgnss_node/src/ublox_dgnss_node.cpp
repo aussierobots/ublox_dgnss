@@ -449,7 +449,8 @@ private:
   void log_usbc()
   {
     RCLCPP_INFO(
-      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x serial_str: %s bus: %03d address: %03d " \
+      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x " \
+      "serial_str: %s bus: %03d address: %03d " \
       "port_number: %d speed: %s num_interfaces: %u " \
       "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
       usbc_->vendor_id(),

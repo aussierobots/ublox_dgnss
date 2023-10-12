@@ -82,11 +82,13 @@ public:
   std::string to_string()
   {
     std::ostringstream oss;
-    oss << "version: " << static_cast<int>(version) << ", num_events: " << static_cast<int>(num_events);
+    oss << "version: " << static_cast<int>(version) << ", num_events: " <<
+      static_cast<int>(num_events);
 
     for (size_t i = 0; i < events.size(); ++i) {
       oss << "\n  event " << i << ": ";
-      oss << "time_elapsed: " << events[i].time_elapsed << ", detection_type: " << static_cast<int>(events[i].detection_type);
+      oss << "time_elapsed: " << events[i].time_elapsed << ", detection_type: " <<
+        static_cast<int>(events[i].detection_type);
       oss << ", event_type: " << static_cast<int>(events[i].event_type);
     }
 

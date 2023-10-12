@@ -113,7 +113,9 @@ private:
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
 
 private:
-  libusb_device_handle* open_device_with_serial_string(libusb_context* ctx, int vendor_id, int product_id, std::string serial_str);
+  libusb_device_handle * open_device_with_serial_string(
+    libusb_context * ctx, int vendor_id,
+    int product_id, std::string serial_str);
 // this is called after the out transfer to USB from HOST has been received by libusb
   void callback_out(struct libusb_transfer * transfer);
 // this is called when the stat for in is available - from USB in HOST
@@ -140,7 +142,9 @@ public:
   void init();  // throws exception on failure
   bool open_device();  // returns false on failure
   void init_async();  // throws exception on failure
-  Connection(int vendor_id, int product_id, std::string serial_str, int log_level = LIBUSB_OPTION_LOG_LEVEL);
+  Connection(
+    int vendor_id, int product_id, std::string serial_str,
+    int log_level = LIBUSB_OPTION_LOG_LEVEL);
   ~Connection();
   void set_in_callback(connection_in_cb_fn in_cb_fn)
   {

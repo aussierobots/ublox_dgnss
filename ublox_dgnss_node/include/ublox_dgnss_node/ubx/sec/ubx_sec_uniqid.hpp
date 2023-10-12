@@ -50,7 +50,7 @@ public:
     memcpy(payload_.data(), payload_polled, size);
 
     version = buf_offset<u1_t>(&payload_, 0);
-    memcpy(unique_id, &payload_[4], 5); // Copy 5 bytes of Unique ID
+    memcpy(unique_id, &payload_[4], 5);  // Copy 5 bytes of Unique ID
   }
 
   std::tuple<u1_t *, size_t> make_poll_payload()

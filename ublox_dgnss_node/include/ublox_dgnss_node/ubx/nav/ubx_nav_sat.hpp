@@ -128,7 +128,7 @@ public:
       oss << ", cno: " << static_cast<int>(sat_data[i].cno);
       oss << ", elev: " << static_cast<int>(sat_data[i].elev);
       oss << ", azim: " << sat_data[i].azim;
-      oss << ", pr_res: " << +sat_data[i].pr_res*0.1;
+      oss << ", pr_res: " << +sat_data[i].pr_res * 0.1;
 
       // Expanding the flags
       oss << ", flags: {";
