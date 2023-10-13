@@ -116,7 +116,8 @@ private:
       // Set covariance type to estimated from the converted NED to ENU covariance
       nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_KNOWN;
     } else {
-      nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+      nav_sat_fix_msg.position_covariance_type =
+        sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
     }
 
     // Publish NavSatFix message
