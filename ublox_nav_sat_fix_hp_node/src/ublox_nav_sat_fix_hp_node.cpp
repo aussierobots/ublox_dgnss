@@ -80,21 +80,12 @@ private:
   sensor_msgs::msg::NavSatStatus nav_sat_stat_;
 
   // flags used to check whether we have received corresponding messages
-  bool have_recd_nav_sat_stat_ = false;
   bool have_recd_enu_pos_cov_ = false;
 
   UBLOX_NAV_SAT_FIX_HP_NODE_LOCAL
   void nav_hp_pos_llh_callback(
     const ublox_ubx_msgs::msg::UBXNavHPPosLLH::SharedPtr ubx_hppos_llh_msg)
   {
-    // if we haven't already received nav_sat_stat and enu_pos_cov messages, then do nothing
-    if (!have_recd_nav_sat_stat_ || !have_recd_enu_pos_cov_) {
-      return;
-    }
-    // clear flags (will be set in the respective message callbacks)
-    have_recd_nav_sat_stat_ = false;
-    have_recd_enu_pos_cov_ = false;
-
     // Create the NavSatFix message
     sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
     // header - copy from Pos message
@@ -121,9 +112,12 @@ private:
     for (size_t i = 0; i < enu_pos_cov_.size(); i++) {
       nav_sat_fix_msg.position_covariance[i] = enu_pos_cov_[i];
     }
-
-    // Set covariance type to estimated from the converted NED to ENU covariance
-    nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_KNOWN;
+    if (have_recd_enu_pos_cov_) {
+      // Set covariance type to estimated from the converted NED to ENU covariance
+      nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_KNOWN;
+    } else {
+      nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+    }
 
     // Publish NavSatFix message
     nav_sat_fix_pub_->publish(nav_sat_fix_msg);
@@ -198,9 +192,6 @@ private:
     // Service values - derive from UBX-NAV-SAT gnssId field?
     // In their absence, use arrogant default assumption of GPS
     nav_sat_stat_.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
-
-    // set flag to show we have received fresh data for this message
-    have_recd_nav_sat_stat_ = true;
   }
 };
 
