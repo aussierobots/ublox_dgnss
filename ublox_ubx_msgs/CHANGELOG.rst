@@ -2,6 +2,11 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2023-10-13)
+------------------
+* Added new messages for satellite data & security
+* Contributors: Nick Hortovanyi
+
 0.4.4 (2023-05-24)
 ------------------
 
