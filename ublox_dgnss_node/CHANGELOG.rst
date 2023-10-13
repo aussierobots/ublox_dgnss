@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.1 (2023-10-13)
+------------------
 * Merge branch 'aussierobots:main' into main
 * Contributors: Geoff Sokoll
 

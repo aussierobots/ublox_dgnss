@@ -2,8 +2,8 @@
 Changelog for package ublox_nav_sat_fix_hp_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.1 (2023-10-13)
+------------------
 * fixed formatting
 * Merge pull request `#14 <https://github.com/aussierobots/ublox_dgnss/issues/14>`_ from gsokoll/main
   Remove check for nav_sat_stat and nav_sat_cov from nav_sat_fix node

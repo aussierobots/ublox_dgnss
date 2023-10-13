@@ -2,8 +2,8 @@
 Changelog for package ublox_ubx_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.1 (2023-10-13)
+------------------
 * Merge branch 'aussierobots:main' into main
 * Contributors: Geoff Sokoll
 
