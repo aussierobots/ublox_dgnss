@@ -43,11 +43,11 @@ void Connection::init()
 {
   int rc = libusb_init(&ctx_);
   if (rc < 0) {
-    throw "Error initializing libusb: " + *libusb_error_name(rc);
+    throw std::string("Error initialising libusb: ") + libusb_error_name(rc);
   }
 
   if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-    throw "Hotplug capabilities are not supported on this platform!";
+    throw std::string("Hotplug capabilities are not supported on this platform!");
   }
 
   // setup C style to C++ style callback
@@ -62,7 +62,7 @@ void Connection::init()
     ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
     product_id_, class_id_, hotplug_attach_callback_fn, NULL, &hp_[0]);
   if (LIBUSB_SUCCESS != rc) {
-    throw "Error registering hotplug attach callback";
+    throw std::string("Error registering hotplug attach callback");
   }
 
   // setup C style to C++ style callback
@@ -77,7 +77,7 @@ void Connection::init()
     ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
     product_id_, class_id_, hotplug_detach_callback_fn, NULL, &hp_[1]);
   if (LIBUSB_SUCCESS != rc) {
-    throw "Error registering hotplug detach callback";
+    throw std::string("Error registering hotplug detach callback");
   }
 
   /* Set debugging output level.
@@ -104,7 +104,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
   ssize_t deviceCount;
   rc = libusb_get_device_list(ctx, &deviceList);
   if (rc < 0) {
-    throw "Error getting device list: " + *libusb_error_name(rc);
+    throw std::string("Error getting device list: ") + libusb_error_name(rc);
   } else {
     deviceCount = rc;
   }
@@ -116,7 +116,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
 
     rc = libusb_get_device_descriptor(device, &desc);
     if (rc < 0) {
-      throw "Error getting device descriptor: " + *libusb_error_name(rc);
+      throw std::string("Error getting device descriptor: ") + libusb_error_name(rc);
     }
 
     if (desc.idVendor != vendor_id || desc.idProduct != product_id) {
@@ -126,7 +126,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
     // Open the device
     rc = libusb_open(device, &devHandle);
     if (rc < 0) {
-      throw "Error opening device: " + *libusb_error_name(rc);
+      throw std::string("Error opening device: ") + libusb_error_name(rc);
     }
 
     char serial_num_string[256];
@@ -134,8 +134,8 @@ libusb_device_handle * Connection::open_device_with_serial_string(
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
       reinterpret_cast<unsigned char *>(serial_num_string), sizeof(serial_num_string));
-    if (rc < 0) {
-      throw "Error getting string descriptor ascii: " + *libusb_error_name(rc);
+    if (rc < 0 && rc !=  LIBUSB_ERROR_INVALID_PARAM) {
+      throw std::string("Error getting string descriptor ascii: ") + libusb_error_name(rc);
     }
 
     // if specified serial string is empty, we can just return now but assign
@@ -156,6 +156,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
   }
   // Free the device list
   libusb_free_device_list(deviceList, 1);
+
   return devHandle;
 }
 
@@ -165,11 +166,11 @@ bool Connection::open_device()
   devh_ = open_device_with_serial_string(ctx_, vendor_id_, product_id_, serial_str_);
   if (!devh_) {
     if (serial_str_.empty()) {
-      // throw "Error finding USB device (no serial string supplied)";
-      std::cerr << "Error finding ublox USB device (no serial string supplied)";
+      throw std::string("Error finding USB device");
+      // std::cerr << "Error finding ublox USB device (no serial string supplied)";
     } else {
-      // throw "Error finding USB device with specified serial string";
-      std::cerr << "Error finding ublox USB device with specified serial string";
+      throw std::string("Error finding USB device with specified serial string");
+      // std::cerr << "Error finding ublox USB device with specified serial string";
     }
     return false;
   }
@@ -178,7 +179,7 @@ bool Connection::open_device()
 
   int rc = libusb_set_auto_detach_kernel_driver(devh_, true);
   if (rc < 0) {
-    throw "Error set auto detach kernel driver: " + *libusb_error_name(rc);
+    throw std::string("Error set auto detach kernel driver: ") + libusb_error_name(rc);
   }
 
   /* As we are dealing with a CDC-ACM device, it's highly probable that
@@ -193,7 +194,7 @@ bool Connection::open_device()
     }
     rc = libusb_claim_interface(devh_, if_num);
     if (rc < 0) {
-      throw "Error claiming interface: " + *libusb_error_name(rc);
+      throw std::string("Error claiming interface: ") + libusb_error_name(rc);
     }
   }
 
@@ -203,23 +204,23 @@ bool Connection::open_device()
   struct libusb_device_descriptor dev_desc;
   rc = libusb_get_device_descriptor(dev_, &dev_desc);
   if (rc < 0) {
-    throw "Error getting device descriptor: " + *libusb_error_name(rc);
+    throw std::string("Error getting device descriptor: ") + *libusb_error_name(rc);
   }
   auto num_configurations = dev_desc.bNumConfigurations;       // this should be 1
   if (num_configurations != 1) {
-    throw "Error bNumConfigurations is not 1 - dont know which configuration to use";
+    throw std::string("Error bNumConfigurations is not 1 - dont know which configuration to use");
   }
 
   /* get the active USB configuration descriptor */
   struct libusb_config_descriptor * conf_desc;
   rc = libusb_get_active_config_descriptor(dev_, &conf_desc);
   if (rc < 0) {
-    throw "Error getting active configuration descriptor: " + *libusb_error_name(rc);
+    throw std::string("Error getting active configuration descriptor: ") + libusb_error_name(rc);
   }
 
   num_interfaces_ = conf_desc->bNumInterfaces;
   if (num_interfaces_ != 2) {
-    throw "Error config bNumInterfaces != 2";
+    throw std::string("Error config bNumInterfaces != 2");
   }
 
   for (uint8_t i = 0; i < num_interfaces_; i++) {
@@ -237,7 +238,7 @@ bool Connection::open_device()
           ep_data_in_addr_ = interface_desc->endpoint[1].bEndpointAddress;
           break;
         default:
-          throw "Error unknown bInterfaceClass";
+          throw std::string("Error unknown bInterfaceClass");
       }
     }
   }
@@ -332,7 +333,7 @@ int Connection::read_chars(u_char * data, size_t size)
   } else if (rc < 0) {
     std::string exception_msg("Error while waiting for char: ");
     exception_msg.append(libusb_error_name(rc));
-    std::cout << "exception_msg: " << exception_msg << std::endl;
+    // std::cout << "exception_msg: " << exception_msg << std::endl;
     throw UsbException(exception_msg);
   }
 

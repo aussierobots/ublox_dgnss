@@ -257,14 +257,36 @@ public:
         RCLCPP_ERROR(get_logger(), "USBDevice handle not valid. USB device not connected?");
         rclcpp::shutdown();
       }
+    } catch (std::string const & msg) {
+      RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg.c_str());
+      if (usbc_ != nullptr) {
+        usbc_->shutdown();
+        usbc_.reset();
+      }
+      rclcpp::shutdown();
+    } catch (usb::UsbException & e) {
+      RCLCPP_ERROR(this->get_logger(), "usb init UsbException: %s", e.what());
+      if (usbc_ != nullptr) {
+        usbc_->shutdown();
+        usbc_.reset();
+      }
+      rclcpp::shutdown();
+    } catch (std::exception & e) {
+      RCLCPP_ERROR(this->get_logger(), "usb init events exception: %s", e.what());
+      if (usbc_ != nullptr) {
+        usbc_->shutdown();
+        usbc_.reset();
+      }
+      rclcpp::shutdown();
     } catch (const char * msg) {
-      RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg);
+      RCLCPP_ERROR(this->get_logger(), "usb init events - %s", msg);
       if (usbc_ != nullptr) {
         usbc_->shutdown();
         usbc_.reset();
       }
       rclcpp::shutdown();
     }
+
 
     log_usbc();
 
@@ -300,6 +322,8 @@ public:
           RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
         } catch (const char * msg) {
           RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
+        } catch (const std::string & msg) {
+          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
         }
         ;
         RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
