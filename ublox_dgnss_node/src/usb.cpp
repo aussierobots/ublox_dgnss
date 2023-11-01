@@ -134,7 +134,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
       reinterpret_cast<unsigned char *>(serial_num_string), sizeof(serial_num_string));
-    if (rc < 0 && rc !=  LIBUSB_ERROR_INVALID_PARAM) {
+    if (rc < 0 && rc != LIBUSB_ERROR_INVALID_PARAM) {
       throw std::string("Error getting string descriptor ascii: ") + libusb_error_name(rc);
     }
 
