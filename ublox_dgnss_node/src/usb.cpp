@@ -140,7 +140,6 @@ libusb_device_handle * Connection::open_device_with_serial_string(
 
     // if specified serial string is empty, we can just return now but assign
     if (serial_str.empty()) {
-      serial_str_ = serial_num_string;      // record device serial number for reporting later
       break;
     }
 
