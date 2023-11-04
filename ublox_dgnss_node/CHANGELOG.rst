@@ -2,6 +2,14 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* removed saving of read serial str in connection
+* uncrustify format issue
+* fixed error messages
+* added rc logic and throws
+* Contributors: Nick Hortovanyi
+
 0.5.1 (2023-10-13)
 ------------------
 * Merge branch 'aussierobots:main' into main

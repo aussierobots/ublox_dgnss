@@ -2,6 +2,9 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.5.1 (2023-10-13)
 ------------------
 * Merge branch 'aussierobots:main' into main
