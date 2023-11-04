@@ -1,5 +1,9 @@
+### usb connection issue with 0.5.1 release ###
+An inadvertent bug was introduced in 0.5.1 that affects those connecting without having a USB serial string defined on the F9. Please use the source code directly. 0.5.2 has a fix. It does not affect all installations.
+
 # ublox-dgnss
-This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available.
+
+This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added.
 
 RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node.
 
@@ -144,7 +148,7 @@ aka Use with Multiple Devices
 
 By default, the ublox_dgnss node will search for and connect to the first device which matches the ublox USB ID's (vendor ID of 0x1546 and product ID of 0x1546).  If multiple devices are connected simultaneously, the remaining devices will be ignored.  In this situation you have no control over which device is used, since the order in which they are found may depend on the order in which they were physically attached to the host.
 
-If you have multiple ublox devices attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING".  The node will then search for and connect to the first device with this matching serial string.  The device serial string itself should be programmed into the ublox device beforehand using u-center software.  
+If you have multiple ublox devices attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING".  The node will then search for and connect to the first device with this matching serial string.  The device serial string itself should be programmed into the ublox device beforehand using u-center software.
 
 The frame ID used in ROS2 messages for that device can also be specified using the launch parameter "FRAME_ID".
 
