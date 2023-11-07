@@ -1,6 +1,3 @@
-### usb connection issue with 0.5.1 release ###
-An inadvertent bug was introduced in 0.5.1 that affects those connecting without having a USB serial string defined on the F9. Please use the source code directly. 0.5.2 has a fix. It does not affect all installations.
-
 # ublox-dgnss
 
 This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added.
