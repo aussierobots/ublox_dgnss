@@ -83,6 +83,7 @@ public:
       curl_easy_setopt(handle, CURLOPT_USERPWD, userpwd.c_str());
       // curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
       // curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
+      curl_easy_setopt(handle, CURLOPT_USERAGENT, "NTRIP ros2/ublox_dgnss");
       curl_easy_setopt(handle, CURLOPT_FAILONERROR, true);
       curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &NTRIPClientNode::WriteCallback);
       curl_easy_setopt(curlHandle_->handle, CURLOPT_WRITEDATA, this);
