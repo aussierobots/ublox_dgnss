@@ -307,6 +307,20 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIG_USB =
 const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIGLOG_USB =
 {"CFG_MSGOUT_UBX_SEC_SIGLOG_USB", 0x2091068c, U1, 0, NA};
 
+// cfg itfm - Jamming and interference monitor configuration
+const ubx_cfg_item_t CFG_ITFM_BBTHRESHOLD = {"CFG_ITFM_BBTHRESHOLD", 0x20410001, U1, 1, NA};
+const ubx_cfg_item_t CFG_ITFM_CWTHRESHOLD = {"CFG_ITFM_CWTHRESHOLD", 0x20410002, U1, 1, NA};
+const ubx_cfg_item_t CFG_ITFM_ENABLE = {"CFG_ITFM_ENABLE", 0x1041000d, L, 0, NA};
+const ubx_cfg_item_t CFG_ITFM_ANTSETTING = {"CFG_ITFM_ANTSETTING", 0x20410010, E1, 0, NA};
+const ubx_cfg_item_t CFG_ITFM_ENABLE_AUX = {"CFG_ITFM_ENABLE_AUX", 0x10410013, L, 0, NA};
+
+enum CFG_ITFM_ANTSETTING_ENUM
+{
+  UNKNOWN = 0,
+  PASSIVE = 1,
+  ACTIVE = 2,
+};
+
 std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_INFMSG_UBX_USB.ubx_key_id, CFG_INFMSG_UBX_USB},
   {CFG_INFMSG_NMEA_USB.ubx_key_id, CFG_INFMSG_NMEA_USB},
@@ -381,7 +395,13 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_MSGOUT_UBX_ESF_MEAS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_MEAS_USB},
   {CFG_MSGOUT_UBX_ESF_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_STATUS_USB},
   {CFG_MSGOUT_UBX_SEC_SIG_USB.ubx_key_id, CFG_MSGOUT_UBX_SEC_SIG_USB},
-  {CFG_MSGOUT_UBX_SEC_SIGLOG_USB.ubx_key_id, CFG_MSGOUT_UBX_SEC_SIGLOG_USB}
+  {CFG_MSGOUT_UBX_SEC_SIGLOG_USB.ubx_key_id, CFG_MSGOUT_UBX_SEC_SIGLOG_USB},
+
+  {CFG_ITFM_BBTHRESHOLD.ubx_key_id, CFG_ITFM_BBTHRESHOLD},
+  {CFG_ITFM_CWTHRESHOLD.ubx_key_id, CFG_ITFM_CWTHRESHOLD},
+  {CFG_ITFM_ENABLE.ubx_key_id, CFG_ITFM_ENABLE},
+  {CFG_ITFM_ANTSETTING.ubx_key_id, CFG_ITFM_ANTSETTING},
+  {CFG_ITFM_ENABLE_AUX.ubx_key_id, CFG_ITFM_ENABLE_AUX},
 };
 
 bool operator<(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2)

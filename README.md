@@ -139,6 +139,12 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_SFODO_LATENCY
   CFG_SFODO_QUANT_ERROR
 
+  CFG_ITFM_BBTHRESHOLD
+  CFG_ITFM_CWTHRESHOLD
+  CFG_ITFM_ENABLE
+  CFG_ITFM_ANTSETTING
+  CFG_ITFM_ENABLE_AUX
+
 ### Device Identification Parameters
 
 aka Use with Multiple Devices
