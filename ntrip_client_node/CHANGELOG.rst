@@ -2,6 +2,16 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#18 <https://github.com/aussierobots/ublox_dgnss/issues/18>`_ from tfoldi/user_agent
+  chore: set user-agent for caster http requests
+* chore: set user-agent for caster http requests
+  Some public caster servers (like caster.centipede.fr) requires
+  specific user agents for streaming requests (NTRIP as first
+  string in the agent).
+* Contributors: Nick Hortovanyi, Tamas Foldi
+
 0.5.2 (2023-11-05)
 ------------------
 
