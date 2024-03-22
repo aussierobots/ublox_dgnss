@@ -2,8 +2,8 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.3 (2024-03-22)
+------------------
 * Merge pull request `#18 <https://github.com/aussierobots/ublox_dgnss/issues/18>`_ from tfoldi/user_agent
   chore: set user-agent for caster http requests
 * chore: set user-agent for caster http requests

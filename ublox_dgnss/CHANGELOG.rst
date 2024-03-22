@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.3 (2024-03-22)
+------------------
 * hp sv tracking and jamming/interference launch file
 * Contributors: Nick Hortovanyi
 

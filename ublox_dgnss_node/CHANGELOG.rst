@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.3 (2024-03-22)
+------------------
 * Jamming and interference monitor configuration
 * Contributors: Nick Hortovanyi
 
