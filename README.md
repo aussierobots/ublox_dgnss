@@ -149,7 +149,7 @@ Values will be as described in the integration manual (without scaling applied).
 
 aka Use with Multiple Devices
 
-By default, the ublox_dgnss node will search for and connect to the first device which matches the ublox USB ID's (vendor ID of 0x1546 and product ID of 0x1546).  If multiple devices are connected simultaneously, the remaining devices will be ignored.  In this situation you have no control over which device is used, since the order in which they are found may depend on the order in which they were physically attached to the host.
+By default, the ublox_dgnss node will search for and connect to the first device which matches the ublox USB ID's (vendor ID of 0x1546 and product ID of 0x01a9).  If multiple devices are connected simultaneously, the remaining devices will be ignored.  In this situation you have no control over which device is used, since the order in which they are found may depend on the order in which they were physically attached to the host.
 
 If you have multiple ublox devices attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING".  The node will then search for and connect to the first device with this matching serial string.  The device serial string itself should be programmed into the ublox device beforehand using u-center software.
 
