@@ -115,7 +115,7 @@ private:
 private:
   libusb_device_handle * open_device_with_serial_string(
     libusb_context * ctx, int vendor_id,
-    int product_id, std::string serial_str);
+    int product_id, std::string serial_str, char * serial_num_string);
 // this is called after the out transfer to USB from HOST has been received by libusb
   void callback_out(struct libusb_transfer * transfer);
 // this is called when the stat for in is available - from USB in HOST
