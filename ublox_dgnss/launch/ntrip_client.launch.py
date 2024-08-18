@@ -1,4 +1,4 @@
-""" Launch ublox_dgnss_node publishing high precision Lon/Lat messages"""
+""" Launch ntrip client publishing RTCM messages"""
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
