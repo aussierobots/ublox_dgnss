@@ -1580,8 +1580,8 @@ private:
       port.rx_peak_usage = payload->ports[i].rxPeakUsage;
       port.overrun_errs = payload->ports[i].overrunErrs;
 
-      for (size_t i = 0; i < 4; i++) {
-        port.msgs[i] = payload->ports[i].msgs[i];
+      for (size_t j = 0; j < 4; j++) {
+        port.msgs[i] = payload->ports[i].msgs[j];
       }
 
       port.skipped = payload->ports[i].skipped;
