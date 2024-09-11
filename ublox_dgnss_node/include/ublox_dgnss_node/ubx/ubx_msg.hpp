@@ -60,9 +60,12 @@ const msg_id_t UBX_NAV_VELNED = 0x12;
 const msg_id_t UBX_NAV_RELPOSNED = 0x3c;
 
 const msg_class_t UBX_RXM = 0x02;
+const msg_id_t UBX_RXM_COR = 0x34;
 const msg_id_t UBX_RXM_RTCM = 0x32;
 const msg_id_t UBX_RXM_MEASX = 0x14;
 const msg_id_t UBX_RXM_RAWX = 0x15;
+const msg_id_t UBX_RXM_SPARTN = 0x33;
+const msg_id_t UBX_RXM_SPARTNKEY = 0x36;
 
 const msg_class_t UBX_SEC = 0x27;
 const msg_id_t UBX_SEC_SIG = 0x09;

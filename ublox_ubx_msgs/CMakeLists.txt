@@ -32,6 +32,7 @@ endif()
 
 rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/CarrSoln.msg"
+  "msg/CorStatusInfo.msg"
   "msg/ESFMeasDataItem.msg"
   "msg/ESFSensorStatus.msg"
   "msg/GpsFix.msg"
@@ -54,6 +55,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/SigData.msg"
   "msg/SigFlags.msg"
   "msg/SigLogEvent.msg"
+  "msg/SpartnKeyInfo.msg"
   "msg/SpoofDet.msg"
   "msg/TrkStat.msg"
   "msg/UBXEsfMeas.msg"
@@ -77,9 +79,12 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXNavTimeUTC.msg"
   "msg/UBXNavVelECEF.msg"
   "msg/UBXNavVelNED.msg"
+  "msg/UBXRxmCor.msg"
   "msg/UBXRxmMeasx.msg"
   "msg/UBXRxmRawx.msg"
   "msg/UBXRxmRTCM.msg"
+  "msg/UBXRxmSpartn.msg"
+  "msg/UBXRxmSpartnKey.msg"
   "msg/UBXSecSig.msg"
   "msg/UBXSecSigLog.msg"
   "msg/UBXSecUniqid.msg"
