@@ -37,6 +37,7 @@ const msg_id_t UBX_CFG_RST = 0x04;
 
 const msg_class_t UBX_MON = 0x0A;
 const msg_id_t UBX_MON_VER = 0x04;
+const msg_id_t UBX_MON_COMMS = 0x36;
 
 const msg_class_t UBX_NAV = 0x01;
 const msg_id_t UBX_NAV_CLOCK = 0x22;
