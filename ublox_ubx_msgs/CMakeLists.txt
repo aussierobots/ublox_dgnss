@@ -32,6 +32,7 @@ endif()
 
 rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/CarrSoln.msg"
+  "msg/CommsPortInfo.msg"
   "msg/CorStatusInfo.msg"
   "msg/ESFMeasDataItem.msg"
   "msg/ESFSensorStatus.msg"
@@ -60,6 +61,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/TrkStat.msg"
   "msg/UBXEsfMeas.msg"
   "msg/UBXEsfStatus.msg"
+  "msg/UBXMonComms.msg"
   "msg/UBXNavEOE.msg"
   "msg/UBXNavClock.msg"
   "msg/UBXNavCov.msg"
