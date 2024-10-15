@@ -94,7 +94,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
   libusb_context * ctx,
   int vendor_id, int product_id,
   std::string serial_str,
-  char *serial_num_string)
+  char * serial_num_string)
 {
   libusb_device_handle * devHandle = nullptr;
   int rc = 0;
@@ -130,7 +130,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       throw std::string("Error opening device: ") + libusb_error_name(rc);
     }
 
-    
+
     // Read the serial number string
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
@@ -164,14 +164,16 @@ libusb_device_handle * Connection::open_device_with_serial_string(
 bool Connection::open_device()
 {
   char serial_num_string[256];
-  devh_ = open_device_with_serial_string(ctx_, vendor_id_, product_id_, serial_str_, serial_num_string);
+  devh_ = open_device_with_serial_string(
+    ctx_, vendor_id_, product_id_, serial_str_,
+    serial_num_string);
   if (!devh_) {
     if (serial_str_.empty()) {
       throw std::string("Error finding USB device");
       // std::cerr << "Error finding ublox USB device (no serial string supplied)";
     } else {
-      throw std::string("Error finding USB device with specified serial string, looking for \"") + 
-        serial_str_ + "\" however \"" + serial_num_string + "\" was found.";
+      throw std::string("Error finding USB device with specified serial string, looking for \"") +
+            serial_str_ + "\" however \"" + serial_num_string + "\" was found.";
       // std::cerr << "Error finding ublox USB device with specified serial string";
     }
     return false;

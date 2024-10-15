@@ -52,11 +52,15 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_time_utc.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_cor.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rtcm.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_measx.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rawx.hpp"
-#include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_spartn.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_spartn_key.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
+#include "ublox_ubx_msgs/msg/ubx_mon_comms.hpp"
 #include "ublox_ubx_msgs/msg/ubx_sec_sig.hpp"
 #include "ublox_ubx_msgs/msg/ubx_sec_sig_log.hpp"
 #include "ublox_ubx_msgs/msg/ubx_sec_uniqid.hpp"
@@ -199,16 +203,24 @@ public:
       "ubx_nav_vel_ecef", qos);
     ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(
       "ubx_nav_vel_ned", qos);
+    ubx_rxm_cor_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmCor>(
+      "ubx_rxm_cor", qos);
     ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(
       "ubx_rxm_rtcm", qos);
     ubx_rxm_measx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>(
       "ubx_rxm_measx", qos);
     ubx_rxm_rawx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRawx>(
       "ubx_rxm_rawx", qos);
+    ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
+      "ubx_rxm_spartn", qos);
+    ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
+      "ubx_rxm_spartnkey", qos);
     ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
       "ubx_esf_status", qos);
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "ubx_esf_meas", qos);
+    ubx_mon_comms_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXMonComms>(
+      "ubx_mon_comms", qos);
     ubx_sec_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSig>("ubx_sec_sig", qos);
     ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(
       "ubx_sec_sig_log", qos);
@@ -412,11 +424,15 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>::SharedPtr ubx_nav_time_utc_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmCor>::SharedPtr ubx_rxm_cor_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>::SharedPtr ubx_rxm_measx_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRawx>::SharedPtr ubx_rxm_rawx_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>::SharedPtr ubx_rxm_spartn_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>::SharedPtr ubx_rxm_spartnkey_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXMonComms>::SharedPtr ubx_mon_comms_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSig>::SharedPtr ubx_sec_sig_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSigLog>::SharedPtr ubx_sec_sig_log_pub_;
 
@@ -1367,6 +1383,12 @@ private:
   void ubx_rxm_out_frame(ubx_queue_frame_t * f)
   {
     switch (f->ubx_frame->msg_id) {
+           case ubx::UBX_RXM_COR:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm cor poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
       case ubx::UBX_RXM_RTCM:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rtcm poll sent to usb device",
@@ -1382,6 +1404,18 @@ private:
       case ubx::UBX_RXM_RAWX:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm rawx poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      case ubx::UBX_RXM_SPARTN:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartn poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      case ubx::UBX_RXM_SPARTNKEY:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartnkey poll sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
@@ -1416,7 +1450,6 @@ private:
           f->ubx_frame->msg_id);
     }
   }
-
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_sec_out_frame(ubx_queue_frame_t * f)
   {
@@ -1512,15 +1545,66 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
+  void ubx_mon_comms_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::mon::comms::MonCommsPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x mon comms polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXMonComms>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    msg->version = payload->version;
+    msg->n_ports = payload->nPorts;
+    msg->tx_errors = payload->txErrors;
+
+    for (size_t i = 0; i < 4; i++)
+    {
+      msg->prot_ids[i] = payload->protIds[i];
+    }
+
+    for (size_t i = 0; i < payload->nPorts; i++) {
+      ublox_ubx_msgs::msg::CommsPortInfo port;
+      port.port_id = payload->ports[i].portId;
+      port.tx_pending = payload->ports[i].txPending;
+      port.tx_bytes = payload->ports[i].txBytes;
+      port.tx_usage = payload->ports[i].txUsage;
+      port.tx_peak_usage = payload->ports[i].txPeakUsage;
+      port.rx_pending = payload->ports[i].rxPending;
+      port.rx_bytes = payload->ports[i].rxBytes;
+      port.rx_usage = payload->ports[i].rxUsage;
+      port.rx_peak_usage = payload->ports[i].rxPeakUsage;
+      port.overrun_errs = payload->ports[i].overrunErrs;
+
+      for (size_t j = 0; j < 4; j++) {
+        port.msgs[i] = payload->ports[i].msgs[j];
+      }
+
+      port.skipped = payload->ports[i].skipped;
+
+      msg->ports.push_back(port);
+    }
+
+    ubx_mon_comms_pub_->publish(std::move(msg));
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
   void ubx_mon_in_frame(ubx_queue_frame_t * f)
   {
+    ubx_mon_->frame(f->ubx_frame);
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_MON_VER:
-        ubx_mon_->ver()->frame(f->ubx_frame);
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x mon ver polled payload - %s",
           f->ubx_frame->msg_class, f->ubx_frame->msg_id,
           ubx_mon_->ver()->payload()->to_string().c_str());
+        break;
+      case ubx::UBX_MON_COMMS:
+        ubx_mon_comms_pub(f, ubx_mon_->comms()->payload());
         break;
       default:
         RCLCPP_WARN(
@@ -1644,6 +1728,10 @@ private:
   void ubx_rxm_in_frame(ubx_queue_frame_t * f)
   {
     switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_RXM_COR:
+        ubx_rxm_->cor()->frame(f->ubx_frame);
+        ubx_rxm_cor_pub(f, ubx_rxm_->cor()->payload());
+        break;
       case ubx::UBX_RXM_RTCM:
         ubx_rxm_->rtcm()->frame(f->ubx_frame);
         ubx_rxm_rtcm_pub(f, ubx_rxm_->rtcm()->payload());
@@ -1655,6 +1743,14 @@ private:
       case ubx::UBX_RXM_RAWX:
         ubx_rxm_->rawx()->frame(f->ubx_frame);
         ubx_rxm_rawx_pub(f, ubx_rxm_->rawx()->payload());
+        break;
+      case ubx::UBX_RXM_SPARTN:
+        ubx_rxm_->spartn()->frame(f->ubx_frame);
+        ubx_rxm_spartn_pub(f, ubx_rxm_->spartn()->payload());
+        break;
+      case ubx::UBX_RXM_SPARTNKEY:
+        ubx_rxm_->spartnkey()->frame(f->ubx_frame);
+        ubx_rxm_spartnkey_pub(f, ubx_rxm_->spartnkey()->payload());
         break;
       default:
         RCLCPP_WARN(
@@ -2304,6 +2400,46 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_cor_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::rxm::cor::RxmCorPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm cor polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    // Create message
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmCor>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate main fields
+    msg->version = payload->version;
+    msg->ebno = payload->ebno;
+    msg->msg_type = payload->msgType;
+    msg->msg_sub_type = payload->msgSubType;
+
+    // Populate status_info
+    ublox_ubx_msgs::msg::CorStatusInfo status_info_msg;
+    status_info_msg.protocol = payload->protocol;
+    status_info_msg.err_status = payload->errStatus;
+    status_info_msg.msg_used = payload->msgUsed;
+    status_info_msg.correction_id = payload->correctionId;
+    status_info_msg.msg_type_valid = payload->msgTypeValid;
+    status_info_msg.msg_sub_type_valid = payload->msgSubTypeValid;
+    status_info_msg.msg_input_handle = payload->msgInputHandle;
+    status_info_msg.msg_encrypted = payload->msgEncrypted;
+    status_info_msg.msg_decrypted = payload->msgDecrypted;
+    msg->status_info = status_info_msg;
+
+    // Publish the message
+    ubx_rxm_cor_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
   void ubx_rxm_rtcm_pub(
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::rxm::rtcm::RxmRTCMPayload> payload)
@@ -2426,6 +2562,77 @@ private:
 
     // Publish the message
     ubx_rxm_rawx_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_spartn_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::rxm::spartn::RxmSpartnPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartn polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    // Create message
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmSpartn>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate fields
+    msg->version = payload->version;
+    msg->msg_used = payload->msg_used;
+    msg->sub_type = payload->subType;
+    msg->msg_type = payload->msgType;
+
+    // Publish the message
+    ubx_rxm_spartn_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_spartnkey_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::rxm::spartnkey::RxmSpartnKeyPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartnkey polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    // Create message
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmSpartnKey>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate fields
+    msg->version = payload->version;
+    msg->num_keys = payload->numKeys;
+
+    // Populate the repeated key info data
+    for (const auto & key_info_payload : payload->keyInfos) {
+      ublox_ubx_msgs::msg::SpartnKeyInfo key_info_msg;
+      key_info_msg.reserved1 = key_info_payload.reserved1;
+      key_info_msg.key_length_bytes = key_info_payload.keyLengthBytes;
+      key_info_msg.valid_from_wno = key_info_payload.validFromWno;
+      key_info_msg.valid_from_tow = key_info_payload.validFromTow;
+      msg->key_info.push_back(key_info_msg);
+    }
+
+    // Concatenate the key data from each KeyPayload into key_payload
+    msg->key_payload.clear(); // Ensure the key_payload array is empty before populating
+    for (const auto & key_payload : payload->keyPayloads) {
+      // Append the entire key vector from KeyPayload to msg->key_payload
+      msg->key_payload.insert(
+        msg->key_payload.end(), key_payload.key.begin(),
+        key_payload.key.end());
+    }
+
+    // Publish the message
+    ubx_rxm_spartnkey_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

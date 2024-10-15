@@ -25,6 +25,9 @@
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_rtcm.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_measx.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_rawx.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_spartn.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_spartn_key.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_cor.hpp"
 
 namespace ubx::rxm
 {
@@ -32,6 +35,10 @@ namespace ubx::rxm
 typedef UBXFrameComms<rxm::rtcm::RxmRTCMPayload, usb::Connection> UbxRxmRTCMFrameComms;
 typedef UBXFrameComms<rxm::measx::RxmMeasxPayload, usb::Connection> UbxRxmMeasxFrameComms;
 typedef UBXFrameComms<rxm::rawx::RxmRawxPayload, usb::Connection> UbxRxmRawxFrameComms;
+typedef UBXFrameComms<rxm::spartn::RxmSpartnPayload, usb::Connection> UbxRxmSpartnFrameComms;
+typedef UBXFrameComms<rxm::spartnkey::RxmSpartnKeyPayload,
+    usb::Connection> UbxRxmSpartnKeyFrameComms;
+typedef UBXFrameComms<rxm::cor::RxmCorPayload, usb::Connection> UbxRxmCorFrameComms;
 
 class UbxRxm
 {
@@ -40,6 +47,9 @@ private:
   std::shared_ptr<UbxRxmRTCMFrameComms> rtcm_;
   std::shared_ptr<UbxRxmMeasxFrameComms> measx_;
   std::shared_ptr<UbxRxmRawxFrameComms> rawx_;
+  std::shared_ptr<UbxRxmSpartnFrameComms> spartn_;
+  std::shared_ptr<UbxRxmSpartnKeyFrameComms> spartn_key_;
+  std::shared_ptr<UbxRxmCorFrameComms> cor_;
 
 public:
   explicit UbxRxm(std::shared_ptr<usb::Connection> usbc)
@@ -48,6 +58,9 @@ public:
     rtcm_ = std::make_shared<UbxRxmRTCMFrameComms>(usbc_);
     measx_ = std::make_shared<UbxRxmMeasxFrameComms>(usbc_);
     rawx_ = std::make_shared<UbxRxmRawxFrameComms>(usbc_);
+    spartn_ = std::make_shared<UbxRxmSpartnFrameComms>(usbc_);
+    spartn_key_ = std::make_shared<UbxRxmSpartnKeyFrameComms>(usbc_);
+    cor_ = std::make_shared<UbxRxmCorFrameComms>(usbc_);
   }
   std::shared_ptr<UbxRxmRTCMFrameComms> rtcm()
   {
@@ -60,6 +73,18 @@ public:
   std::shared_ptr<UbxRxmRawxFrameComms> rawx()
   {
     return rawx_;
+  }
+  std::shared_ptr<UbxRxmSpartnFrameComms> spartn()
+  {
+    return spartn_;
+  }
+  std::shared_ptr<UbxRxmSpartnKeyFrameComms> spartnkey()
+  {
+    return spartn_key_;
+  }
+  std::shared_ptr<UbxRxmCorFrameComms> cor()
+  {
+    return cor_;
   }
 };
 }  // namespace ubx::rxm
