@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__UBX__UBX_MON_VER_HPP_
-#define UBLOX_DGNSS_NODE__UBX__UBX_MON_VER_HPP_
+#ifndef UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_VER_HPP_
+#define UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_VER_HPP_
 
 #include <unistd.h>
 #include <memory>
@@ -81,4 +81,4 @@ public:
 
 }  // namespace ubx::mon::ver
 
-#endif  // UBLOX_DGNSS_NODE__UBX__UBX_MON_VER_HPP_
+#endif  // UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_VER_HPP_

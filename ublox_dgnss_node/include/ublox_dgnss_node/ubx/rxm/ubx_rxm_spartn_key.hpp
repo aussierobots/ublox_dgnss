@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTNKEY_HPP_
-#define UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTNKEY_HPP_
+#ifndef UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTN_KEY_HPP_
+#define UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTN_KEY_HPP_
 
 #include <unistd.h>
 #include <memory>
@@ -139,4 +139,4 @@ public:
 
 }  // namespace ubx::rxm::spartnkey
 
-#endif  // UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTNKEY_HPP_
+#endif  // UBLOX_DGNSS_NODE__UBX__RXM__UBX_RXM_SPARTN_KEY_HPP_

@@ -52,8 +52,7 @@ public:
   }
   void frame(std::shared_ptr<ubx::Frame> frame)
   {
-    switch (frame->msg_id)
-    {
+    switch (frame->msg_id) {
       case UBX_MON_VER:
         ver_->frame(frame);
         break;

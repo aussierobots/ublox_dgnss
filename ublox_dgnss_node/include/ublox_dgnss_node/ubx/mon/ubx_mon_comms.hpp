@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UBLOX_DGNSS_NODE__UBX__UBX_MON_COMMS_HPP_
-#define UBLOX_DGNSS_NODE__UBX__UBX_MON_COMMS_HPP_
+#ifndef UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_COMMS_HPP_
+#define UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_COMMS_HPP_
 
-#include <cstring>
-#include <vector>
-#include <tuple>
-#include <string>
-#include <sstream>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
+#include <cstring>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace ubx::mon::comms
 {
@@ -73,7 +73,7 @@ public:
     ptr += sizeof(nPorts);
     memcpy(&txErrors, ptr, sizeof(txErrors));
     ptr += sizeof(txErrors);
-    ptr += sizeof(reserved0);      // skip reserved0
+    ptr += sizeof(reserved0);   // skip reserved0
     memcpy(protIds, ptr, sizeof(protIds));
     ptr += sizeof(protIds);
 
@@ -99,7 +99,7 @@ public:
     oss << " txErrors: " << static_cast<int>(txErrors);
     for (auto & port : ports) {
       oss << " PortID: " << port.portId << " TxPending: " << port.txPending << " TxBytes: " <<
-          port.txBytes;
+        port.txBytes;
     }
     return oss.str();
   }
@@ -107,4 +107,4 @@ public:
 
 }  // namespace ubx::mon::comms
 
-#endif  // UBLOX_DGNSS_NODE__UBX__UBX_MON_COMMS_HPP_
+#endif  // UBLOX_DGNSS_NODE__UBX__MON__UBX_MON_COMMS_HPP_

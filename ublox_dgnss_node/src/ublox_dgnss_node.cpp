@@ -320,7 +320,8 @@ public:
 
     async_initialised_ = false;
 
-    auto handle_usb_events_callback = [this]() -> void {
+    auto handle_usb_events_callback = [this]() -> void
+      {
         if (usbc_ == nullptr) {
           return;
         }
@@ -338,8 +339,10 @@ public:
           RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
         }
         ;
+
         RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
       };
+
     handle_usb_events_timer_ = create_wall_timer(
       10ms, handle_usb_events_callback,
       callback_group_usb_events_timer_);
@@ -1383,7 +1386,7 @@ private:
   void ubx_rxm_out_frame(ubx_queue_frame_t * f)
   {
     switch (f->ubx_frame->msg_id) {
-           case ubx::UBX_RXM_COR:
+      case ubx::UBX_RXM_COR:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm cor poll sent to usb device",
           f->ubx_frame->msg_class,
@@ -1562,8 +1565,7 @@ private:
     msg->n_ports = payload->nPorts;
     msg->tx_errors = payload->txErrors;
 
-    for (size_t i = 0; i < 4; i++)
-    {
+    for (size_t i = 0; i < 4; i++) {
       msg->prot_ids[i] = payload->protIds[i];
     }
 
@@ -2623,7 +2625,7 @@ private:
     }
 
     // Concatenate the key data from each KeyPayload into key_payload
-    msg->key_payload.clear(); // Ensure the key_payload array is empty before populating
+    msg->key_payload.clear();  // Ensure the key_payload array is empty before populating
     for (const auto & key_payload : payload->keyPayloads) {
       // Append the entire key vector from KeyPayload to msg->key_payload
       msg->key_payload.insert(
