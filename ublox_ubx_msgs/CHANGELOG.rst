@@ -2,8 +2,8 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.4 (2024-10-16)
+------------------
 * Merge pull request `#27 <https://github.com/aussierobots/ublox_dgnss/issues/27>`_ from aussierobots/spartn-dev
   initial spartn changes
 * Merge pull request `#25 <https://github.com/aussierobots/ublox_dgnss/issues/25>`_ from ARK3r/spartn-dev

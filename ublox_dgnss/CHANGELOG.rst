@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.4 (2024-10-16)
+------------------
 * Update ntrip_client.launch.py
   fixed script description
 * Contributors: Nick Hortovanyi
