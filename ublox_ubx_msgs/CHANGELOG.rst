@@ -2,6 +2,15 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#27 <https://github.com/aussierobots/ublox_dgnss/issues/27>`_ from aussierobots/spartn-dev
+  initial spartn changes
+* Merge pull request `#25 <https://github.com/aussierobots/ublox_dgnss/issues/25>`_ from ARK3r/spartn-dev
+* add UBXMonComms msg
+* Added UBX Rxm Cor|Spartn|SpartnKey
+* Contributors: ARK3r, Nick Hortovanyi
+
 0.5.3 (2024-03-22)
 ------------------
 

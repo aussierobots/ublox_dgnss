@@ -2,6 +2,25 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed uncrustify formatting errros
+* Added copyright and fixed formatting
+* Merge pull request `#27 <https://github.com/aussierobots/ublox_dgnss/issues/27>`_ from aussierobots/spartn-dev
+  initial spartn changes
+* Merge pull request `#25 <https://github.com/aussierobots/ublox_dgnss/issues/25>`_ from ARK3r/spartn-dev
+* fix iteration variable override
+* add UBX-MON-COMMS
+* move UBX-MON-VER to mon folder
+* Added UBX Rxm Cor|Spartn|SpartnKey
+* Merge pull request `#24 <https://github.com/aussierobots/ublox_dgnss/issues/24>`_ from ARK3r/spartn-key-f9p-d9s
+  Spartn configuration / monitoring support
+* Merge pull request `#23 <https://github.com/aussierobots/ublox_dgnss/issues/23>`_ from icos-pit/main
+  added printing serial_str\_ & serial_num_string to error of not finding device with specificed serial string.
+* added uart2 and spartn source cfg items
+* add serial_str\_ & serial_num_string to error stream  of finding USB device with specified serial string
+* Contributors: ARK3r, Nick Hortovanyi, iman01
+
 0.5.3 (2024-03-22)
 ------------------
 * Jamming and interference monitor configuration
