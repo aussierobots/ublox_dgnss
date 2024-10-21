@@ -28,13 +28,22 @@ def generate_launch_description():
   password_arg = DeclareLaunchArgument(
     "password", default_value=EnvironmentVariable(name="NTRIP_PASSWORD", default_value="password")
   )
+  log_level_arg = DeclareLaunchArgument(
+    "log_level", default_value=TextSubstitution(text="INFO")
+  )
+  maxage_conn_arg = DeclareLaunchArgument(
+    "maxage_conn", default_value=TextSubstitution(text="30")
+  )
+
   params = [{
     'use_https': LaunchConfiguration('use_https'),
     'host': LaunchConfiguration('host'),
     'port': LaunchConfiguration('port'),
     'mountpoint': LaunchConfiguration('mountpoint'),
     'username': LaunchConfiguration('username'),
-    'password': LaunchConfiguration('password')
+    'password': LaunchConfiguration('password'),
+    'log_level': LaunchConfiguration('log_level'),
+    'maxage_conn': LaunchConfiguration('maxage_conn'),
   }]
 
   container1 = ComposableNodeContainer(
@@ -42,12 +51,14 @@ def generate_launch_description():
     namespace='',
     package='rclcpp_components',
     executable='component_container_mt',
+    arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
     composable_node_descriptions=[
       ComposableNode(
         package='ntrip_client_node',
         plugin='ublox_dgnss::NTRIPClientNode',
         name='ntrip_client',
-        parameters=params
+        parameters=params,
+        # extra_arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
       )
     ]
   )
@@ -59,5 +70,7 @@ def generate_launch_description():
     mountpoint_arg,
     username_arg,
     password_arg,
+    log_level_arg,
+    maxage_conn_arg,
     container1
   ])

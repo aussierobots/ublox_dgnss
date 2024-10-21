@@ -51,6 +51,8 @@ public:
     declare_parameter("mountpoint", "MBCH00AUS0");
     declare_parameter("username", "noname");
     declare_parameter("password", "password");
+    declare_parameter("log_level", "INFO");
+    declare_parameter("maxage_conn", 30);
 
     use_https_ = get_parameter("use_https").as_bool();
     host_ = get_parameter("host").as_string();
@@ -58,6 +60,8 @@ public:
     mountpoint_ = get_parameter("mountpoint").as_string();
     username_ = get_parameter("username").as_string();
     password_ = get_parameter("password").as_string();
+    log_level_ = get_parameter("log_level").as_string();
+    maxage_conn_ = get_parameter("maxage_conn").as_int();
 
     std::string url = ConnectionUrl();
 
@@ -82,7 +86,11 @@ public:
       curl_easy_setopt(handle, CURLOPT_HTTP09_ALLOWED, true);
       curl_easy_setopt(handle, CURLOPT_USERPWD, userpwd.c_str());
       // curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
-      // curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
+      if (!log_level_.compare("INFO") == 0) {
+        RCLCPP_DEBUG(this->get_logger(), "setting CURLOPT_VERBOSE 1L");
+        curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
+      }
+      curl_easy_setopt(handle, CURLOPT_MAXAGE_CONN, maxage_conn_);
       curl_easy_setopt(handle, CURLOPT_USERAGENT, "NTRIP ros2/ublox_dgnss");
       curl_easy_setopt(handle, CURLOPT_FAILONERROR, true);
       curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &NTRIPClientNode::WriteCallback);
@@ -112,6 +120,8 @@ private:
   std::string mountpoint_;
   std::string username_;
   std::string password_;
+  std::string log_level_;
+  long maxage_conn_;
 
   rclcpp::Publisher<rtcm_msgs::msg::Message>::SharedPtr rtcm_pub_;
 
