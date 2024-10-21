@@ -87,9 +87,12 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_MSGOUT_UBX_NAV_TIMEUTC_USB
   CFG_MSGOUT_UBX_NAV_VELECEF_USB
   CFG_MSGOUT_UBX_NAV_VELNED_USB
+  CFG_MSGOUT_UBX_RXM_COR_USB
   CFG_MSGOUT_UBX_RXM_RTCM_USB
   CFG_MSGOUT_UBX_RXM_MEASX_USB
   CFG_MSGOUT_UBX_RXM_RAWX_USB
+  CFG_MSGOUT_UBX_RXM_SPARTN_USB
+  CFG_MSGOUT_UBX_MON_COMMS_USB
   CFG_MSGOUT_UBX_ESF_MEAS_USB
   CFG_MSGOUT_UBX_ESF_STATUS_USB
   CFG_MSGOUT_UBX_SEC_SIG_USB
@@ -115,16 +118,26 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_TMODE_POS_TYPE
   CFG_UART1INPROT_NMEA
   CFG_UART1INPROT_RTCM3X
+  CFG_UART1INPROT_SPARTN
   CFG_UART1INPROT_UBX
   CFG_UART1OUTPROT_NMEA
   CFG_UART1OUTPROT_RTCM3X
   CFG_UART1OUTPROT_UBX
+  CFG_UART2INPROT_NMEA
+  CFG_UART2INPROT_RTCM3X
+  CFG_UART2INPROT_SPARTN
+  CFG_UART2INPROT_UBX
+  CFG_UART2OUTPROT_NMEA
+  CFG_UART2OUTPROT_RTCM3X
+  CFG_UART2OUTPROT_UBX
   CFG_USBINPROT_NMEA
   CFG_USBINPROT_RTCM3X
   CFG_USBINPROT_UBX
   CFG_USBOUTPROT_NMEA
   CFG_USBOUTPROT_RTCM3X
   CFG_USBOUTPROT_UBX
+
+  CFG_SPARTN_USE_SOURCE
 
   CFG_SFIMU_AUTO_MNTALG_ENA
   CFG_SFIMU_IMU_MNTALG_YAW
@@ -139,11 +152,6 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_SFODO_LATENCY
   CFG_SFODO_QUANT_ERROR
 
-  CFG_ITFM_BBTHRESHOLD
-  CFG_ITFM_CWTHRESHOLD
-  CFG_ITFM_ENABLE
-  CFG_ITFM_ANTSETTING
-  CFG_ITFM_ENABLE_AUX
 
 ### Device Identification Parameters
 
@@ -164,6 +172,7 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 /ubx_esf_meas
 
 /ubx_esf_status
+/ubx_mon_comms
 /ubx_nav_clock
 /ubx_nav_cov
 /ubx_nav_dop
@@ -182,6 +191,7 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 /ubx_nav_time_utc
 /ubx_nav_vel_ecef
 /ubx_nav_vel_ned
+/ubx_rxm_cor
 /ubx_rxm_rtcm
 /ubx_rxm_measx
 /ubx_rxm_rawx
