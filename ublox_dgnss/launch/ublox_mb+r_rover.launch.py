@@ -2,9 +2,17 @@
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import TextSubstitution
+from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
   """Generate launch description for ublox_dgnss components."""
+
+  log_level_arg = DeclareLaunchArgument(
+    "log_level", default_value=TextSubstitution(text="INFO")
+  )
+
   params_rover = [
             {'DEVICE_SERIAL_STRING': "Test Rover"},
             {'FRAME_ID': "rover"},
@@ -55,6 +63,7 @@ def generate_launch_description():
     namespace='',
     package='rclcpp_components',
     executable='component_container_mt',
+    arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
     composable_node_descriptions=[
       ComposableNode(
         package='ublox_dgnss_node',
@@ -71,6 +80,7 @@ def generate_launch_description():
     namespace='',
     package='rclcpp_components',
     executable='component_container_mt',
+    arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
     composable_node_descriptions=[
       ComposableNode(
         package='ublox_nav_sat_fix_hp_node',
@@ -82,6 +92,7 @@ def generate_launch_description():
   )
 
   return launch.LaunchDescription([
+    log_level_arg,
     container_rover,
     container_navsatfix,
     ])

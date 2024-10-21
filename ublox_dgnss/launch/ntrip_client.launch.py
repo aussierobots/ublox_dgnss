@@ -58,7 +58,6 @@ def generate_launch_description():
         plugin='ublox_dgnss::NTRIPClientNode',
         name='ntrip_client',
         parameters=params,
-        # extra_arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
       )
     ]
   )
