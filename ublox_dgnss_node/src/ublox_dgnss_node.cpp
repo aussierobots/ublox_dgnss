@@ -173,57 +173,67 @@ public:
     }
 
     auto qos = rclcpp::SensorDataQoS();
+    rclcpp::PublisherOptions pub_options;
+    pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
     ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>(
-      "ubx_nav_clock",
-      qos);
-    ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>("ubx_nav_cov", qos);
-    ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>("ubx_nav_dop", qos);
-    ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>("ubx_nav_eoe", qos);
+      "ubx_nav_clock", qos, pub_options);
+    ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>(
+      "ubx_nav_cov", qos, pub_options);
+    ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>(
+      "ubx_nav_dop", qos, pub_options);
+    ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>(
+      "ubx_nav_eoe", qos, pub_options);
     ubx_nav_hp_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>(
-      "ubx_nav_hp_pos_ecef", qos);
+      "ubx_nav_hp_pos_ecef", qos, pub_options);
     ubx_nav_hp_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosLLH>(
-      "ubx_nav_hp_pos_llh", qos);
-    ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>("ubx_nav_odo", qos);
-    ubx_nav_orb_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOrb>("ubx_nav_orb", qos);
-    ubx_nav_sat_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSat>("ubx_nav_sat", qos);
-    ubx_nav_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSig>("ubx_nav_sig", qos);
+      "ubx_nav_hp_pos_llh", qos, pub_options);
+    ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>(
+      "ubx_nav_odo", qos, pub_options);
+    ubx_nav_orb_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOrb>(
+      "ubx_nav_orb", qos, pub_options);
+    ubx_nav_sat_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSat>(
+      "ubx_nav_sat", qos, pub_options);
+    ubx_nav_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSig>(
+      "ubx_nav_sig", qos, pub_options);
     ubx_nav_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosECEF>(
-      "ubx_nav_pos_ecef", qos);
+      "ubx_nav_pos_ecef", qos, pub_options);
     ubx_nav_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosLLH>(
-      "ubx_nav_pos_llh", qos);
-    ubx_nav_pvt_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPVT>("ubx_nav_pvt", qos);
+      "ubx_nav_pos_llh", qos, pub_options);
+    ubx_nav_pvt_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPVT>(
+      "ubx_nav_pvt", qos, pub_options);
     ubx_nav_rel_pos_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavRelPosNED>(
-      "ubx_nav_rel_pos_ned", qos);
+      "ubx_nav_rel_pos_ned", qos, pub_options);
     ubx_nav_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavStatus>(
-      "ubx_nav_status", qos);
+      "ubx_nav_status", qos, pub_options);
     ubx_nav_time_utc_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>(
-      "ubx_nav_time_utc", qos);
+      "ubx_nav_time_utc", qos, pub_options);
     ubx_nav_vel_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>(
-      "ubx_nav_vel_ecef", qos);
+      "ubx_nav_vel_ecef", qos, pub_options);
     ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(
-      "ubx_nav_vel_ned", qos);
+      "ubx_nav_vel_ned", qos, pub_options);
     ubx_rxm_cor_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmCor>(
-      "ubx_rxm_cor", qos);
+      "ubx_rxm_cor", qos, pub_options);
     ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(
-      "ubx_rxm_rtcm", qos);
+      "ubx_rxm_rtcm", qos, pub_options);
     ubx_rxm_measx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>(
-      "ubx_rxm_measx", qos);
+      "ubx_rxm_measx", qos, pub_options);
     ubx_rxm_rawx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRawx>(
-      "ubx_rxm_rawx", qos);
+      "ubx_rxm_rawx", qos, pub_options);
     ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
-      "ubx_rxm_spartn", qos);
+      "ubx_rxm_spartn", qos, pub_options);
     ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
-      "ubx_rxm_spartnkey", qos);
+      "ubx_rxm_spartnkey", qos, pub_options);
     ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
-      "ubx_esf_status", qos);
+      "ubx_esf_status", qos, pub_options);
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "ubx_esf_meas", qos);
+      "ubx_esf_meas", qos, pub_options);
     ubx_mon_comms_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXMonComms>(
-      "ubx_mon_comms", qos);
-    ubx_sec_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSig>("ubx_sec_sig", qos);
+      "ubx_mon_comms", qos, pub_options);
+    ubx_sec_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSig>(
+      "ubx_sec_sig", qos, pub_options);
     ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(
-      "ubx_sec_sig_log", qos);
+      "ubx_sec_sig_log", qos, pub_options);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
