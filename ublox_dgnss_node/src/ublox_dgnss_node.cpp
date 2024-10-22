@@ -760,8 +760,20 @@ public:
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
 
+    // Define the parameters you want to exclude from processing
+    std::set<std::string> excluded_params =
+    {"hw_version", "sw_version", "version_extension", "unique_id"};
+
+
     try {
       for (const rclcpp::Parameter & parameter : parameters) {
+
+        // Check if the parameter is in the excluded list
+        if (excluded_params.find(parameter.get_name()) != excluded_params.end()) {
+          RCLCPP_DEBUG(get_logger(), "Skipping parameter: %s", parameter.get_name().c_str());
+          continue; // Skip this parameter
+        }
+
         auto cache_state = cfg_param_cache_map_[parameter.get_name()];
         rclcpp::ParameterValue cache_value = cache_state.value;
         if ((cache_state.status == PARAM_LOADED || cache_state.status == PARAM_VALSET) &&
@@ -1548,6 +1560,35 @@ private:
   }
 
   UBLOX_DGNSS_NODE_LOCAL
+  void ubx_mon_ver_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::mon::ver::MonVerPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x mon ver polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto sw_version =
+      std::string(reinterpret_cast<char *>(payload->sw_version));
+    auto hw_version =
+      std::string(reinterpret_cast<char *>(payload->hw_version));
+    this->declare_parameter("sw_version", sw_version);
+    this->declare_parameter("hw_version", hw_version);
+
+    std::string version_extensions;
+    for (const auto & e : payload->extension) {
+      if (!version_extensions.empty()) {
+        version_extensions += " ";       // Add a space before appending next element
+      }
+      version_extensions += e;       // Append the current element
+    }
+
+    // Declare the parameter with the aggregated string
+    this->declare_parameter("version_extension", version_extensions);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
   void ubx_mon_comms_pub(
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::mon::comms::MonCommsPayload> payload)
@@ -1600,10 +1641,7 @@ private:
     ubx_mon_->frame(f->ubx_frame);
     switch (f->ubx_frame->msg_id) {
       case ubx::UBX_MON_VER:
-        RCLCPP_DEBUG(
-          get_logger(), "ubx class: 0x%02x id: 0x%02x mon ver polled payload - %s",
-          f->ubx_frame->msg_class, f->ubx_frame->msg_id,
-          ubx_mon_->ver()->payload()->to_string().c_str());
+        ubx_mon_ver_pub(f, ubx_mon_->ver()->payload());
         break;
       case ubx::UBX_MON_COMMS:
         ubx_mon_comms_pub(f, ubx_mon_->comms()->payload());
@@ -1615,6 +1653,7 @@ private:
           f->ubx_frame->msg_id);
     }
   }
+
 
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_inf_in_frame(ubx_queue_frame_t * f)
@@ -1807,6 +1846,7 @@ private:
               << std::setw(2) << static_cast<int>(unique_id[3])
               << std::setw(2) << static_cast<int>(unique_id[4]);
           unique_id_ = oss.str();
+          this->declare_parameter("unique_id", unique_id_);
           RCLCPP_INFO(
             get_logger(), "ubx sec unique_id: 0x%s",
             unique_id_.c_str());
@@ -2732,14 +2772,32 @@ private:
     // Populate the main fields
     msg->version = payload->version;
 
-    // Information related to jamming/interference
-    msg->jam_det_enabled = payload->jam_flags.bits.jam_det_enabled;
-    msg->jamming_state = payload->jam_flags.bits.jamming_state;
 
-    // Information related to GNSS spoofing
-    msg->spf_det_enabled = payload->spf_flags.bits.spf_det_enabled;
-    msg->spoofing_state = payload->spf_flags.bits.spoofing_state;
+    if (msg->version >= 2) {
+      // Information related to jamming/interference
+      msg->jam_det_enabled = payload->sec_sig_flags.bits.jam_det_enabled;
+      msg->jamming_state = payload->sec_sig_flags.bits.jam_state;
 
+      // Information related to GNSS spoofing
+      msg->spf_det_enabled = payload->sec_sig_flags.bits.spf_det_enabled;
+      msg->spoofing_state = payload->sec_sig_flags.bits.spf_state;
+
+      msg->jam_num_cent_freqs = payload->jam_num_cent_freqs;
+      for (const auto & jam_state : payload->jam_state_cent_freqs) {
+        ublox_ubx_msgs::msg::JamStateCentFreq jam_state_msg;
+        jam_state_msg.cent_freq = jam_state.bits.cent_freq;
+        jam_state_msg.jammed = jam_state.bits.jammed;
+        msg->jam_state_cent_freqs.push_back(jam_state_msg);
+      }
+    } else {
+      // Information related to jamming/interference
+      msg->jam_det_enabled = payload->jam_flags.bits.jam_det_enabled;
+      msg->jamming_state = payload->jam_flags.bits.jamming_state;
+
+      // Information related to GNSS spoofing
+      msg->spf_det_enabled = payload->spf_flags.bits.spf_det_enabled;
+      msg->spoofing_state = payload->spf_flags.bits.spoofing_state;
+    }
     // Publish the message
     ubx_sec_sig_pub_->publish(*msg);
   }
