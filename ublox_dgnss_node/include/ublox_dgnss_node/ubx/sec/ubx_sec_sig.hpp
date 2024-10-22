@@ -51,6 +51,34 @@ struct spf_flags_t
   };
 };
 
+struct sec_sig_flags_t
+{
+  union {
+    x1_t all;
+    struct
+    {
+      u1_t jam_det_enabled : 1;
+      u1_t jam_state : 2;
+      u1_t spf_det_enabled : 1;
+      u1_t spf_state : 3;
+      u1_t reserved : 1;
+    } bits;
+  };
+};
+
+struct jam_state_cent_freq_t
+{
+  union {
+    x4_t all;
+    struct
+    {
+      u4_t cent_freq : 24;
+      u1_t jammed : 1;
+      u1_t reserved : 7;
+    } bits;
+  };
+};
+
 class SecSigPayload : public UBXPayload
 {
 public:
@@ -60,6 +88,9 @@ public:
   u1_t version;
   jam_flags_t jam_flags;
   spf_flags_t spf_flags;
+  sec_sig_flags_t sec_sig_flags;
+  u1_t jam_num_cent_freqs;
+  std::vector<jam_state_cent_freq_t> jam_state_cent_freqs;
 
 public:
   SecSigPayload()
@@ -76,8 +107,28 @@ public:
     memcpy(payload_.data(), payload_polled, size);
 
     version = buf_offset<u1_t>(&payload_, 0);
-    jam_flags.all = buf_offset<x1_t>(&payload_, 4);
-    spf_flags.all = buf_offset<x1_t>(&payload_, 8);
+    if (version == 1) {
+      jam_flags.all = buf_offset<x1_t>(&payload_, 1);
+      spf_flags.all = buf_offset<x1_t>(&payload_, 2);
+    } else {
+      sec_sig_flags.all = buf_offset<x1_t>(&payload_, 1);
+      jam_flags.bits.jam_det_enabled = sec_sig_flags.bits.jam_det_enabled;
+      jam_flags.bits.jamming_state = sec_sig_flags.bits.jam_state;
+      spf_flags.bits.spf_det_enabled = sec_sig_flags.bits.spf_det_enabled;
+      spf_flags.bits.spoofing_state = sec_sig_flags.bits.spf_state;
+    }
+    jam_state_cent_freqs.clear();
+    jam_num_cent_freqs = 0;
+    if (version >= 2) {
+      jam_num_cent_freqs = buf_offset<u1_t>(&payload_, 3);
+      size_t offset = 4;
+      for (u1_t i = 0; i < jam_num_cent_freqs; ++i) {
+        jam_state_cent_freq_t jam_state_cent_freq;
+        jam_state_cent_freq.all = buf_offset<x4_t>(&payload_, offset);
+        jam_state_cent_freqs.push_back(jam_state_cent_freq);
+        offset += 4;
+      }
+    }
   }
 
   std::tuple<u1_t *, size_t> make_poll_payload()
@@ -94,6 +145,20 @@ public:
     oss << ", jamming_state: " << static_cast<int>(jam_flags.bits.jamming_state) << "}";
     oss << ", spf_flags: {spf_det_enabled: " << static_cast<int>(spf_flags.bits.spf_det_enabled);
     oss << ", spoofing_state: " << static_cast<int>(spf_flags.bits.spoofing_state) << "}";
+    if (version >= 2) {
+      oss << ", jam_num_cent_freqs: " << static_cast<int>(jam_num_cent_freqs);
+      oss << " [";
+      for (size_t i = 0; i < jam_state_cent_freqs.size(); ++i) {
+        if (i > 1) {
+          oss << ", ";
+        }
+        oss << "{ " << i << ", ";
+        oss << static_cast<int64_t>(jam_state_cent_freqs[i].bits.cent_freq) << ", ";
+        oss << static_cast<bool>(jam_state_cent_freqs[i].bits.jammed);
+        oss << "}";
+      }
+      oss << "]";
+    }
     return oss.str();
   }
 };
