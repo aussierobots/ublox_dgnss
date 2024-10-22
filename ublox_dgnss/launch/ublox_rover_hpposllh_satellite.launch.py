@@ -31,6 +31,7 @@ def generate_launch_description():
             {'CFG_MSGOUT_UBX_SEC_SIG_USB': 20},
             {'CFG_MSGOUT_UBX_SEC_SIGLOG_USB': 20},
             {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 20},
+            {'CFG_MSGOUT_UBX_RXM_COR_USB': 20},
             {'CFG_MSGOUT_UBX_RXM_RAWX_USB': 20},
             {'CFG_MSGOUT_UBX_RXM_MEASX_USB': 20}]
 
