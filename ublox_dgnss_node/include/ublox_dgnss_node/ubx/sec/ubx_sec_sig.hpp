@@ -19,6 +19,7 @@
 #include <memory>
 #include <tuple>
 #include <string>
+#include <vector>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
 

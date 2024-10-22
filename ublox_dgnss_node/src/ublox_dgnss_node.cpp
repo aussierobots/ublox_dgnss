@@ -767,11 +767,10 @@ public:
 
     try {
       for (const rclcpp::Parameter & parameter : parameters) {
-
         // Check if the parameter is in the excluded list
         if (excluded_params.find(parameter.get_name()) != excluded_params.end()) {
           RCLCPP_DEBUG(get_logger(), "Skipping parameter: %s", parameter.get_name().c_str());
-          continue; // Skip this parameter
+          continue;  // Skip this parameter
         }
 
         auto cache_state = cfg_param_cache_map_[parameter.get_name()];
