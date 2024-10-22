@@ -37,6 +37,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/ESFMeasDataItem.msg"
   "msg/ESFSensorStatus.msg"
   "msg/GpsFix.msg"
+  "msg/JamStateCentFreq.msg"
   "msg/MapMatching.msg"
   "msg/MeasxData.msg"
   "msg/OrbAlmInfo.msg"
