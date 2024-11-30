@@ -1010,7 +1010,6 @@ public:
         }
         // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
         else if (len > 2 && buf [0] == 0xD3 && buf[1] == 0x00) {
-          RCLCPP_INFO(get_logger(), "rtcm3: %s", buf);
           std::vector<uint8_t> frame_buf;
           frame_buf.reserve(len);
           frame_buf.resize(len);
@@ -1209,7 +1208,7 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_queue_frame_in(rtcm_queue_frame_t * f)
   {
-    RCLCPP_DEBUG(get_logger(), "rtcm message buf - %s", f->buf)
+    RCLCPP_DEBUG(get_logger(), "Publishing rtcm message");
     auto msg = std::make_unique<rtcm_msgs::msg::Message>();
 
     // Populate the header
@@ -1217,7 +1216,7 @@ private:
     msg->header.stamp = f->ts;
 
     // Populate fields
-    msg->message = f->buf.data();
+    msg->message = f->buf;
 
     // Publish the message
     rtcm_pub_->publish(*msg);
