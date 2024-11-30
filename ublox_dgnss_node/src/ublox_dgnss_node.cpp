@@ -382,11 +382,11 @@ public:
     sub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
     ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "ubx_esf_meas_to_device", 10,
+      "/ubx_esf_meas_to_device", 10,
       std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
       sub_options);
     rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
-      "ntrip_client/rtcm", 10,
+      "/ntrip_client/rtcm", 10,
       std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
       sub_options);
 
