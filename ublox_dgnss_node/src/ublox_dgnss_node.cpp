@@ -1209,7 +1209,7 @@ private:
   void rtcm_queue_frame_in(rtcm_queue_frame_t * f)
   {
     std::ostringstream oss;
-    for (auto b : f.buf) {
+    for (auto b : f->buf) {
       oss << std::hex << std::setfill('0') << std::setw(2) << +b;
     }
     RCLCPP_DEBUG(get_logger(), "rtcm message payload - 0x%s", oss.str().c_str());
