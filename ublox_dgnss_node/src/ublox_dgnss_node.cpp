@@ -242,7 +242,7 @@ public:
     ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(
       "ubx_sec_sig_log", qos, pub_options);
     rtcm_pub_ = this->create_publisher<rtcm_msgs::msg::Message>(
-      "rtcm3", qos, pub_options);
+      "rtcm", qos, pub_options);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
