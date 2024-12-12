@@ -330,7 +330,7 @@ v_acc: 123
 
 The driver output the raw UBX data into the message so some interpreting is required.
 
-`h_acc` and `v_acc` are in millimeters but need to be scaled by 0.1 - `h_acc: 16.9 mm` and v_acc: 12.3 mm` per the above. Such that there is centimeter level accruacy.
+`h_acc` and `v_acc` are in millimeters but need to be scaled by 0.1 - `h_acc: 16.9 mm` and `v_acc: 12.3 mm` per the above. Such that there is centimeter level accuracy.
 
 If in doubt as to what the scaling is, please look at the F9 interface description for an explanation. All debug log output have had scaling applied.
 
