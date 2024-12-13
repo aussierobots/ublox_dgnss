@@ -331,27 +331,27 @@ public:
     async_initialised_ = false;
 
     auto handle_usb_events_callback = [this]() -> void
-      {
-        if (usbc_ == nullptr) {
-          return;
-        }
+    {
+      if (usbc_ == nullptr) {
+        return;
+      }
 
-        RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
-        try {
-          usbc_->handle_usb_events();
-        } catch (usb::UsbException & e) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
-        } catch (std::exception & e) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
-        } catch (const char * msg) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
-        } catch (const std::string & msg) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
-        }
-        ;
+      RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
+      try {
+        usbc_->handle_usb_events();
+      } catch (usb::UsbException & e) {
+        RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
+      } catch (std::exception & e) {
+        RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
+      } catch (const char * msg) {
+        RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
+      } catch (const std::string & msg) {
+        RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
+      }
+      ;
 
-        RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
-      };
+      RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
+    };
 
     handle_usb_events_timer_ = create_wall_timer(
       10ms, handle_usb_events_callback,
