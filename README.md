@@ -2,11 +2,13 @@
 
 This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added.
 
-RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node.
+RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node. 
 
-It will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P and a ZED-F9R connected via USB, under Ubuntu 22.04. The driver uses libusb api 1.0.
+Work has started on SPARTN support - basic commands are available to enable it on the device and to confirm that the messages are being used (when delivered to the device).
 
-This release works with Rolling, Humble and Iron.
+This driver will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P and a ZED-F9R connected via USB, under Ubuntu 22.04/24.04. The driver uses libusb api 1.0.
+
+This release works with Rolling, Jazzy, Iron and Humble.
 
 You may need to create a udev rule as follows:
 
@@ -328,7 +330,7 @@ v_acc: 123
 
 The driver output the raw UBX data into the message so some interpreting is required.
 
-`h_acc` and `v_acc` are in millimeters but need to be scaled by 0.1 - `h_acc: 16.9 mm` and v_acc: 12.3 mm` per the above. Such that there is centimeter level accruacy.
+`h_acc` and `v_acc` are in millimeters but need to be scaled by 0.1 - `h_acc: 16.9 mm` and `v_acc: 12.3 mm` per the above. Such that there is centimeter level accuracy.
 
 If in doubt as to what the scaling is, please look at the F9 interface description for an explanation. All debug log output have had scaling applied.
 

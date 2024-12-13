@@ -90,6 +90,12 @@ struct ubx_queue_frame_t
   std::shared_ptr<ubx::Frame> ubx_frame;
   FrameType frame_type;
 };
+struct rtcm_queue_frame_t
+{
+  rclcpp::Time ts;
+  std::vector<uint8_t> buf;
+  FrameType frame_type;
+};
 
 enum ParamStatus
 {
@@ -118,6 +124,7 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
+    callback_group_rtcm_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_ubx_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_usb_events_timer_ = create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -234,6 +241,8 @@ public:
       "ubx_sec_sig", qos, pub_options);
     ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(
       "ubx_sec_sig_log", qos, pub_options);
+    rtcm_pub_ = this->create_publisher<rtcm_msgs::msg::Message>(
+      "rtcm", 10);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
@@ -316,6 +325,10 @@ public:
     ubx_timer_ = create_wall_timer(
       10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
       callback_group_ubx_timer_);
+    rtcm_queue_.clear();
+    rtcm_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::rtcm_timer_callback, this),
+      callback_group_rtcm_timer_);
 
     ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
     ubx_cfg_->cfg_val_set_cfgdata_clear();
@@ -394,6 +407,7 @@ private:
 
   rclcpp::CallbackGroup::SharedPtr callback_group_usb_events_timer_;
   rclcpp::CallbackGroup::SharedPtr callback_group_ubx_timer_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_rtcm_timer_;
 
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<ubx::cfg::UbxCfg> ubx_cfg_;
@@ -412,8 +426,11 @@ private:
 // so put them in a queue, with a timestamp to be processed later
   std::deque<ubx_queue_frame_t> ubx_queue_;
   std::mutex ubx_queue_mutex_;
+  std::deque<rtcm_queue_frame_t> rtcm_queue_;
+  std::mutex rtcm_queue_mutex_;
 
   rclcpp::TimerBase::SharedPtr ubx_timer_;
+  rclcpp::TimerBase::SharedPtr rtcm_timer_;
 
   bool async_initialised_;
 
@@ -456,6 +473,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXMonComms>::SharedPtr ubx_mon_comms_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSig>::SharedPtr ubx_sec_sig_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSigLog>::SharedPtr ubx_sec_sig_log_pub_;
+  rclcpp::Publisher<rtcm_msgs::msg::Message>::SharedPtr rtcm_pub_;
 
   rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
   rclcpp::Subscription<rtcm_msgs::msg::Message>::SharedPtr rtcm_sub_;
@@ -990,6 +1008,18 @@ public:
             ubx_queue_.push_back(queue_frame);
           }
         }
+        // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
+        else if (len > 2 && buf [0] == 0xD3 && buf[1] == 0x00) {
+          std::vector<uint8_t> frame_buf;
+          frame_buf.reserve(len);
+          frame_buf.resize(len);
+          memcpy(frame_buf.data(), &buf[0], len);
+          rtcm_queue_frame_t queue_frame {ts, frame_buf, FrameType::frame_in};
+          {
+            const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
+            rtcm_queue_.push_back(queue_frame);
+          }
+        }
 
         std::ostringstream os;
         os << "0x";
@@ -1139,6 +1169,61 @@ private:
         ubx_queue_.pop_front();
       }
     }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void rtcm_timer_callback()
+  {
+    // if we dont have anything to do just return
+    if (rtcm_queue_.size() == 0) {
+      return;
+    }
+
+    while (rtcm_queue_.size() > 0) {
+      try {
+        rtcm_queue_frame_t f = rtcm_queue_[0];
+        switch (f.frame_type) {
+          case FrameType::frame_in:
+            rtcm_queue_frame_in(&f);
+            break;
+          case FrameType::frame_out:
+            RCLCPP_WARN(
+              get_logger(), "Received an rtcm_queue_frame_t with frame_type as frame_out - doing nothing");
+            break;
+          default:
+            RCLCPP_ERROR(
+              get_logger(), "Unknown rtcm_queue frame_type: %d - doing nothing", f.frame_type);
+        }
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "rtcm_queue_ exception: %s", e.what());
+      }
+
+      {
+        const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
+        rtcm_queue_.pop_front();
+      }
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void rtcm_queue_frame_in(rtcm_queue_frame_t * f)
+  {
+    std::ostringstream oss;
+    for (auto b : f->buf) {
+      oss << std::hex << std::setfill('0') << std::setw(2) << +b;
+    }
+    RCLCPP_DEBUG(get_logger(), "rtcm message payload - 0x%s", oss.str().c_str());
+    auto msg = std::make_unique<rtcm_msgs::msg::Message>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate fields
+    msg->message = f->buf;
+
+    // Publish the message
+    rtcm_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL
