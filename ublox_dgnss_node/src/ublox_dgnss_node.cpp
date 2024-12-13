@@ -124,7 +124,8 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
-    callback_group_rtcm_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    callback_group_rtcm_timer_ =
+      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_ubx_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_usb_events_timer_ = create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -344,27 +345,27 @@ public:
     async_initialised_ = false;
 
     auto handle_usb_events_callback = [this]() -> void
-    {
-      if (usbc_ == nullptr) {
-        return;
-      }
+      {
+        if (usbc_ == nullptr) {
+          return;
+        }
 
-      RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
-      try {
-        usbc_->handle_usb_events();
-      } catch (usb::UsbException & e) {
-        RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
-      } catch (std::exception & e) {
-        RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
-      } catch (const char * msg) {
-        RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
-      } catch (const std::string & msg) {
-        RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
-      }
-      ;
+        RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
+        try {
+          usbc_->handle_usb_events();
+        } catch (usb::UsbException & e) {
+          RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
+        } catch (std::exception & e) {
+          RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
+        } catch (const char * msg) {
+          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
+        } catch (const std::string & msg) {
+          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
+        }
+        ;
 
-      RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
-    };
+        RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
+      };
 
     handle_usb_events_timer_ = create_wall_timer(
       10ms, handle_usb_events_callback,
@@ -1007,17 +1008,19 @@ public:
             const std::lock_guard<std::mutex> lock(ubx_queue_mutex_);
             ubx_queue_.push_back(queue_frame);
           }
-        }
+
         // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
-        else if (len > 2 && buf [0] == 0xD3 && buf[1] == 0x00) {
-          std::vector<uint8_t> frame_buf;
-          frame_buf.reserve(len);
-          frame_buf.resize(len);
-          memcpy(frame_buf.data(), &buf[0], len);
-          rtcm_queue_frame_t queue_frame {ts, frame_buf, FrameType::frame_in};
-          {
-            const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
-            rtcm_queue_.push_back(queue_frame);
+        } else {
+          if (len > 2 && buf[0] == 0xD3 && buf[1] == 0x00) {
+            std::vector<uint8_t> frame_buf;
+            frame_buf.reserve(len);
+            frame_buf.resize(len);
+            memcpy(frame_buf.data(), &buf[0], len);
+            rtcm_queue_frame_t queue_frame {ts, frame_buf, FrameType::frame_in};
+            {
+              const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
+              rtcm_queue_.push_back(queue_frame);
+            }
           }
         }
 
@@ -1188,7 +1191,8 @@ private:
             break;
           case FrameType::frame_out:
             RCLCPP_WARN(
-              get_logger(), "Received an rtcm_queue_frame_t with frame_type as frame_out - doing nothing");
+              get_logger(),
+              "Received an rtcm_queue_frame_t with frame_type as frame_out - doing nothing");
             break;
           default:
             RCLCPP_ERROR(
