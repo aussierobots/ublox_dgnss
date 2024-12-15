@@ -1,4 +1,7 @@
-""" Launch ublox_dgnss_node publishing high precision Lon/Lat messages"""
+"""
+Launch a ublox_dgnss_node for the base in the fixed base and moving rover
+use case.
+"""
 
 import launch
 from launch.actions import DeclareLaunchArgument

@@ -1,3 +1,8 @@
+"""
+Launch a ublox_dgnss_node and a ublox_nav_sat_fix_hp_node for the rover in the
+fixed base and moving rover use case.
+"""
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
