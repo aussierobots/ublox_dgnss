@@ -185,6 +185,19 @@ const ubx_cfg_item_t CFG_TMODE_MODE = {"CFG_TMODE_MODE", 0x20030001, E1, 1, NA};
 enum CFG_TMODE_MODE_ENUM {DISABLED = 0, SURVEY_IN = 1, FIXED = 2};
 const ubx_cfg_item_t CFG_TMODE_POS_TYPE = {"CFG_TMODE_POS_TYPE", 0x20030002, E1, 1, NA};
 enum CFG_TMODE_POS_TYPE_ENUM {ECEF = 0, LLH = 1};
+const ubx_cfg_item_t CFG_TMODE_ECEF_X = {"CFG_TMODE_ECEF_X", 0x40030003, I4, 1, CM};
+const ubx_cfg_item_t CFG_TMODE_ECEF_Y = {"CFG_TMODE_ECEF_Y", 0x40030004, I4, 1, CM};
+const ubx_cfg_item_t CFG_TMODE_ECEF_Z = {"CFG_TMODE_ECEF_Z", 0x40030005, I4, 1, CM};
+const ubx_cfg_item_t CFG_TMODE_ECEF_X_HP = {"CFG_TMODE_ECEF_X_HP", 0x20030006, I1, 0.1, MM};
+const ubx_cfg_item_t CFG_TMODE_ECEF_Y_HP = {"CFG_TMODE_ECEF_Y_HP", 0x20030007, I1, 0.1, MM};
+const ubx_cfg_item_t CFG_TMODE_ECEF_Z_HP = {"CFG_TMODE_ECEF_Z_HP", 0x20030008, I1, 0.1, MM};
+const ubx_cfg_item_t CFG_TMODE_LAT = {"CFG_TMODE_LAT", 0x40030009, I4, 1e-7, DEG};
+const ubx_cfg_item_t CFG_TMODE_LON = {"CFG_TMODE_LON", 0x4003000a, I4, 1e-7, DEG};
+const ubx_cfg_item_t CFG_TMODE_HEIGHT = {"CFG_TMODE_HEIGHT", 0x4003000b, I4, 1, CM};
+const ubx_cfg_item_t CFG_TMODE_LAT_HP = {"CFG_TMODE_LAT_HP", 0x2003000c, I1, 1e-9, DEG};
+const ubx_cfg_item_t CFG_TMODE_LON_HP = {"CFG_TMODE_LON_HP", 0x2003000d, I1, 1e-9, DEG};
+const ubx_cfg_item_t CFG_TMODE_HEIGHT_HP = {"CFG_TMODE_HEIGHT_HP", 0x2003000e, I1, 0.1, MM};
+const ubx_cfg_item_t CFG_TMODE_FIXED_POS_ACC = {"CFG_TMODE_FIXED_POS_ACC", 0x4003000f, U4, 0.1, MM};
 const ubx_cfg_item_t CFG_TMODE_SVIN_MIN_DUR = {"CFG_TMODE_SVIN_MIN_DUR", 0x40030010, U4, 1, S};
 const ubx_cfg_item_t CFG_TMODE_SVIN_ACC_LIMIT = {"CFG_TMODE_SVIN_ACC_LIMIT", 0x40030011, U4, 0.1, MM};
 
@@ -409,6 +422,19 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_SPARTN_USE_SOURCE.ubx_key_id, CFG_SPARTN_USE_SOURCE},
   {CFG_TMODE_MODE.ubx_key_id, CFG_TMODE_MODE},
   {CFG_TMODE_POS_TYPE.ubx_key_id, CFG_TMODE_POS_TYPE},
+  {CFG_TMODE_ECEF_X.ubx_key_id, CFG_TMODE_ECEF_X},
+  {CFG_TMODE_ECEF_Y.ubx_key_id, CFG_TMODE_ECEF_Y},
+  {CFG_TMODE_ECEF_Z.ubx_key_id, CFG_TMODE_ECEF_Z},
+  {CFG_TMODE_ECEF_X_HP.ubx_key_id, CFG_TMODE_ECEF_X_HP},
+  {CFG_TMODE_ECEF_Y_HP.ubx_key_id, CFG_TMODE_ECEF_Y_HP},
+  {CFG_TMODE_ECEF_Z_HP.ubx_key_id, CFG_TMODE_ECEF_Z_HP},
+  {CFG_TMODE_LAT.ubx_key_id, CFG_TMODE_LAT},
+  {CFG_TMODE_LON.ubx_key_id, CFG_TMODE_LON},
+  {CFG_TMODE_HEIGHT.ubx_key_id, CFG_TMODE_HEIGHT},
+  {CFG_TMODE_LAT_HP.ubx_key_id, CFG_TMODE_LAT_HP},
+  {CFG_TMODE_LON_HP.ubx_key_id, CFG_TMODE_LON_HP},
+  {CFG_TMODE_HEIGHT_HP.ubx_key_id, CFG_TMODE_HEIGHT_HP},
+  {CFG_TMODE_FIXED_POS_ACC.ubx_key_id, CFG_TMODE_FIXED_POS_ACC},
   {CFG_TMODE_SVIN_MIN_DUR.ubx_key_id, CFG_TMODE_SVIN_MIN_DUR},
   {CFG_TMODE_SVIN_ACC_LIMIT.ubx_key_id, CFG_TMODE_SVIN_ACC_LIMIT},
   {CFG_NAVHPG_DGNSSMODE.ubx_key_id, CFG_NAVHPG_DGNSSMODE},
