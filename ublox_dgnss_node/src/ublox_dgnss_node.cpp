@@ -49,6 +49,7 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_pvt.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_rel_pos_ned.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_status.hpp"
+#include "ublox_ubx_msgs/msg/ubx_nav_svin.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_time_utc.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
@@ -2458,7 +2459,7 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_nav_svin_pub(
     ubx_queue_frame_t * f,
-    std::shared_ptr<nav::svin::NavSvinPayload> payload)
+    std::shared_ptr<ubx::nav::svin::NavSvinPayload> payload)
   {
     RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav svin payload - %s",

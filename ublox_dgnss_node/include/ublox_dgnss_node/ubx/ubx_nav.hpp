@@ -35,6 +35,7 @@
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_resetodo.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_pvt.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_status.hpp"
+#include "ublox_dgnss_node/ubx/nav/ubx_nav_svin.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_relposned.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_timeutc.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_velecef.hpp"
@@ -86,7 +87,7 @@ private:
   std::shared_ptr<UbxNavResetOdoFrameComms> resetodo_;
   std::shared_ptr<UbxNavPvtFrameComms> pvt_;
   std::shared_ptr<UbxNavStatusFrameComms> status_;
-  std::shared_ptr<UbxNavSvinFrameComms> status_;
+  std::shared_ptr<UbxNavSvinFrameComms> svin_;
   std::shared_ptr<UbxNavRelPosNedFrameComms> relposned_;
   std::shared_ptr<UbxNavTimeUTCFrameComms> timeutc_;
   std::shared_ptr<UbxNavVelECEFFrameComms> velecef_;
