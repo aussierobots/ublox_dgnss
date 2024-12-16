@@ -199,7 +199,8 @@ const ubx_cfg_item_t CFG_TMODE_LON_HP = {"CFG_TMODE_LON_HP", 0x2003000d, I1, 1e-
 const ubx_cfg_item_t CFG_TMODE_HEIGHT_HP = {"CFG_TMODE_HEIGHT_HP", 0x2003000e, I1, 0.1, MM};
 const ubx_cfg_item_t CFG_TMODE_FIXED_POS_ACC = {"CFG_TMODE_FIXED_POS_ACC", 0x4003000f, U4, 0.1, MM};
 const ubx_cfg_item_t CFG_TMODE_SVIN_MIN_DUR = {"CFG_TMODE_SVIN_MIN_DUR", 0x40030010, U4, 1, S};
-const ubx_cfg_item_t CFG_TMODE_SVIN_ACC_LIMIT = {"CFG_TMODE_SVIN_ACC_LIMIT", 0x40030011, U4, 0.1, MM};
+const ubx_cfg_item_t CFG_TMODE_SVIN_ACC_LIMIT =
+{"CFG_TMODE_SVIN_ACC_LIMIT", 0x40030011, U4, 0.1, MM};
 
 // cfg navhpg - high precision navigation configuration
 const ubx_cfg_item_t CFG_NAVHPG_DGNSSMODE = {"CFG_NAVHPG_DGNSSMODE", 0x20140011, E1, 1, NA};

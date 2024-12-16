@@ -67,8 +67,8 @@ public:
     meanZHP = buf_offset<i1_t>(&payload_, 26);
     meanAcc = buf_offset<u4_t>(&payload_, 28);
     obs = buf_offset<u4_t>(&payload_, 32);
-    valid = buf_offset<u1_t>(&payload_,36);
-    active = buf_offset<u1_t>(&payload_,37);
+    valid = buf_offset<u1_t>(&payload_, 36);
+    active = buf_offset<u1_t>(&payload_, 37);
   }
   std::tuple<u1_t *, size_t> make_poll_payload()
   {

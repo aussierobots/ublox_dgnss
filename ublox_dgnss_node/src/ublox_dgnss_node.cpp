@@ -216,7 +216,7 @@ public:
     ubx_nav_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavStatus>(
       "ubx_nav_status", qos, pub_options);
     ubx_nav_svin_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSvin>(
-    "ubx_nav_svin", qos, pub_options);
+      "ubx_nav_svin", qos, pub_options);
     ubx_nav_time_utc_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>(
       "ubx_nav_time_utc", qos, pub_options);
     ubx_nav_vel_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>(
@@ -1013,7 +1013,7 @@ public:
             ubx_queue_.push_back(queue_frame);
           }
 
-        // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
+          // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
         } else {
           if (len > 2 && buf[0] == 0xD3 && buf[1] == 0x00) {
             std::vector<uint8_t> frame_buf;
@@ -2482,7 +2482,7 @@ private:
     msg->obs = payload->obs;
     msg->valid = payload->valid;
     msg->active = payload->active;
-    
+
     ubx_nav_svin_pub_->publish(*msg);
   }
 
