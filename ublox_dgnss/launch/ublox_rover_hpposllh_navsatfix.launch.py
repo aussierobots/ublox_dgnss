@@ -1,20 +1,37 @@
 """ Launch ublox_dgnss_node publishing high precision Lon/Lat messages"""
 import launch
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.actions import LoadComposableNodes
-from launch_ros.descriptions import ComposableNode
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import TextSubstitution
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 
 def generate_launch_description():
   """Generate launch description for ublox_dgnss components."""
 
+  namespace = LaunchConfiguration('namespace')
+  device_serial_string = LaunchConfiguration('device_serial_string')
+  frame_id = LaunchConfiguration('frame_id')
+
   log_level_arg = DeclareLaunchArgument(
     "log_level", default_value=TextSubstitution(text="INFO")
   )
+  namespace_arg = DeclareLaunchArgument(
+    "namespace", default_value=""
+  )
+  device_serial_string_arg = DeclareLaunchArgument(
+    "device_serial_string",
+    default_value="",
+    description="Serial string of the device to use"
+  )
+  frame_id_arg = DeclareLaunchArgument(
+    "frame_id",
+    default_value="ubx",
+    description="The frame_id to use in header of published messages"
+  )
 
-  params = [{'CFG_USBOUTPROT_NMEA': False},
+  params = [{'DEVICE_SERIAL_STRING': device_serial_string},
+            {'FRAME_ID': frame_id},
+            {'CFG_USBOUTPROT_NMEA': False},
             {'CFG_RATE_MEAS': 10},
             {'CFG_RATE_NAV': 100},
             {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
@@ -33,6 +50,7 @@ def generate_launch_description():
         package='ublox_dgnss_node',
         plugin='ublox_dgnss::UbloxDGNSSNode',
         name='ublox_dgnss',
+        namespace=namespace,
         parameters=params
       )
     ]
@@ -48,13 +66,17 @@ def generate_launch_description():
       ComposableNode(
         package='ublox_nav_sat_fix_hp_node',
         plugin='ublox_nav_sat_fix_hp::UbloxNavSatHpFixNode',
-        name='ublox_nav_sat_fix_hp'
+        name='ublox_nav_sat_fix_hp',
+        namespace=namespace
       )
     ]
   )
 
   return launch.LaunchDescription([
     log_level_arg,
+    namespace_arg,
+    device_serial_string_arg,
+    frame_id_arg,
     container1,
     container2,
     ])

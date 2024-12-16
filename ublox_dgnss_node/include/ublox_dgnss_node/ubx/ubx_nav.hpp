@@ -35,6 +35,7 @@
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_resetodo.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_pvt.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_status.hpp"
+#include "ublox_dgnss_node/ubx/nav/ubx_nav_svin.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_relposned.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_timeutc.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_velecef.hpp"
@@ -59,6 +60,7 @@ typedef UBXFrameComms<nav::sig::NavSigPayload, usb::Connection> UbxNavSigFrameCo
 typedef UBXFrameComms<nav::resetodo::NavResetOdoPayload, usb::Connection> UbxNavResetOdoFrameComms;
 typedef UBXFrameComms<nav::pvt::NavPvtPayload, usb::Connection> UbxNavPvtFrameComms;
 typedef UBXFrameComms<nav::status::NavStatusPayload, usb::Connection> UbxNavStatusFrameComms;
+typedef UBXFrameComms<nav::svin::NavSvinPayload, usb::Connection> UbxNavSvinFrameComms;
 typedef UBXFrameComms<nav::relposned::NavRelPosNedPayload,
     usb::Connection> UbxNavRelPosNedFrameComms;
 typedef UBXFrameComms<nav::timeutc::NavTimeUTCPayload, usb::Connection> UbxNavTimeUTCFrameComms;
@@ -85,6 +87,7 @@ private:
   std::shared_ptr<UbxNavResetOdoFrameComms> resetodo_;
   std::shared_ptr<UbxNavPvtFrameComms> pvt_;
   std::shared_ptr<UbxNavStatusFrameComms> status_;
+  std::shared_ptr<UbxNavSvinFrameComms> svin_;
   std::shared_ptr<UbxNavRelPosNedFrameComms> relposned_;
   std::shared_ptr<UbxNavTimeUTCFrameComms> timeutc_;
   std::shared_ptr<UbxNavVelECEFFrameComms> velecef_;
@@ -109,6 +112,7 @@ public:
     resetodo_ = std::make_shared<UbxNavResetOdoFrameComms>(usbc_);
     pvt_ = std::make_shared<UbxNavPvtFrameComms>(usbc_);
     status_ = std::make_shared<UbxNavStatusFrameComms>(usbc_);
+    svin_ = std::make_shared<UbxNavSvinFrameComms>(usbc_);
     relposned_ = std::make_shared<UbxNavRelPosNedFrameComms>(usbc_);
     timeutc_ = std::make_shared<UbxNavTimeUTCFrameComms>(usbc_);
     velecef_ = std::make_shared<UbxNavVelECEFFrameComms>(usbc_);
@@ -174,6 +178,10 @@ public:
   std::shared_ptr<UbxNavStatusFrameComms> status()
   {
     return status_;
+  }
+  std::shared_ptr<UbxNavSvinFrameComms> svin()
+  {
+    return svin_;
   }
   std::shared_ptr<UbxNavRelPosNedFrameComms> relposned()
   {

@@ -47,6 +47,7 @@ const msg_id_t UBX_NAV_EOE = 0x61;
 const msg_id_t UBX_NAV_POSECEF = 0x01;
 const msg_id_t UBX_NAV_POSLLH = 0x02;
 const msg_id_t UBX_NAV_STATUS = 0x03;
+const msg_id_t UBX_NAV_SVIN = 0x3b;
 const msg_id_t UBX_NAV_PVT = 0x07;
 const msg_id_t UBX_NAV_HPPOSECEF = 0x13;
 const msg_id_t UBX_NAV_HPPOSLLH = 0x14;
