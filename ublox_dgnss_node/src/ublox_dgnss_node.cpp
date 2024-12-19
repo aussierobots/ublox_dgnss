@@ -1009,7 +1009,7 @@ public:
             ubx_queue_.push_back(queue_frame);
           }
 
-        // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
+          // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
         } else {
           if (len > 2 && buf[0] == 0xD3 && buf[1] == 0x00) {
             std::vector<uint8_t> frame_buf;
