@@ -10,6 +10,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 
 
 def generate_launch_description():
@@ -36,16 +38,55 @@ def generate_launch_description():
         description="The frame_id to use in header of published messages",
     )
 
-    rover_hpposllh_navsatfix_launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_dir, "ublox_rover_hpposllh_navsatfix.launch.py")
-        ),
-        launch_arguments={
-            "log_level": log_level,
-            "namespace": namespace,
-            "device_serial_string": device_serial_string,
-            "frame_id": frame_id,
-        }.items(),
+    params = [{'DEVICE_SERIAL_STRING': device_serial_string},
+              {'FRAME_ID': frame_id},
+              {'CFG_USBOUTPROT_NMEA': False},
+              {'CFG_RATE_MEAS': 10},
+              {'CFG_RATE_NAV': 100},
+              {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
+              {'CFG_MSGOUT_UBX_NAV_COV_USB': 1},
+              {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1},
+              {'CFG_MSGOUT_UBX_NAV_SIG_UART1':1},
+              {'CFG_MSGOUT_UBX_NAV_PVT_UART1':1},
+              {'CFG_MSGOUT_UBX_NAV_POSLLH_USB':1},
+              {'CFG_MSGOUT_UBX_NAV_RELPOSEND_USB':1},
+              {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 1}]
+
+
+    container1 = ComposableNodeContainer(
+        name='ublox_dgnss_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        composable_node_descriptions=[
+            ComposableNode(
+                package='ublox_dgnss_node',
+                plugin='ublox_dgnss::UbloxDGNSSNode',
+                name='ublox_dgnss',
+                namespace=namespace,
+                parameters=params,
+                remapping={
+                    {'/ntrip_client/rtcm', '/base/rtcm'}
+                }
+            )
+        ]
+    )
+
+    container2 = ComposableNodeContainer(
+        name='ublox_nav_sat_fix_hp_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        composable_node_descriptions=[
+            ComposableNode(
+                package='ublox_nav_sat_fix_hp_node',
+                plugin='ublox_nav_sat_fix_hp::UbloxNavSatHpFixNode',
+                name='ublox_nav_sat_fix_hp',
+                namespace=namespace
+            )
+        ]
     )
 
     return LaunchDescription(
@@ -54,6 +95,7 @@ def generate_launch_description():
             namespace_arg,
             device_serial_string_arg,
             frame_id_arg,
-            rover_hpposllh_navsatfix_launch_file,
+            container1,
+            container2,
         ]
     )
