@@ -43,6 +43,7 @@ def generate_launch_description():
         {"CFG_TMODE_SVIN_MIN_DUR": 0x3C},
         # output some recommended UBX messages
         {"CFG_MSGOUT_UBX_NAV_SIG_USB": 0x1},
+        {"CFG_MSGOUT_UBX_NAV_SOL_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_PVT_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_POSLLH_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_RELPOSNED_USB": 0x1},
