@@ -36,7 +36,7 @@ def generate_launch_description():
 
     params_base = [
         {"DEVICE_SERIAL_STRING": device_serial_string},
-        {"FRAME_ID": "base"},
+        {"FRAME_ID": frame_id},
         # output RTCM messages
         {"CFG_MSGOUT_RTCM_3X_TYPE1005_USB": 0x1},
         {"CFG_MSGOUT_RTCM_3X_TYPE1077_USB": 0x1},
