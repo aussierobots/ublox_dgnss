@@ -16,6 +16,7 @@ def generate_launch_description():
     log_level = LaunchConfiguration("log_level")
     namespace = LaunchConfiguration("namespace")
     device_serial_string = LaunchConfiguration("device_serial_string")
+    frame_id = LaunchConfiguration("frame_id")
 
     log_level_arg = DeclareLaunchArgument(
         "log_level", default_value=TextSubstitution(text="INFO")
@@ -25,6 +26,12 @@ def generate_launch_description():
         "device_serial_string",
         default_value="",
         description="Serial string of the device to use",
+    )
+
+    frame_id_arg = DeclareLaunchArgument(
+        "frame_id",
+        default_value="base",
+        description="The frame_id to use in header of published messages",
     )
 
     params_base = [
@@ -43,7 +50,6 @@ def generate_launch_description():
         {"CFG_TMODE_SVIN_MIN_DUR": 0x3C},
         # output some recommended UBX messages
         {"CFG_MSGOUT_UBX_NAV_SIG_USB": 0x1},
-        {"CFG_MSGOUT_UBX_NAV_SOL_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_PVT_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_POSLLH_USB": 0x1},
         {"CFG_MSGOUT_UBX_NAV_RELPOSNED_USB": 0x1},
@@ -73,6 +79,7 @@ def generate_launch_description():
             log_level_arg,
             namespace_arg,
             device_serial_string_arg,
+            frame_id_arg,
             container_base,
         ]
     )

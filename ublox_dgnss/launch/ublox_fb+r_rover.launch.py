@@ -15,8 +15,6 @@ from launch_ros.descriptions import ComposableNode
 
 
 def generate_launch_description():
-    ublox_dgnss_dir = get_package_share_directory("ublox_dgnss")
-    launch_dir = os.path.join(ublox_dgnss_dir, "launch")
 
     log_level = LaunchConfiguration("log_level")
     namespace = LaunchConfiguration("namespace")
@@ -46,11 +44,13 @@ def generate_launch_description():
               {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
               {'CFG_MSGOUT_UBX_NAV_COV_USB': 1},
               {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1},
-              {'CFG_MSGOUT_UBX_NAV_SIG_UART1':1},
-              {'CFG_MSGOUT_UBX_NAV_PVT_UART1':1},
+              {'CFG_MSGOUT_UBX_NAV_SIG_USB':1},
+              {'CFG_MSGOUT_UBX_NAV_PVT_USB':1},
               {'CFG_MSGOUT_UBX_NAV_POSLLH_USB':1},
-              {'CFG_MSGOUT_UBX_NAV_RELPOSEND_USB':1},
-              {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 1}]
+              {'CFG_MSGOUT_UBX_NAV_RELPOSNED_USB':1},
+              {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 1},
+              {'CFG_MSGOUT_UBX_NAV_SVIN_USB':1},
+              {'CFG_MSGOUT_UBX_NAV_SOL_USB':1}]
 
 
     container1 = ComposableNodeContainer(
@@ -58,7 +58,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container_mt',
-        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        arguments=['--ros-args', '--log-level', log_level],
         composable_node_descriptions=[
             ComposableNode(
                 package='ublox_dgnss_node',
@@ -78,7 +78,7 @@ def generate_launch_description():
         namespace='',
         package='rclcpp_components',
         executable='component_container_mt',
-        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        arguments=['--ros-args', '--log-level', log_level],
         composable_node_descriptions=[
             ComposableNode(
                 package='ublox_nav_sat_fix_hp_node',
