@@ -63,7 +63,7 @@ def generate_launch_description():
                 name="ublox_dgnss",
                 namespace=namespace,
                 parameters=params,
-                remapping={{"/ntrip_client/rtcm", "/base/rtcm"}},
+                remappings=[("/ntrip_client/rtcm", "/base/rtcm")],
             )
         ],
     )
