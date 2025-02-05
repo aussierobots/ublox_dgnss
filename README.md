@@ -1,6 +1,6 @@
 # ublox-dgnss
 
-This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added.
+This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added. This package also supports a fixed base station and moving rover use case.
 
 RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node. 
 
@@ -169,7 +169,7 @@ Note: these parameters are not written to the device.  They only instruct the no
 
 # ROS2 UBX NAV Messages
 
-The following messages may be outputed. They included a `std_msgs/Header header` with the remainder of the fields matching the UBX output. Note that field names use different notation as the UBX field name notation is not compliant with the ROS IDL field names.
+The following messages may be outputted. They included a `std_msgs/Header header` with the remainder of the fields matching the UBX output. Note that field names use different notation as the UBX field name notation is not compliant with the ROS IDL field names.
 ```
 /ubx_esf_meas
 
@@ -203,8 +203,10 @@ The following messages may be outputed. They included a `std_msgs/Header header`
 ```
 
 The following topics are subscribed to
+```
 /ubx_esf_meas_to_device
 /ntrip_client/rtcm
+```
 
 # ROS2 NAVSATFIX Messages
 
@@ -227,6 +229,12 @@ An example launch file is provided. You will need to set values appropriate for 
 ros2 launch ublox_dgnss ntrip_client.launch.py use_https:=true host:=ntrip.data.gnss.ga.gov.au port:=443 mountpoint:=MBCH00AUS0 username:=username password:=password
 ```
 Note the launch file has been configured to also use environment variables `NTRIP_USERNAME` & `NTRIP_PASSWORD` such that you dont need credentials in the launch scripts.
+
+# Fixed Base and Rover
+
+This package supports the use case where a fixed base station is setup to emit RTCM data and a moving rover consumes the emitted RTCM data for improved location accuracy as it moves. The base is setup to perform the survey-in procedure and, once finished, emit RTCM messages.
+
+Example launch files are provided for this use case. Run `ublox_fb+r_base.launch.py` for the fixed base and `ublox_fb+r_rover.launch.py` for the moving rover.
 
 # Moving Base and Rover
 

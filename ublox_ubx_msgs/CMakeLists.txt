@@ -79,6 +79,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXNavSBAS.msg"
   "msg/UBXNavSig.msg"
   "msg/UBXNavStatus.msg"
+  "msg/UBXNavSvin.msg"
   "msg/UBXNavTimeUTC.msg"
   "msg/UBXNavVelECEF.msg"
   "msg/UBXNavVelNED.msg"

@@ -9,12 +9,19 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
   """Generate launch description for ublox_dgnss components."""
 
+  device_serial_string = LaunchConfiguration('device_serial_string')
+
   log_level_arg = DeclareLaunchArgument(
     "log_level", default_value=TextSubstitution(text="INFO")
   )
+  device_serial_string_arg = DeclareLaunchArgument(
+    "device_serial_string",
+    default_value="Test Base",
+    description="Serial string of the device to use"
+  )
 
   params_base= [
-            {'DEVICE_SERIAL_STRING': "Test Base"},
+            {'DEVICE_SERIAL_STRING': device_serial_string},
             {'FRAME_ID': "base"},
 
             # config measurement interval to 200 ms (ie 5 Hz) and nav update rate to once per measurement
@@ -98,6 +105,7 @@ def generate_launch_description():
 
   return launch.LaunchDescription([
     log_level_arg,
+    device_serial_string_arg,
     container_base,
     container_navsatfix,
     ])

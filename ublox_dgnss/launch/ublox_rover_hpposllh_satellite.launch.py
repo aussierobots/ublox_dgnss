@@ -1,7 +1,6 @@
 """ Launch ublox_dgnss_node publishing high precision Lon/Lat messages"""
 import launch
 from launch_ros.actions import ComposableNodeContainer
-from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import TextSubstitution
