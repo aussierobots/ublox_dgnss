@@ -379,7 +379,7 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIG_USB =
 const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIGLOG_USB =
 {"CFG_MSGOUT_UBX_SEC_SIGLOG_USB", 0x2091068c, U1, 0, NA};
 
- //Support both USB type and UART2 type messages simultaneously
+// Support both USB type and UART2 type messages simultaneously
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1005_USB =
 {"CFG_MSGOUT_RTCM_3X_TYPE1005_USB", 0x209102c0, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1077_USB =
@@ -548,8 +548,8 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_MSGOUT_UBX_ESF_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_STATUS_USB},
   {CFG_MSGOUT_UBX_SEC_SIG_USB.ubx_key_id, CFG_MSGOUT_UBX_SEC_SIG_USB},
   {CFG_MSGOUT_UBX_SEC_SIGLOG_USB.ubx_key_id, CFG_MSGOUT_UBX_SEC_SIGLOG_USB},
-  
-  //Support both USB type and UART2 type messages simultaneously
+
+  // Support both USB type and UART2 type messages simultaneously
   {CFG_MSGOUT_RTCM_3X_TYPE1005_USB.ubx_key_id, CFG_MSGOUT_RTCM_3X_TYPE1005_USB},
   {CFG_MSGOUT_RTCM_3X_TYPE1077_USB.ubx_key_id, CFG_MSGOUT_RTCM_3X_TYPE1077_USB},
   {CFG_MSGOUT_RTCM_3X_TYPE1087_USB.ubx_key_id, CFG_MSGOUT_RTCM_3X_TYPE1087_USB},
