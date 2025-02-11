@@ -2,8 +2,8 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.5 (2025-02-12)
+------------------
 * added log_level param and CURLOPT_MAXAGE_CONN
 * Contributors: Nick Hortovanyi
 
