@@ -2,6 +2,42 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#33 <https://github.com/aussierobots/ublox_dgnss/issues/33>`_ from bvsam/base-rtcm-support
+  Base rtcm support
+* fixed style
+* Merge branch 'main' into base-rtcm-support
+* Merge pull request `#32 <https://github.com/aussierobots/ublox_dgnss/issues/32>`_ from bvsam/mb+r_fix
+  Updating mb+r_base launch file and adding missing parameters
+* Fixing formatting to allow for tests to pass
+* Fixing formatting to enable tests to pass
+* Fixing errors in code to ensure successful builds
+* Adding more CONFIG_TMODE parameters
+* Updating mb+r_base launch file and adding missing parameters
+* Adding initial code for fixed base use case
+* uncrustify formatting fixes
+* Merge branch 'main' of github.com:aussierobots/ublox_dgnss
+* uncrustify formatting changes
+* Merge pull request `#30 <https://github.com/aussierobots/ublox_dgnss/issues/30>`_ from bvsam/base-station-rtcm
+  Add base station rtcm message publishing support
+* Updating rtcm publisher QOS for subscription compatibility
+* Minor: fixing error in code
+* Changing rtcm publisher topic name
+* Adding payload logging for rtcm publishing
+* Making subscription topics absolute for backwards compatbility
+* Updating subscription topic names to be non-absolute
+* Fixing errors in code
+* Adding basic rtcm receival and publishing functionality
+* Added Subcription Options Qos Override on subscriptions
+* Add Publisher Option with QOS Overriding for all publishers
+* uncrustify formatting changes
+* parameter pub for ubx_mon_ver ubx_sec_uniqid
+* ubx_sec_sig msg ver 2 changes
+* added CFG_SIGNAL for GPS, SBAS, GAL, BDS, QZSS and GLO
+* updated cfg items
+* Contributors: Benjamin Sam, Nick Hortovanyi, Xiran Zhou, ryan
+
 0.5.4 (2024-10-16)
 ------------------
 * fixed uncrustify formatting errros

@@ -2,6 +2,14 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#33 <https://github.com/aussierobots/ublox_dgnss/issues/33>`_ from bvsam/base-rtcm-support
+  Base rtcm support
+* Adding initial code for fixed base use case
+* Update UBXSecSig with 1.5 firmware cent freq jamming state
+* Contributors: Benjamin Sam, Nick Hortovanyi
+
 0.5.4 (2024-10-16)
 ------------------
 * Merge pull request `#27 <https://github.com/aussierobots/ublox_dgnss/issues/27>`_ from aussierobots/spartn-dev

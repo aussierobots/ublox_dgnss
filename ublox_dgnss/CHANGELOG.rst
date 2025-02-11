@@ -2,6 +2,30 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#33 <https://github.com/aussierobots/ublox_dgnss/issues/33>`_ from bvsam/base-rtcm-support
+  Base rtcm support
+* Fixed ublox_fb+r_rover.launch.py and ublox_fb+r_base.launch.py
+* updated ublox_fb+r_rover.launch.py and ublox_fb+r_base.launch.py
+* updated ublox_fb+r_rover.launch.py and ublox_fb+r_base.launch.py
+* updated ublox_fb+r_rover.launch.py and ublox_fb+r_base.launch.py
+* Changed ublox_fb+r_base.launch.py
+* Changed ublox_fb+r_rover.launch.py
+* Merge branch 'main' into base-rtcm-support
+* Merge pull request `#32 <https://github.com/aussierobots/ublox_dgnss/issues/32>`_ from bvsam/mb+r_fix
+  Updating mb+r_base launch file and adding missing parameters
+* Updating launch file description comments
+* Updating mb+r_base launch file and adding missing parameters
+* Adding 2 launch files for fixed base use case
+* Improving ublox_rover_hpposllh_navsatfix launch file
+* Cleaning up and improving launch files
+* added ubx_rxm_cor usb output
+* ubx_sec_sig msg ver 2 changes
+* added log-level for debug
+* added log_level param and CURLOPT_MAXAGE_CONN
+* Contributors: Benjamin Sam, Nick Hortovanyi, Xiran Zhou, ryan
+
 0.5.4 (2024-10-16)
 ------------------
 * Update ntrip_client.launch.py
