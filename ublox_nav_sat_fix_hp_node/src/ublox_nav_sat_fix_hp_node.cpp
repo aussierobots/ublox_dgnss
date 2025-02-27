@@ -45,9 +45,11 @@ public:
     enu_pos_cov_.fill(0.0);  // initialise values to zero
 
     auto qos = rclcpp::SensorDataQoS();
+    rclcpp::PublisherOptions pub_options;
+    pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
     // Create publishers
-    nav_sat_fix_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>("fix", qos);
+    nav_sat_fix_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>("fix", qos, pub_options);
 
     // Create subscribers
     ubx_nav_hp_pos_llh_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXNavHPPosLLH>(
