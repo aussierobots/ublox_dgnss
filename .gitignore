@@ -58,3 +58,6 @@ imgui.ini
 .pytest_cache
 
 *.py[co]
+
+# Local documentation (u-blox manuals)
+docs/
