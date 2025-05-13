@@ -29,15 +29,16 @@
 #include "ublox_dgnss_node/ubx/mon/ubx_mon_ver.hpp"
 #include "ublox_dgnss_node/ubx/ubx_ack.hpp"
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 UbxCfgHandler::UbxCfgHandler(
   rclcpp::Node * node,
-  std::shared_ptr<usb::Connection> usbc,
+  std::shared_ptr<UbxTransceiver> transceiver,
   const std::string & device_type,
   const std::string & parameter_file_path)
 : node_(node),
-  usbc_(usbc),
+  transceiver_(transceiver),
   device_type_(device_type),
   parameter_loader_(parameter_file_path)
 {
@@ -97,7 +98,7 @@ bool UbxCfgHandler::initialize()
       try {
         // Get the parameter value as a ParameterValue object
         rclcpp::ParameterValue param_value = param.get_parameter_value();
-        
+
         // Convert ROS parameter value to UBX value
         ::ubx::value_t ubx_value = ros_to_ubx_value(ubx_param, param_value);
 
@@ -148,69 +149,69 @@ bool UbxCfgHandler::get_parameter_value(const std::string & name)
     payload->layer = 1;  // RAM layer
     payload->position = 0;  // Start from first position
     payload->keys.push_back(ubx_param.get_key_id());
-    
+
     // Create a frame for the message
     auto frame_poll = std::make_shared<ubx::FramePoll>();
     frame_poll->msg_class = ubx::cfg::CfgValGetPayload::MSG_CLASS;
     frame_poll->msg_id = ubx::cfg::CfgValGetPayload::MSG_ID;
-    
+
     // Get the payload data
     auto [payload_data, payload_size] = payload->make_poll_payload();
-    
+
     // Set up the frame
     frame_poll->payload = reinterpret_cast<ch_t *>(payload_data);
     frame_poll->length = payload_size;
-    
+
     // Calculate checksum and build frame buffer
     std::tie(frame_poll->ck_a, frame_poll->ck_b) = frame_poll->ubx_check_sum();
     frame_poll->build_frame_buf();
 
-    // Send the message
-    usbc_->write_buffer(frame_poll->buf.data(), frame_poll->buf.size());
+    // Send the CFG-VALGET message
+    auto write_poll_result = transceiver_->write(frame_poll);
+    if (write_poll_result.status == ubx::AckNack::NONE) { // Or handle NACK if applicable for VALGET write
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "Failed to write CFG-VALGET message for parameter: %s (Write operation failed)",
+          name.c_str());
+      return false;
+    }
 
-    // Read the response
-    std::vector<u1_t> buffer(1024);
-    int bytes_read = usbc_->read_chars(buffer.data(), buffer.size());
-    
-    if (bytes_read <= 0) {
+    // Read the CFG-VALGET response
+    auto response_frame = std::make_shared<ubx::Frame>(); // Generic frame to receive into
+    auto read_result = transceiver_->read(response_frame, 1000 /* timeout_ms */);
+    if (read_result.status != ubx::ReadStatus::SUCCESS) {
       RCLCPP_ERROR(
         node_->get_logger(),
-        "Failed to read response from device");
+        "Failed to read CFG-VALGET response for parameter: %s (Read status: %d)", name.c_str(),
+          static_cast<int>(read_result.status));
       return false;
     }
-    
-    // Find the UBX message in the buffer
-    size_t i = 0;
-    while (i < static_cast<size_t>(bytes_read) - 1) {
-      if (buffer[i] == 0xB5 && buffer[i+1] == 0x62) {  // UBX sync chars
-        break;
-      }
-      i++;
-    }
-    
-    if (i >= static_cast<size_t>(bytes_read) - 1) {
+
+    // Check if this is a CFG-VALGET message response
+    // Note: The actual CFG-VALGET response will have the same class/ID as the poll msg,
+    // but it's good practice to check. Some devices might send other messages.
+    // For CFG-VALGET, the response IS a CFG-VALGET message with the data.
+    if (response_frame->msg_class != ubx::cfg::CfgValGetPayload::MSG_CLASS ||
+      response_frame->msg_id != ubx::cfg::CfgValGetPayload::MSG_ID)
+    {
       RCLCPP_ERROR(
         node_->get_logger(),
-        "Failed to find UBX message in response");
+        "Unexpected message type received: 0x%02X 0x%02X, expected CFG-VALGET (0x%02X 0x%02X)",
+        response_frame->msg_class, response_frame->msg_id,
+        ubx::cfg::CfgValGetPayload::MSG_CLASS, ubx::cfg::CfgValGetPayload::MSG_ID);
       return false;
     }
-    
-    // Check if this is a CFG-VALGET message
-    if (buffer[i+2] != ubx::cfg::CfgValGetPayload::MSG_CLASS || 
-        buffer[i+3] != ubx::cfg::CfgValGetPayload::MSG_ID) {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Unexpected message type: 0x%02X 0x%02X",
-        buffer[i+2], buffer[i+3]);
+
+    // Parse the response payload
+    // The payload starts after the header (SYNC1, SYNC2, CLASS, ID, LENGTH = 6 bytes)
+    // response_frame->length is the length of the payload
+    if (response_frame->buf.size() < ubx::UBX_SIZE_HEADER + ubx::UBX_SIZE_CHECKSUM) {
+      RCLCPP_ERROR(node_->get_logger(), "Received frame too short for parameter: %s", name.c_str());
       return false;
     }
-    
-    // Get the payload length
-    u2_t length = *reinterpret_cast<u2_t *>(&buffer[i+4]);
-    
-    // Parse the response using the CfgValGetPayload constructor
-    ubx::cfg::CfgValGetPayload response_payload(&buffer[i+6], length);
-    
+    ubx::cfg::CfgValGetPayload response_payload(response_frame->buf.data() +
+      ubx::UBX_OFFSET_PAYLOAD, response_frame->length);
+
     // Check if we got a valid response
     if (response_payload.cfg_data.empty()) {
       RCLCPP_ERROR(
@@ -219,20 +220,19 @@ bool UbxCfgHandler::get_parameter_value(const std::string & name)
         name.c_str());
       return false;
     }
-    
+
     // Extract the parameter value
     auto value = response_payload.cfg_data[0].ubx_value;
-    
+
     // Convert the UBX value to a ROS parameter value
     rclcpp::ParameterValue ros_value = ubx_to_ros_value(ubx_param, value);
-    
+
     // Set the parameter in the node
     node_->set_parameter(rclcpp::Parameter(name, ros_value));
 
     RCLCPP_DEBUG(
       node_->get_logger(),
       "Got parameter %s = %s", name.c_str(), node_->get_parameter(name).value_to_string().c_str());
-    
 
     return true;
   } catch (const std::exception & e) {
@@ -243,7 +243,9 @@ bool UbxCfgHandler::get_parameter_value(const std::string & name)
   }
 }
 
-bool UbxCfgHandler::set_parameter_value(const std::string & name, const rclcpp::ParameterValue & value)
+bool UbxCfgHandler::set_parameter_value(
+  const std::string & name,
+  const rclcpp::ParameterValue & value)
 {
   // Check if this is a registered UBX parameter
   auto it = registered_parameters_.find(name);
@@ -273,85 +275,49 @@ bool UbxCfgHandler::set_parameter_value(const std::string & name, const rclcpp::
     payload->layers.bits.ram = 1;    // Set RAM layer
     payload->layers.bits.bbr = 1;    // Set BBR layer
     payload->layers.bits.flash = 1;  // Set Flash layer
-    
+
     // Add the key-value pair to the payload
     ubx::cfg::key_value_t kv;
     kv.ubx_key_id = ubx_param.get_key_id();
     kv.ubx_value = ubx_value;
     payload->cfg_data.push_back(kv);
-    
+
     // Create a frame for the message
     auto frame = std::make_shared<ubx::FrameValSet>();
     frame->msg_class = ubx::cfg::CfgValSetPayload::MSG_CLASS;
     frame->msg_id = ubx::cfg::CfgValSetPayload::MSG_ID;
-    
+
     // Get the payload data
     auto [payload_data, payload_size] = payload->make_poll_payload();
-    
+
     // Set up the frame
     frame->payload = reinterpret_cast<ch_t *>(payload_data);
     frame->length = payload_size;
-    
+
     // Calculate checksum and build frame buffer
     std::tie(frame->ck_a, frame->ck_b) = frame->ubx_check_sum();
     frame->build_frame_buf();
 
-    // Send the message
-    usbc_->write_buffer(frame->buf.data(), frame->buf.size());
-
-    // Read the ACK/NAK response
-    std::vector<u1_t> buffer(1024);
-    int bytes_read = usbc_->read_chars(buffer.data(), buffer.size());
-    if (bytes_read <= 0) {
+    // Send the CFG-VALSET message and check ACK/NAK from the write operation itself
+    auto write_result = transceiver_->write(frame);
+    if (write_result.status != ubx::AckNack::ACK) {
       RCLCPP_ERROR(
         node_->get_logger(),
-        "No response to CFG-VALSET message for parameter: %s", name.c_str());
+        "Failed to set parameter %s: Write failed or NAK received/timeout (Status: %d)",
+          name.c_str(), static_cast<int>(write_result.status));
       return false;
     }
 
-    // Parse the response
-    // First, find the UBX message in the buffer
-    size_t i = 0;
-    while (i < static_cast<size_t>(bytes_read - 1)) {
-      if (buffer[i] == 0xB5 && buffer[i+1] == 0x62) {  // UBX sync chars
-        break;
-      }
-      i++;
-    }
-    
-    if (i >= static_cast<size_t>(bytes_read - 1)) {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Failed to find UBX message in response");
-      return false;
-    }
-    
-    // Parse the ACK-ACK or ACK-NAK message
-    ubx::ack::AckNakPayload ack_nak(&buffer[i+6], 2);  // Skip header (6 bytes) to get to payload
+    // Update the ROS parameter if the device update was successful
+    node_->set_parameter(rclcpp::Parameter(name, value));
 
-    // Check for ACK response (ACK-ACK has class 0x05, ID 0x01)
-    if (buffer[i+2] == 0x05 && buffer[i+3] == 0x01) {
-      // Update the ROS parameter if the device update was successful
-      node_->set_parameter(rclcpp::Parameter(name, value));
-      
-      RCLCPP_DEBUG(
-        node_->get_logger(),
-        "Successfully set parameter %s",
-        name.c_str());
-      
-      return true;
-    } else if (buffer[i+2] == 0x05 && buffer[i+3] == 0x00)  // ACK-NAK has class 0x05, ID 0x00
-    {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Failed to set parameter %s: NAK received", name.c_str());
-      return false;
-    } else {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Unexpected response to CFG-VALSET message for parameter: %s", name.c_str());
-      return false;
-    }
+    RCLCPP_DEBUG(
+      node_->get_logger(),
+      "Successfully set parameter %s",
+      name.c_str());
+
+    return true;
+
   } catch (const std::exception & e) {
     RCLCPP_ERROR(
       node_->get_logger(),
@@ -412,65 +378,59 @@ std::string UbxCfgHandler::detect_firmware_version()
     frame_poll->msg_id = ubx::mon::ver::MonVerPayload::MSG_ID;
     frame_poll->payload = nullptr;  // Poll messages have empty payload
     frame_poll->length = 0;
-    
+
     // Calculate checksum and build frame buffer
     std::tie(frame_poll->ck_a, frame_poll->ck_b) = frame_poll->ubx_check_sum();
     frame_poll->build_frame_buf();
 
-    // Send the message
-    usbc_->write_buffer(frame_poll->buf.data(), frame_poll->buf.size());
+    // Send the MON-VER message
+    auto write_mon_ver_result = transceiver_->write(frame_poll);
+    if (write_mon_ver_result.status == ubx::AckNack::NONE) { // Or handle NACK if applicable for MON-VER write
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "Failed to write MON-VER message (Write operation failed)");
+      return "";
+    }
 
-    // Read the response
-    std::vector<u1_t> buffer(1024);
-    int bytes_read = usbc_->read_chars(buffer.data(), buffer.size());
-    
-    if (bytes_read <= 0) {
+    // Read the MON-VER response
+    auto response_frame = std::make_shared<ubx::Frame>(); // Generic frame to receive into
+    auto read_mon_ver_result = transceiver_->read(response_frame, 1000 /* timeout_ms */);
+    if (read_mon_ver_result.status != ubx::ReadStatus::SUCCESS) {
       RCLCPP_ERROR(
         node_->get_logger(),
-        "Failed to read response from device");
+        "Failed to read MON-VER response from device (Read status: %d)",
+          static_cast<int>(read_mon_ver_result.status));
       return "";
     }
-    
-    // Find the UBX message in the buffer
-    size_t i = 0;
-    while (i < static_cast<size_t>(bytes_read) - 1) {
-      if (buffer[i] == 0xB5 && buffer[i+1] == 0x62) {  // UBX sync chars
-        break;
-      }
-      i++;
-    }
-    
-    if (i >= static_cast<size_t>(bytes_read) - 1) {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Failed to find UBX message in response");
-      return "";
-    }
-    
+
+    // The UBX message is now at the beginning of the buffer
+
     // Check if this is a MON-VER message
-    if (buffer[i+2] != ubx::mon::ver::MonVerPayload::MSG_CLASS || 
-        buffer[i+3] != ubx::mon::ver::MonVerPayload::MSG_ID) {
+    if (response_frame->msg_class != ubx::mon::ver::MonVerPayload::MSG_CLASS ||
+      response_frame->msg_id != ubx::mon::ver::MonVerPayload::MSG_ID)
+    {
       RCLCPP_ERROR(
         node_->get_logger(),
         "Unexpected message type: 0x%02X 0x%02X",
-        buffer[i+2], buffer[i+3]);
+        response_frame->msg_class, response_frame->msg_id);
       return "";
     }
-    
+
     // Get the payload length
-    u2_t length = *reinterpret_cast<u2_t *>(&buffer[i+4]);
-    
+    u2_t length = *reinterpret_cast<u2_t *>(&response_frame->buf[6]);
+
     // Parse the response using the MonVerPayload constructor
-    ubx::mon::ver::MonVerPayload mon_ver(&buffer[i+6], length);
-    
+    ubx::mon::ver::MonVerPayload mon_ver(response_frame->buf.data() + ubx::UBX_OFFSET_PAYLOAD,
+      length);
+
     // Extract the firmware version (sw_version is a char array, not a string)
     std::string fw_version(reinterpret_cast<char *>(mon_ver.sw_version));
     firmware_version_ = fw_version;
-    
+
     RCLCPP_INFO(
       node_->get_logger(),
       "Detected firmware version: %s", fw_version.c_str());
-    
+
     return fw_version;
   } catch (const std::exception & e) {
     RCLCPP_ERROR(
@@ -484,7 +444,7 @@ bool UbxCfgHandler::register_parameters()
 {
   // Get parameters applicable to the current device and firmware
   auto applicable_params = get_applicable_parameters();
-  
+
   if (applicable_params.empty()) {
     RCLCPP_WARN(
       node_->get_logger(),
@@ -492,18 +452,18 @@ bool UbxCfgHandler::register_parameters()
       device_type_.c_str(), firmware_version_.c_str());
     return false;
   }
-  
+
   RCLCPP_INFO(
     node_->get_logger(),
     "Registering %zu parameters for device %s with firmware %s",
     applicable_params.size(), device_type_.c_str(), firmware_version_.c_str());
-  
+
   // Register each parameter
   for (const auto & param : applicable_params) {
     try {
       // Create parameter name
       std::string param_name = param.get_name();
-      
+
       // Check for behavior changes
       std::string behavior_change = param.get_behavior_change(device_type_, firmware_version_);
       if (!behavior_change.empty()) {
@@ -512,7 +472,7 @@ bool UbxCfgHandler::register_parameters()
           "Parameter %s has behavior changes in firmware %s: %s",
           param_name.c_str(), firmware_version_.c_str(), behavior_change.c_str());
       }
-      
+
       // Register the parameter with ROS
       auto param_descriptor = rcl_interfaces::msg::ParameterDescriptor();
       param_descriptor.name = param.get_name();
@@ -552,10 +512,10 @@ bool UbxCfgHandler::register_parameters()
             param.get_name().c_str());
           return false;
       }
-      
+
       // Store the parameter for later use
       registered_parameters_[param_name] = param;
-      
+
       RCLCPP_DEBUG(
         node_->get_logger(),
         "Registered parameter: %s", param_name.c_str());
@@ -565,7 +525,7 @@ bool UbxCfgHandler::register_parameters()
         "Error registering parameter %s: %s", param.get_name().c_str(), e.what());
     }
   }
-  
+
   return !registered_parameters_.empty();
 }
 
@@ -683,7 +643,8 @@ bool UbxCfgHandler::register_parameters()
         try {
           ubx_value.r4 = static_cast<::ubx::r4_t>(std::stod(value.get<std::string>()));
         } catch (const std::exception & e) {
-          throw std::runtime_error("Failed to parse floating-point value: " + value.get<std::string>());
+          throw std::runtime_error("Failed to parse floating-point value: " +
+            value.get<std::string>());
         }
       } else {
         throw std::runtime_error("Invalid parameter type for R4");
@@ -699,7 +660,8 @@ bool UbxCfgHandler::register_parameters()
         try {
           ubx_value.r8 = static_cast<::ubx::r8_t>(std::stod(value.get<std::string>()));
         } catch (const std::exception & e) {
-          throw std::runtime_error("Failed to parse floating-point value: " + value.get<std::string>());
+          throw std::runtime_error("Failed to parse floating-point value: " +
+            value.get<std::string>());
         }
       } else {
         throw std::runtime_error("Invalid parameter type for R8");
@@ -788,7 +750,8 @@ bool UbxCfgHandler::register_parameters()
       break;
 
     default:
-      throw std::runtime_error("Unsupported parameter type: " + std::to_string(static_cast<int>(param.get_type())));
+      throw std::runtime_error("Unsupported parameter type: " +
+        std::to_string(static_cast<int>(param.get_type())));
   }
 
   return ubx_value;

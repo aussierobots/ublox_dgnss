@@ -26,7 +26,8 @@
 
 #include <nlohmann/json.hpp>
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 UbxCfgParameterLoader::UbxCfgParameterLoader(const std::string & file_path)
 : file_path_(file_path)
@@ -257,7 +258,8 @@ std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_sup
 
     // Check if the support has the required fields
     if (!support.contains("since")) {
-      throw ParameterLoadException("Firmware support for " + device_type + " is missing 'since' field");
+      throw ParameterLoadException("Firmware support for " + device_type +
+          " is missing 'since' field");
     }
 
     // Parse the support fields
@@ -308,47 +310,46 @@ std::map<std::string, std::string> UbxCfgParameterLoader::parse_possible_values(
 
 ::ubx::ubx_type_t UbxCfgParameterLoader::parse_ubx_type(const std::string & type_str)
 {
-  if (type_str == "L") return ::ubx::L;
-  else if (type_str == "U1") return ::ubx::U1;
-  else if (type_str == "I1") return ::ubx::I1;
-  else if (type_str == "E1") return ::ubx::E1;
-  else if (type_str == "X1") return ::ubx::X1;
-  else if (type_str == "U2") return ::ubx::U2;
-  else if (type_str == "I2") return ::ubx::I2;
-  else if (type_str == "E2") return ::ubx::E2;
-  else if (type_str == "X2") return ::ubx::X2;
-  else if (type_str == "U4") return ::ubx::U4;
-  else if (type_str == "I4") return ::ubx::I4;
-  else if (type_str == "E4") return ::ubx::E4;
-  else if (type_str == "X4") return ::ubx::X4;
-  else if (type_str == "R4") return ::ubx::R4;
-  else if (type_str == "U8") return ::ubx::U8;
-  else if (type_str == "I8") return ::ubx::I8;
-  else if (type_str == "X8") return ::ubx::X8;
-  else if (type_str == "R8") return ::ubx::R8;
-  else {
+  if (type_str == "L") {return ::ubx::L;} else if (type_str == "U1") {
+    return ::ubx::U1;
+  } else if (type_str == "I1") {return ::ubx::I1;} else if (type_str == "E1") {
+    return ::ubx::E1;
+  } else if (type_str == "X1") {return ::ubx::X1;} else if (type_str == "U2") {
+    return ::ubx::U2;
+  } else if (type_str == "I2") {return ::ubx::I2;} else if (type_str == "E2") {
+    return ::ubx::E2;
+  } else if (type_str == "X2") {return ::ubx::X2;} else if (type_str == "U4") {
+    return ::ubx::U4;
+  } else if (type_str == "I4") {return ::ubx::I4;} else if (type_str == "E4") {
+    return ::ubx::E4;
+  } else if (type_str == "X4") {return ::ubx::X4;} else if (type_str == "R4") {
+    return ::ubx::R4;
+  } else if (type_str == "U8") {return ::ubx::U8;} else if (type_str == "I8") {
+    return ::ubx::I8;
+  } else if (type_str == "X8") {return ::ubx::X8;} else if (type_str == "R8") {
+    return ::ubx::R8;
+  } else {
     throw ParameterLoadException("Invalid UBX type: " + type_str);
   }
 }
 
 ::ubx::cfg::ubx_unit_t UbxCfgParameterLoader::parse_ubx_unit(const std::string & unit_str)
 {
-  if (unit_str == "NA") return ::ubx::cfg::NA;
-  else if (unit_str == "M") return ::ubx::cfg::M;
-  else if (unit_str == "Y") return ::ubx::cfg::Y;
-  else if (unit_str == "MONTH") return ::ubx::cfg::MONTH;
-  else if (unit_str == "D") return ::ubx::cfg::D;
-  else if (unit_str == "H") return ::ubx::cfg::H;
-  else if (unit_str == "MIN") return ::ubx::cfg::MIN;
-  else if (unit_str == "S") return ::ubx::cfg::S;
-  else if (unit_str == "HZ") return ::ubx::cfg::HZ;
-  else if (unit_str == "MA") return ::ubx::cfg::MA;
-  else if (unit_str == "MS") return ::ubx::cfg::MS;
-  else if (unit_str == "DEG") return ::ubx::cfg::DEG;
-  else if (unit_str == "MM") return ::ubx::cfg::MM;
-  else if (unit_str == "CM") return ::ubx::cfg::CM;
-  else if (unit_str == "MPS") return ::ubx::cfg::MPS;
-  else {
+  if (unit_str == "NA") {return ::ubx::cfg::NA;} else if (unit_str == "M") {
+    return ::ubx::cfg::M;
+  } else if (unit_str == "Y") {return ::ubx::cfg::Y;} else if (unit_str == "MONTH") {
+    return ::ubx::cfg::MONTH;
+  } else if (unit_str == "D") {return ::ubx::cfg::D;} else if (unit_str == "H") {
+    return ::ubx::cfg::H;
+  } else if (unit_str == "MIN") {return ::ubx::cfg::MIN;} else if (unit_str == "S") {
+    return ::ubx::cfg::S;
+  } else if (unit_str == "HZ") {return ::ubx::cfg::HZ;} else if (unit_str == "MA") {
+    return ::ubx::cfg::MA;
+  } else if (unit_str == "MS") {return ::ubx::cfg::MS;} else if (unit_str == "DEG") {
+    return ::ubx::cfg::DEG;
+  } else if (unit_str == "MM") {return ::ubx::cfg::MM;} else if (unit_str == "CM") {
+    return ::ubx::cfg::CM;
+  } else if (unit_str == "MPS") {return ::ubx::cfg::MPS;} else {
     throw ParameterLoadException("Invalid UBX unit: " + unit_str);
   }
 }

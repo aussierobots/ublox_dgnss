@@ -13,10 +13,10 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>libusb-1.0-dev</depend>
-  <exec_depend>std_msgs</exec_depend>
   <depend>ublox_ubx_msgs</depend>
   <depend>ublox_ubx_interfaces</depend>
   <depend>rtcm_msgs</depend>
+  <depend>std_msgs</depend>
   <build_depend>pkg-config</build_depend>
   <depend>nlohmann_json</depend>
 

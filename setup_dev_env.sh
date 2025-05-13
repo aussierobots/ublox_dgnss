@@ -12,7 +12,7 @@ fi
 
 # Build the workspace
 echo "Building workspace..."
-colcon build
+colcon build --cmake-args -DCMAKE_VERBOSE_MAKEFILE=ON
 
 # Source the workspace setup
 source install/setup.bash

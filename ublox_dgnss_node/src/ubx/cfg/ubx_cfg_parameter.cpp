@@ -24,7 +24,8 @@
 #include <sstream>
 #include <iomanip>
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 UbxCfgParameter::UbxCfgParameter(
   const std::string & name,

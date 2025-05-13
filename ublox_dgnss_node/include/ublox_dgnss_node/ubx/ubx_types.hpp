@@ -63,6 +63,21 @@ enum ubx_type_t {L, U1, I1, E1, X1,
 const u1_t UBX_SYNC_CHAR_1 = 0xB5;
 const u1_t UBX_SYNC_CHAR_2 = 0x62;
 
+// UBX Frame Structure Constants
+constexpr size_t UBX_OFFSET_SYNC1 = 0;
+constexpr size_t UBX_OFFSET_SYNC2 = 1;
+constexpr size_t UBX_OFFSET_CLASS = 2;
+constexpr size_t UBX_OFFSET_ID = 3;
+constexpr size_t UBX_OFFSET_LENGTH_LSB = 4;
+constexpr size_t UBX_OFFSET_LENGTH_MSB = 5;
+constexpr size_t UBX_OFFSET_PAYLOAD = 6;         // Payload starts at index 6 of the frame buffer
+
+constexpr size_t UBX_SIZE_SYNC = 2;              // Bytes for SYNC_CHAR_1 + SYNC_CHAR_2
+constexpr size_t UBX_SIZE_CLASS_ID = 2;          // Bytes for Class + ID
+constexpr size_t UBX_SIZE_LENGTH = 2;            // Bytes for Length field
+constexpr size_t UBX_SIZE_HEADER = UBX_SIZE_SYNC + UBX_SIZE_CLASS_ID + UBX_SIZE_LENGTH;           // Total 6 bytes
+constexpr size_t UBX_SIZE_CHECKSUM = 2;          // Bytes for CK_A + CK_B
+
 union value_t {
   u1_t bytes[8];
   l_t l : 1;                // single bit boolen

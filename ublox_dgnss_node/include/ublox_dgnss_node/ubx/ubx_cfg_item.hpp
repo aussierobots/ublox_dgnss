@@ -428,6 +428,14 @@ extern std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap;
 bool operator<(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2);
 
 /**
+ * @brief Compare two UBX key IDs for equality
+ * @param fk1 First key ID
+ * @param fk2 Second key ID
+ * @return True if the key IDs are equal
+ */
+bool operator==(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2);
+
+/**
  * @brief Compare a UBX key ID with an integer
  * @param fk1 UBX key ID
  * @param value Integer value

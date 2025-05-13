@@ -31,15 +31,16 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
-#include "ublox_dgnss_node/usb.hpp"
+#include "ublox_dgnss_node/ubx/ubx_transceiver.hpp"
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter_loader.hpp"
 #include "ublox_dgnss_node/ubx/mon/ubx_mon_ver.hpp"
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 /**
  * @brief Class for handling UBX-CFG operations
- * 
+ *
  * This class is responsible for managing parameter operations, including
  * detecting firmware versions, filtering parameters based on device type and
  * firmware version, and handling parameter get/set operations.
@@ -48,15 +49,15 @@ class UbxCfgHandler
 {
 public:
   /**
-   * @brief Constructor with node, USB connection, device type, and parameter file path
+   * @brief Constructor with node, UBX transceiver, device type, and parameter file path
    * @param node ROS node
-   * @param usbc USB connection
+   * @param transceiver UBX transceiver
    * @param device_type Device type
    * @param parameter_file_path Path to the parameter file
    */
   UbxCfgHandler(
     rclcpp::Node * node,
-    std::shared_ptr<usb::Connection> usbc,
+    std::shared_ptr<UbxTransceiver> transceiver,
     const std::string & device_type,
     const std::string & parameter_file_path);
 
@@ -146,7 +147,7 @@ private:
    * @param value ROS parameter value
    * @return UBX value
    */
-  ::ubx::value_t ros_to_ubx_value(
+  ubx::value_t ros_to_ubx_value(
     const UbxCfgParameter & param,
     const rclcpp::ParameterValue & value);
 
@@ -158,15 +159,16 @@ private:
    */
   rclcpp::ParameterValue ubx_to_ros_value(
     const UbxCfgParameter & param,
-    const ::ubx::value_t & value);
+    const ubx::value_t & value);
 
   rclcpp::Node * node_;                                  ///< ROS node
-  std::shared_ptr<usb::Connection> usbc_;                ///< USB connection
+  std::shared_ptr<UbxTransceiver> transceiver_;          ///< UBX transceiver
   std::string device_type_;                              ///< Device type
   std::string firmware_version_;                         ///< Firmware version
   UbxCfgParameterLoader parameter_loader_;               ///< Parameter loader
   std::unordered_map<std::string, UbxCfgParameter> registered_parameters_;  ///< Map of registered parameter names to parameters
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;  ///< Parameter callback handle
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr
+    parameter_callback_handle_;  ///< Parameter callback handle
 };
 
 }  // namespace ubx::cfg

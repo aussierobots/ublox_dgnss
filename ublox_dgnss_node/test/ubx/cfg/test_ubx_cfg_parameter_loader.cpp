@@ -39,11 +39,11 @@ protected:
     // Create a temporary test directory
     test_dir_ = std::filesystem::temp_directory_path() / "ubx_cfg_test";
     std::filesystem::create_directories(test_dir_);
-    
+
     // Create a test parameter file
     test_file_ = test_dir_ / "test_parameters.json";
     createTestParameterFile(test_file_);
-    
+
     // Create a parameter loader
     loader_ = std::make_unique<ubx::cfg::UbxCfgParameterLoader>(test_file_.string());
   }
@@ -58,7 +58,8 @@ protected:
   {
     // Create a test parameter file with firmware version support
     std::ofstream file(file_path);
-    file << R"({
+    file <<
+      R"({
       "version": "1.0.0",
       "device_types": ["ZED-F9P", "ZED-F9R"],
       "firmware_versions": {
@@ -214,7 +215,7 @@ TEST_F(UbxCfgParameterLoaderTest, LoadParameters)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Check the number of parameters
   auto parameters = loader_->get_all_parameters();
   EXPECT_EQ(parameters.size(), 4u);
@@ -225,13 +226,13 @@ TEST_F(UbxCfgParameterLoaderTest, ParameterLookupByName)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Look up a parameter by name
   auto param = loader_->get_parameter_by_name("CFG_UART1_BAUDRATE");
   ASSERT_TRUE(param.has_value());
   EXPECT_EQ(param->get_name(), "CFG_UART1_BAUDRATE");
   EXPECT_EQ(param->get_key_id().all, 0x40520001);
-  
+
   // Look up a non-existent parameter
   auto non_existent = loader_->get_parameter_by_name("NON_EXISTENT");
   EXPECT_FALSE(non_existent.has_value());
@@ -242,7 +243,7 @@ TEST_F(UbxCfgParameterLoaderTest, ParameterLookupByKeyId)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Look up a parameter by key ID
   ubx::cfg::ubx_key_id_t key_id;
   key_id.all = 0x40520001;
@@ -250,7 +251,7 @@ TEST_F(UbxCfgParameterLoaderTest, ParameterLookupByKeyId)
   ASSERT_TRUE(param.has_value());
   EXPECT_EQ(param->get_name(), "CFG_UART1_BAUDRATE");
   EXPECT_EQ(param->get_key_id().all, 0x40520001);
-  
+
   // Look up a non-existent parameter
   ubx::cfg::ubx_key_id_t non_existent_key;
   non_existent_key.all = 0x12345678;
@@ -263,15 +264,15 @@ TEST_F(UbxCfgParameterLoaderTest, FilterByDeviceType)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Get parameters for ZED-F9P
   auto f9p_params = loader_->get_parameters_for_device("ZED-F9P");
   EXPECT_EQ(f9p_params.size(), 4u);
-  
+
   // Get parameters for ZED-F9R
   auto f9r_params = loader_->get_parameters_for_device("ZED-F9R");
   EXPECT_EQ(f9r_params.size(), 4u);
-  
+
   // Get parameters for non-existent device
   auto non_existent = loader_->get_parameters_for_device("ZED-F9T");
   EXPECT_EQ(non_existent.size(), 0u);
@@ -282,27 +283,27 @@ TEST_F(UbxCfgParameterLoaderTest, FilterByDeviceAndFirmware)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Get parameters for ZED-F9P with early firmware
   auto f9p_early = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.13");
   EXPECT_EQ(f9p_early.size(), 3u);  // UART, RATE, and RTCM parameters
-  
+
   // Get parameters for ZED-F9P with middle firmware
   auto f9p_middle = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.30");
   EXPECT_EQ(f9p_middle.size(), 4u);  // UART, RATE, NAVSPG, and RTCM parameters
-  
+
   // Get parameters for ZED-F9P with latest firmware
   auto f9p_latest = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.32");
   EXPECT_EQ(f9p_latest.size(), 3u);  // UART, RATE, NAVSPG parameters (RTCM deprecated)
-  
+
   // Get parameters for ZED-F9R with early firmware
   auto f9r_early = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.13");
   EXPECT_EQ(f9r_early.size(), 3u);  // UART, RATE, and RTCM parameters
-  
+
   // Get parameters for ZED-F9R with middle firmware
   auto f9r_middle = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.20");
   EXPECT_EQ(f9r_middle.size(), 4u);  // UART, RATE, NAVSPG, and RTCM parameters
-  
+
   // Get parameters for ZED-F9R with latest firmware
   auto f9r_latest = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.30");
   EXPECT_EQ(f9r_latest.size(), 3u);  // UART, RATE, NAVSPG parameters (RTCM deprecated)
@@ -313,7 +314,7 @@ TEST_F(UbxCfgParameterLoaderTest, AvailableDeviceTypes)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Get available device types
   auto device_types = loader_->get_available_device_types();
   ASSERT_EQ(device_types.size(), 2u);
@@ -326,21 +327,21 @@ TEST_F(UbxCfgParameterLoaderTest, AvailableFirmwareVersions)
 {
   // Load parameters
   EXPECT_TRUE(loader_->load());
-  
+
   // Get available firmware versions for ZED-F9P
   auto f9p_versions = loader_->get_available_firmware_versions("ZED-F9P");
   ASSERT_EQ(f9p_versions.size(), 3u);
   EXPECT_EQ(f9p_versions[0], "HPG 1.13");
   EXPECT_EQ(f9p_versions[1], "HPG 1.30");
   EXPECT_EQ(f9p_versions[2], "HPG 1.32");
-  
+
   // Get available firmware versions for ZED-F9R
   auto f9r_versions = loader_->get_available_firmware_versions("ZED-F9R");
   ASSERT_EQ(f9r_versions.size(), 3u);
   EXPECT_EQ(f9r_versions[0], "HPS 1.13");
   EXPECT_EQ(f9r_versions[1], "HPS 1.20");
   EXPECT_EQ(f9r_versions[2], "HPS 1.30");
-  
+
   // Get available firmware versions for non-existent device
   auto non_existent = loader_->get_available_firmware_versions("ZED-F9T");
   EXPECT_EQ(non_existent.size(), 0u);
@@ -351,7 +352,7 @@ TEST_F(UbxCfgParameterLoaderTest, NonExistentFile)
 {
   // Create a loader with a non-existent file
   auto loader = std::make_unique<ubx::cfg::UbxCfgParameterLoader>("non_existent.json");
-  
+
   // Attempt to load parameters
   EXPECT_THROW(loader->load(), ubx::cfg::ParameterLoadException);
 }
@@ -364,10 +365,10 @@ TEST_F(UbxCfgParameterLoaderTest, InvalidJson)
   std::ofstream file(invalid_file);
   file << "{ invalid json }";
   file.close();
-  
+
   // Create a loader with the invalid file
   auto loader = std::make_unique<ubx::cfg::UbxCfgParameterLoader>(invalid_file.string());
-  
+
   // Attempt to load parameters
   EXPECT_THROW(loader->load(), ubx::cfg::ParameterLoadException);
 }
@@ -382,10 +383,10 @@ TEST_F(UbxCfgParameterLoaderTest, MissingRequiredFields)
     "version": "1.0.0"
   })";
   file.close();
-  
+
   // Create a loader with the file
   auto loader = std::make_unique<ubx::cfg::UbxCfgParameterLoader>(missing_fields_file.string());
-  
+
   // Attempt to load parameters
   EXPECT_THROW(loader->load(), ubx::cfg::ParameterLoadException);
 }

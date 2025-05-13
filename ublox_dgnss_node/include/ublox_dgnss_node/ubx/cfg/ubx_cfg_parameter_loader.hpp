@@ -32,7 +32,8 @@
 
 #include <nlohmann/json.hpp>
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 /**
  * @brief Exception class for parameter loading errors
@@ -46,7 +47,7 @@ public:
 
 /**
  * @brief Class for loading UBX-CFG parameters from JSON files
- * 
+ *
  * This class is responsible for loading parameter definitions from JSON files,
  * validating them, and providing access to the parameters. It also supports
  * filtering parameters by device type and firmware version.
@@ -176,8 +177,8 @@ private:
   std::string file_path_;                                  ///< Path to the parameter file
   std::vector<UbxCfgParameter> parameters_;                ///< Vector of all parameters
   std::unordered_map<std::string, UbxCfgParameter> name_to_parameter_;  ///< Map of parameter names to parameters
-  std::unordered_map<uint32_t, UbxCfgParameter> key_id_to_parameter_;  ///< Map of parameter key IDs to parameters
-  std::vector<std::string> device_types_;                  ///< Vector of available device types
+  std::unordered_map<uint32_t, UbxCfgParameter> key_id_to_parameter_;  ///< Map of key IDs to parameters
+  std::vector<std::string> device_types_;                  ///< Available device types
   std::map<std::string, std::vector<std::string>> firmware_versions_;  ///< Map of device types to firmware versions
 };
 

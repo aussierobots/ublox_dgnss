@@ -30,12 +30,14 @@
 
 #include "ublox_dgnss_node/ubx/ubx_cfg.hpp"
 
-namespace ubx::cfg {
+namespace ubx::cfg
+{
 
 /**
  * @brief Represents a behavior change in a parameter for a specific firmware version
  */
-struct BehaviorChange {
+struct BehaviorChange
+{
   std::string version;       ///< Firmware version where behavior changed
   std::string description;   ///< Description of the behavior change
 };
@@ -43,15 +45,16 @@ struct BehaviorChange {
 /**
  * @brief Represents firmware support information for a parameter on a specific device
  */
-struct FirmwareSupport {
+struct FirmwareSupport
+{
   std::string since;                      ///< Firmware version when parameter was introduced
   std::optional<std::string> until;       ///< Firmware version when parameter was deprecated (if applicable)
-  std::vector<BehaviorChange> behavior_changes;  ///< List of behavior changes across firmware versions
+  std::vector<BehaviorChange> behavior_changes;  ///< Behavior changes across firmware versions
 };
 
 /**
  * @brief Class representing a UBX-CFG parameter with all its attributes
- * 
+ *
  * This class encapsulates all the information about a UBX-CFG parameter,
  * including its name, key ID, type, scale, unit, applicable devices,
  * description, possible values, default value, and firmware support information.
@@ -66,7 +69,7 @@ public:
 
   /**
    * @brief Constructor with all parameter attributes
-   * 
+   *
    * @param name Parameter name
    * @param key_id Parameter key ID
    * @param type Parameter type
@@ -242,15 +245,15 @@ public:
 
 private:
   std::string name_;                                  ///< Parameter name
-  ::ubx::cfg::ubx_key_id_t key_id_;                               ///< Parameter key ID
-  ::ubx::ubx_type_t type_;                                   ///< Parameter type
+  ubx_key_id_t key_id_;                               ///< Parameter key ID
+  ubx::ubx_type_t type_;                                   ///< Parameter type
   double scale_;                                      ///< Parameter scale
-  ::ubx::cfg::ubx_unit_t unit_;                                   ///< Parameter unit
+  ubx_unit_t unit_;                                   ///< Parameter unit
   std::vector<std::string> applicable_devices_;       ///< List of applicable device types
   std::string description_;                           ///< Parameter description
   std::string group_;                                 ///< Parameter group
-  std::map<std::string, FirmwareSupport> firmware_support_;  ///< Map of device type to firmware support information
-  std::map<std::string, std::string> possible_values_;  ///< Map of possible value names to values (for enum types)
+  std::map<std::string, FirmwareSupport> firmware_support_;  ///< Map of device type to firmware support
+  std::map<std::string, std::string> possible_values_;  ///< Possible value names to values (for enums)
   std::string default_value_;                         ///< Default parameter value
   std::optional<std::string> min_value_;              ///< Minimum parameter value (optional)
   std::optional<std::string> max_value_;              ///< Maximum parameter value (optional)

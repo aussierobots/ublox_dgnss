@@ -42,6 +42,11 @@ bool operator<(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2)
   return fk1.all < fk2.all;
 }
 
+bool operator==(const ubx_key_id_t & fk1, const ubx_key_id_t & fk2)
+{
+  return fk1.all == fk2.all;
+}
+
 bool operator==(const ubx_key_id_t & fk1, uint32_t value)
 {
   return fk1.all == value;
