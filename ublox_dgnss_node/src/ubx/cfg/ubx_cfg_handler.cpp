@@ -312,14 +312,14 @@ bool UbxCfgHandler::set_parameter_value(const std::string & name, const rclcpp::
     // Parse the response
     // First, find the UBX message in the buffer
     size_t i = 0;
-    while (i < bytes_read - 1) {
+    while (i < static_cast<size_t>(bytes_read - 1)) {
       if (buffer[i] == 0xB5 && buffer[i+1] == 0x62) {  // UBX sync chars
         break;
       }
       i++;
     }
     
-    if (i >= bytes_read - 1) {
+    if (i >= static_cast<size_t>(bytes_read - 1)) {
       RCLCPP_ERROR(
         node_->get_logger(),
         "Failed to find UBX message in response");

@@ -158,7 +158,7 @@ bool UbxCfgParameter::is_supported_in_firmware(
 
   // If parameter has been deprecated, check if current firmware is still supported
   if (support.until.has_value() &&
-    compare_firmware_versions(firmware_version, support.until.value()) > 0)
+    compare_firmware_versions(firmware_version, support.until.value()) >= 0)
   {
     return false;
   }
@@ -395,6 +395,14 @@ bool UbxCfgParameter::validate_ubx_value(const value_t & value) const
     // Check if the value is a valid enum value
     for (const auto & [name, val] : possible_values_) {
       if (val == hex_value) {
+        return true;
+      }
+    }
+
+    // If not in possible_values, check if it's within the min/max range
+    if (max_value_.has_value()) {
+      value_t max_val = string_to_ubx_value(max_value_.value());
+      if (value.u1 <= max_val.u1) {
         return true;
       }
     }

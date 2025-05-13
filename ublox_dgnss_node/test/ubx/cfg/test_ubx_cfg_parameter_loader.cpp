@@ -285,27 +285,27 @@ TEST_F(UbxCfgParameterLoaderTest, FilterByDeviceAndFirmware)
   
   // Get parameters for ZED-F9P with early firmware
   auto f9p_early = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.13");
-  EXPECT_EQ(f9p_early.size(), 2u);  // UART and RATE parameters
+  EXPECT_EQ(f9p_early.size(), 3u);  // UART, RATE, and RTCM parameters
   
   // Get parameters for ZED-F9P with middle firmware
   auto f9p_middle = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.30");
-  EXPECT_EQ(f9p_middle.size(), 3u);  // UART, RATE, and NAVSPG parameters
+  EXPECT_EQ(f9p_middle.size(), 4u);  // UART, RATE, NAVSPG, and RTCM parameters
   
   // Get parameters for ZED-F9P with latest firmware
   auto f9p_latest = loader_->get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.32");
-  EXPECT_EQ(f9p_latest.size(), 3u);  // UART, RATE, and NAVSPG parameters (RTCM deprecated)
+  EXPECT_EQ(f9p_latest.size(), 3u);  // UART, RATE, NAVSPG parameters (RTCM deprecated)
   
   // Get parameters for ZED-F9R with early firmware
   auto f9r_early = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.13");
-  EXPECT_EQ(f9r_early.size(), 2u);  // UART and RATE parameters
+  EXPECT_EQ(f9r_early.size(), 3u);  // UART, RATE, and RTCM parameters
   
   // Get parameters for ZED-F9R with middle firmware
   auto f9r_middle = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.20");
-  EXPECT_EQ(f9r_middle.size(), 3u);  // UART, RATE, and NAVSPG parameters
+  EXPECT_EQ(f9r_middle.size(), 4u);  // UART, RATE, NAVSPG, and RTCM parameters
   
   // Get parameters for ZED-F9R with latest firmware
   auto f9r_latest = loader_->get_parameters_for_device_and_firmware("ZED-F9R", "HPS 1.30");
-  EXPECT_EQ(f9r_latest.size(), 3u);  // UART, RATE, and NAVSPG parameters (RTCM deprecated)
+  EXPECT_EQ(f9r_latest.size(), 3u);  // UART, RATE, NAVSPG parameters (RTCM deprecated)
 }
 
 // Test getting available device types
