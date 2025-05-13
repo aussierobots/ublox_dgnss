@@ -75,19 +75,31 @@ The refactoring has made significant progress. The following tasks have been com
 
 10. **Build Stability**: Successfully achieved a clean build without any error messages, with linter checks passing.
 
+11. **UbxCfgParameter Test Refactoring**: Updated `test_ubx_cfg_parameter.cpp` to use original enum identifiers from the UBX configuration header instead of friendly names, fixed format inconsistencies, and improved test clarity.
+
+12. **Python Extractor Improvements**: Updated `extract_parameters.py` to ensure it preserves original enum identifiers when extracting values from the header file.
+
+13. **UbxCfgParameterLoader Tests**: Successfully implemented and fixed tests for the `UbxCfgParameterLoader` class in a new test file `test_ubx_cfg_parameter_loader.cpp`. All tests are now passing.
+
 ### Remaining Tasks
 
-1. **Functional Test Re-enabling**: Re-enable and fix functional tests one by one to work with the refactored code structure.
+1. ✅ **Parameter Test Refactoring**: Successfully updated the `test_ubx_cfg_parameter.cpp` test file and fixed all failing tests.
 
-2. **Test Context Implementation**: Implement or update the `Context` class referenced in the test files to properly work with the new architecture.
+2. ✅ **UbxCfgParameterLoader Test Implementation**: Created and fixed the test file `test_ubx_cfg_parameter_loader.cpp` to properly test parameter loading functionality, with all tests now passing.
 
-3. **Test Execution Verification**: Run the tests to verify that all aspects of the refactored code work as expected.
+3. ⏳ **UbxCfgHandler Testing**: Complete the implementation and fix any issues with the new approach to testing the `UbxCfgHandler` class using the `MockUbxTransceiver`.
 
-4. **Documentation Updates**: Complete the documentation update to reflect the new architecture and interfaces, including class diagrams if applicable.
+4. **UbxTransceiverFactory Tests**: Create and implement tests for the `UbxTransceiverFactory` class to ensure it correctly creates instances of the appropriate transceiver implementation.
 
-5. **Code Reviews**: Conduct final code reviews to ensure all refactored code follows project standards and best practices.
+5. **Test Context Implementation**: Implement or update the `Context` class referenced in the test files to properly work with the new architecture.
 
-6. **Legacy Test Cleanup**: Decide whether to update or remove legacy test files that may no longer be needed with the new testing approach.
+6. **Comprehensive Test Coverage**: Ensure all refactored components have adequate test coverage, including edge cases and error conditions.
+
+7. **Documentation Updates**: Complete the documentation update to reflect the new architecture and interfaces, including class diagrams if applicable.
+
+8. **Code Reviews**: Conduct final code reviews to ensure all refactored code follows project standards and best practices.
+
+9. **Legacy Test Cleanup**: Decide whether to update or remove legacy test files that may no longer be needed with the new testing approach.
 
 ## Future Considerations
 

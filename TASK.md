@@ -75,6 +75,13 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Create development environment setup script
   - [x] Fix signedness comparison warnings
 
+- [x] Improve test coverage and documentation
+  - [x] Refactor test_ubx_cfg_parameter.cpp to use original enum identifiers
+  - [x] Fix format inconsistencies in test value representation (using hex format)
+  - [x] Implement comprehensive tests for UbxCfgParameterLoader in test_ubx_cfg_parameter_loader.cpp
+  - [x] Add detailed diagnostics to test cases to aid in debugging
+  - [x] Document parameter handling behavior with nonexistent firmware versions
+
 ### Phase 3: Integration
 
 - [ ] Update `UbloxDGNSSNode` to use the new parameter system
@@ -164,6 +171,8 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 | 2025-05-13 | JSON schema creation | Completed | Created schema for parameter definitions with firmware version support |
 | 2025-05-13 | Parameter extraction | Completed | Developed script to extract parameters from existing code |
 | 2025-05-13 | Firmware version support | Completed | Added firmware version information to parameter definitions |
+| 2025-05-14 | UbxCfgParameter test refactoring | Completed | Updated tests to use original enum identifiers and consistent formatting |
+| 2025-05-14 | UbxCfgParameterLoader tests | Completed | Fixed JSON structure and implemented comprehensive tests for parameter loading functionality |
 
 ## Discovered During Work
 
@@ -174,6 +183,14 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 - The node uses `add_on_set_parameters_callback` to handle parameter changes
 - There is no explicit device type differentiation in the current implementation
 - The `ubxKeyCfgItemMap` is a global map that contains all parameter definitions
+
+### UbxCfgParameterLoader Behavior (2025-05-14)
+
+- The `UbxCfgParameterLoader::get_parameters_for_device_and_firmware` method returns parameters for nonexistent firmware versions as long as the device type is valid
+- This behavior appears to be intentional to support unknown or future firmware versions
+- When a nonexistent firmware version is specified, all parameters applicable to the device type are returned
+- This can be useful for handling cases where a device reports an unknown firmware version
+- The test suite now includes validation of this behavior to ensure consistency
 
 ## Technical Considerations
 
