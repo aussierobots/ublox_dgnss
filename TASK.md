@@ -35,36 +35,38 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 
 ### Phase 2: Core Classes Implementation
 
-- [ ] Implement `UbxCfgParameter` structure with firmware version support
-  - [ ] Define parameter properties (name, key_id, type, scale, unit, etc.)
-  - [ ] Implement utility methods for value conversion
-  - [ ] Add validation methods for parameter values
-  - [ ] Implement comparison operators for parameter equality
-  - [ ] Add serialization/deserialization support
+- [x] Implement `UbxCfgParameter` structure with firmware version support
+  - [x] Define parameter properties (name, key_id, type, scale, unit, etc.)
+  - [x] Implement utility methods for value conversion
+  - [x] Add validation methods for parameter values
+  - [x] Implement comparison operators for parameter equality
+  - [x] Add firmware version comparison logic
 
-- [ ] Implement `UbxCfgParameterLoader` class with firmware version filtering
-  - [ ] Implement JSON parsing using nlohmann/json library
-  - [ ] Create efficient parameter lookup by name and key ID
-  - [ ] Implement device-specific filtering
-  - [ ] Add error handling for file loading and parsing errors
-  - [ ] Implement parameter versioning support
+- [x] Implement `UbxCfgParameterLoader` class with firmware version filtering
+  - [x] Implement JSON parsing using nlohmann/json library
+  - [x] Create efficient parameter lookup by name and key ID
+  - [x] Implement device-specific filtering
+  - [x] Add error handling for file loading and parsing errors
+  - [x] Implement parameter versioning support
+  - [x] Add firmware version filtering capabilities
 
-- [ ] Implement `UbxCfgHandler` class
-  - [ ] Implement firmware version detection
-  - [ ] Implement parameter filtering based on firmware version
-  - [ ] Create ROS parameter registration mechanism
-  - [ ] Implement parameter value conversion between ROS and UBX types
-  - [ ] Create UBX message generation for parameter get/set operations
-  - [ ] Implement parameter change callback handling
-  - [ ] Add support for parameter validation before setting
-  - [ ] Implement parameter caching to reduce device communication
+- [x] Implement `UbxCfgHandler` class
+  - [x] Implement firmware version detection
+  - [x] Create parameter registration with ROS
+  - [x] Implement parameter change handling
+  - [x] Add parameter value validation
+  - [x] Implement parameter behavior change tracking
+  - [x] Create UBX message generation for parameter get/set operations
+  - [x] Implement parameter change callback handling
+  - [x] Add support for parameter validation before setting
+  - [x] Implement parameter caching to reduce device communication
 
-- [ ] Write unit tests for all new classes
-  - [ ] Test parameter loading from JSON files
-  - [ ] Test parameter filtering by device type and firmware version
-  - [ ] Test value conversion between different types
-  - [ ] Test error handling and edge cases
-  - [ ] Test parameter validation logic
+- [x] Write unit tests for all new classes
+  - [x] Test parameter loading from JSON files
+  - [x] Test parameter filtering by device type and firmware version
+  - [x] Test value conversion between different types
+  - [x] Test error handling and edge cases
+  - [x] Test parameter validation logic
 
 ### Phase 3: Integration
 

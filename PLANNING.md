@@ -91,14 +91,63 @@ The JSON schema will include:
 ```cpp
 class UbxCfgParameter {
 public:
-  std::string name;
-  ubx::cfg::ubx_key_id_t key_id;
-  ubx::ubx_type_t type;
-  double scale;
-  ubx::cfg::ubx_unit_t unit;
-  std::vector<std::string> applicable_devices;
-  std::string description;
-  std::map<std::string, std::string> possible_values;
+  // Constructor with firmware support
+  UbxCfgParameter(
+    const std::string & name,
+    const ubx_key_id_t & key_id,
+    const ubx_type_t & type,
+    double scale,
+    const ubx_unit_t & unit,
+    const std::vector<std::string> & applicable_devices,
+    const std::string & description,
+    const std::string & group,
+    const std::map<std::string, FirmwareSupport> & firmware_support,
+    const std::map<std::string, std::string> & possible_values,
+    const std::string & default_value,
+    const std::string & min_value = "",
+    const std::string & max_value = ""
+  );
+
+  // Getters for all properties
+  std::string get_name() const;
+  ubx_key_id_t get_key_id() const;
+  ubx_type_t get_type() const;
+  double get_scale() const;
+  ubx_unit_t get_unit() const;
+  std::vector<std::string> get_applicable_devices() const;
+  std::string get_description() const;
+  std::string get_group() const;
+  std::map<std::string, FirmwareSupport> get_firmware_support() const;
+  std::map<std::string, std::string> get_possible_values() const;
+  std::string get_default_value() const;
+  std::optional<std::string> get_min_value() const;
+  std::optional<std::string> get_max_value() const;
+
+  // Firmware version support methods
+  bool is_applicable_to_device(const std::string & device_type) const;
+  bool is_supported_in_firmware(const std::string & device_type, const std::string & firmware_version) const;
+  std::string get_behavior_change(const std::string & device_type, const std::string & firmware_version) const;
+  static int compare_firmware_versions(const std::string & version1, const std::string & version2);
+
+  // Value conversion and validation
+  ubx::value_t string_to_ubx_value(const std::string & value_str) const;
+  std::string ubx_value_to_string(const ubx::value_t & value) const;
+  bool validate_string_value(const std::string & value_str) const;
+
+private:
+  std::string name_;
+  ubx_key_id_t key_id_;
+  ubx_type_t type_;
+  double scale_;
+  ubx_unit_t unit_;
+  std::vector<std::string> applicable_devices_;
+  std::string description_;
+  std::string group_;
+  std::map<std::string, FirmwareSupport> firmware_support_;
+  std::map<std::string, std::string> possible_values_;
+  std::string default_value_;
+  std::optional<std::string> min_value_;
+  std::optional<std::string> max_value_;
   std::string default_value;
   
   // Utility methods for value conversion, validation, etc.
@@ -118,33 +167,31 @@ public:
   std::optional<UbxCfgParameter> get_parameter_by_name(const std::string& name);
   
   // Get parameter by key ID
-  std::optional<UbxCfgParameter> get_parameter_by_key_id(const ubx::cfg::ubx_key_id_t& key_id);
-  
-  // Get parameters for a specific device type
-  std::vector<UbxCfgParameter> get_parameters_for_device(const std::string& device_type);
-  
 private:
   std::string file_path_;
   std::vector<UbxCfgParameter> parameters_;
-  std::unordered_map<std::string, UbxCfgParameter> name_to_parameter_;
-  std::unordered_map<uint32_t, UbxCfgParameter> key_id_to_parameter_;
+  std::map<std::string, UbxCfgParameter> parameters_by_name_;
+  std::map<uint32_t, UbxCfgParameter> parameters_by_key_id_;
+  std::vector<std::string> device_types_;
+  std::map<std::string, std::vector<std::string>> firmware_versions_;
 };
-```
 
 #### UbxCfgHandler Class
 ```cpp
 class UbxCfgHandler {
 public:
+  // Constructor with node, transceiver, parameter loader, and device type
   UbxCfgHandler(
-    rclcpp::Node* node,
-    std::shared_ptr<usb::Connection> usbc,
-    const std::string& device_type,
-    const std::string& parameter_file_path);
-  
-  // Initialize parameters
+    rclcpp::Node * node,
+    std::shared_ptr<UbxTransceiver> transceiver,
+    std::shared_ptr<UbxCfgParameterLoader> parameter_loader,
+    const std::string & device_type
+  );
+
+  // Initialize the handler
   bool initialize();
-  
-  // Handle parameter changes
+
+  // Parameter change callback for ROS
   rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter>& parameters);
   
@@ -152,19 +199,60 @@ public:
   bool get_parameter_value(const std::string& name);
   
   // Set parameter value on device
-  bool set_parameter_value(const std::string& name, const rclcpp::ParameterValue& value);
-  
+  bool set_parameter_value(const std::string& name, const std::string& value);
+
+  // Firmware version detection
+  std::string get_detected_firmware_version() const;
+  void process_mon_ver(
+    const std::string & sw_version,
+    const std::string & hw_version,
+    const std::vector<std::string> & extensions
+  );
+
+  // Parameter behavior change tracking
+  std::string get_parameter_behavior_change(const std::string & parameter_name) const;
+
 private:
   rclcpp::Node* node_;
-  std::shared_ptr<usb::Connection> usbc_;
+  std::shared_ptr<UbxTransceiver> transceiver_;
+  std::shared_ptr<UbxCfgParameterLoader> parameter_loader_;
   std::string device_type_;
-  UbxCfgParameterLoader parameter_loader_;
-  
-  // Convert between ROS parameter values and UBX values
-  ubx::value_t ros_to_ubx_value(const UbxCfgParameter& param, const rclcpp::ParameterValue& value);
-  rclcpp::ParameterValue ubx_to_ros_value(const UbxCfgParameter& param, const ubx::value_t& value);
+  std::string firmware_version_;
+  std::map<std::string, UbxCfgParameter> parameters_;
+  std::map<std::string, std::string> parameter_behavior_changes_;
 };
-```
+
+### Implementation Approach
+
+The implementation of the UBX-CFG parameter system with firmware version support follows these key design principles:
+
+1. **Data-Driven Design**: Parameter definitions are stored in JSON files rather than hardcoded in the source code, making it easier to maintain and extend the parameter set.
+
+2. **Separation of Concerns**:
+   - `UbxCfgParameter`: Encapsulates parameter attributes and provides value conversion/validation
+   - `UbxCfgParameterLoader`: Handles loading and filtering parameters from JSON files
+   - `UbxCfgHandler`: Manages parameter operations with the device and ROS integration
+
+3. **Firmware Version Support**:
+   - Parameters include firmware version information (since, until, behavior_changes)
+   - The system automatically detects device firmware version
+   - Parameters are filtered based on firmware compatibility
+   - Behavior changes are tracked and reported to users
+
+4. **Robust Error Handling**:
+   - Comprehensive validation of parameter values
+   - Clear error messages for invalid configurations
+   - Graceful handling of missing or invalid parameter files
+
+5. **Efficient Implementation**:
+   - Parameters are indexed by both name and key ID for fast lookup
+   - Parameter values are cached to reduce device communication
+   - Firmware version comparison is optimized for performance
+
+6. **Testability**:
+   - All classes are designed for unit testing
+   - Mock objects are used for testing device communication
+   - Test coverage includes edge cases and error conditions
 
 ### 3. Integration with UbloxDGNSSNode
 
