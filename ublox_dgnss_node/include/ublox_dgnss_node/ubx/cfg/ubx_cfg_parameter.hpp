@@ -1,5 +1,4 @@
-// Copyright 2021 Australian Robotics Supplies & Technology
-// Copyright 2023 G. Sokoll
+// Copyright 2025 GreenForge Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

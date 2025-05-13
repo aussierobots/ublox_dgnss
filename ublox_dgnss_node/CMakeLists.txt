@@ -95,6 +95,33 @@ if(BUILD_TESTING)
   # uncomment the line when this package is not in a git repo
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+  
+  # Add unit tests for UBX-CFG parameter system
+  find_package(ament_cmake_gtest REQUIRED)
+  
+  # UbxCfgParameter tests
+  ament_add_gtest(test_ubx_cfg_parameter
+    test/ubx/cfg/test_ubx_cfg_parameter.cpp
+  )
+  target_link_libraries(test_ubx_cfg_parameter
+    ublox_dgnss_components
+  )
+  
+  # UbxCfgParameterLoader tests
+  ament_add_gtest(test_ubx_cfg_parameter_loader
+    test/ubx/cfg/test_ubx_cfg_parameter_loader.cpp
+  )
+  target_link_libraries(test_ubx_cfg_parameter_loader
+    ublox_dgnss_components
+  )
+  
+  # UbxCfgHandler tests
+  ament_add_gtest(test_ubx_cfg_handler
+    test/ubx/cfg/test_ubx_cfg_handler.cpp
+  )
+  target_link_libraries(test_ubx_cfg_handler
+    ublox_dgnss_components
+  )
 endif()
 
 ament_package()
