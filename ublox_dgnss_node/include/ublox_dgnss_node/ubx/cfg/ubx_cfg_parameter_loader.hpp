@@ -30,13 +30,9 @@
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter.hpp"
 
-// Forward declaration for nlohmann::json
-namespace nlohmann
-{
-class json;
-}
+#include <nlohmann/json.hpp>
 
-namespace ubx::cfg
+namespace ubx::cfg {
 
 /**
  * @brief Exception class for parameter loading errors
@@ -134,7 +130,7 @@ private:
    * @return Parsed parameter
    * @throw ParameterLoadException if there was an error parsing the parameter
    */
-  UbxCfgParameter parse_parameter(const nlohmann::json & json_param);
+  UbxCfgParameter parse_parameter(const ::nlohmann::json & json_param);
 
   /**
    * @brief Parse firmware support information from JSON
@@ -143,7 +139,7 @@ private:
    * @throw ParameterLoadException if there was an error parsing the firmware support
    */
   std::map<std::string, FirmwareSupport> parse_firmware_support(
-    const nlohmann::json & json_support);
+    const ::nlohmann::json & json_support);
 
   /**
    * @brief Parse a behavior change from JSON
@@ -151,7 +147,7 @@ private:
    * @return Parsed behavior change
    * @throw ParameterLoadException if there was an error parsing the behavior change
    */
-  BehaviorChange parse_behavior_change(const nlohmann::json & json_change);
+  BehaviorChange parse_behavior_change(const ::nlohmann::json & json_change);
 
   /**
    * @brief Parse possible values from JSON
@@ -159,23 +155,23 @@ private:
    * @return Map of possible value names to values
    * @throw ParameterLoadException if there was an error parsing the possible values
    */
-  std::map<std::string, std::string> parse_possible_values(const nlohmann::json & json_values);
+  std::map<std::string, std::string> parse_possible_values(const ::nlohmann::json & json_values);
 
   /**
-   * @brief Parse a UBX type from string
-   * @param type_str Type string
-   * @return UBX type
-   * @throw ParameterLoadException if the type is invalid
+   * @brief Parse a UBX type string into a ubx_type_t enum value
+   * @param type_str The type string to parse
+   * @return The corresponding ubx_type_t value
+   * @throws ParameterLoadException If the type string is invalid
    */
-  ubx_type_t parse_ubx_type(const std::string & type_str);
+  ::ubx::ubx_type_t parse_ubx_type(const std::string & type_str);
 
   /**
-   * @brief Parse a UBX unit from string
-   * @param unit_str Unit string
-   * @return UBX unit
-   * @throw ParameterLoadException if the unit is invalid
+   * @brief Parse a UBX unit string into a ubx_unit_t enum value
+   * @param unit_str The unit string to parse
+   * @return The corresponding ubx_unit_t value
+   * @throws ParameterLoadException If the unit string is invalid
    */
-  ubx_unit_t parse_ubx_unit(const std::string & unit_str);
+  ::ubx::cfg::ubx_unit_t parse_ubx_unit(const std::string & unit_str);
 
   std::string file_path_;                                  ///< Path to the parameter file
   std::vector<UbxCfgParameter> parameters_;                ///< Vector of all parameters

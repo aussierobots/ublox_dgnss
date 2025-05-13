@@ -24,6 +24,7 @@
 #include <map>
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter.hpp"
+#include "ublox_dgnss_node/ubx/ubx_types.hpp"
 
 namespace
 {
@@ -63,10 +64,13 @@ protected:
     possible_values["OPTION_2"] = "0x02";
     
     // Create the parameter
+    ubx::cfg::ubx_key_id_t key_id;
+    key_id.all = 0x20920001;
+    
     parameter_ = std::make_unique<ubx::cfg::UbxCfgParameter>(
       "CFG_TEST_PARAM",
-      0x20920001,
-      ubx::cfg::ubx_type_t::E1,
+      key_id,
+      ubx::ubx_type_t::E1,
       1.0,
       ubx::cfg::ubx_unit_t::NA,
       applicable_devices,
@@ -87,8 +91,8 @@ protected:
 TEST_F(UbxCfgParameterTest, BasicProperties)
 {
   EXPECT_EQ(parameter_->get_name(), "CFG_TEST_PARAM");
-  EXPECT_EQ(parameter_->get_key_id(), 0x20920001);
-  EXPECT_EQ(parameter_->get_type(), ubx::cfg::ubx_type_t::E1);
+  EXPECT_EQ(parameter_->get_key_id().all, 0x20920001);
+  EXPECT_EQ(parameter_->get_type(), ubx::ubx_type_t::E1);
   EXPECT_DOUBLE_EQ(parameter_->get_scale(), 1.0);
   EXPECT_EQ(parameter_->get_unit(), ubx::cfg::ubx_unit_t::NA);
   EXPECT_EQ(parameter_->get_description(), "Test parameter");

@@ -26,6 +26,7 @@
 #include <filesystem>
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter_loader.hpp"
+#include "ublox_dgnss_node/ubx/ubx_types.hpp"
 
 namespace
 {
@@ -229,7 +230,7 @@ TEST_F(UbxCfgParameterLoaderTest, ParameterLookupByName)
   auto param = loader_->get_parameter_by_name("CFG_UART1_BAUDRATE");
   ASSERT_TRUE(param.has_value());
   EXPECT_EQ(param->get_name(), "CFG_UART1_BAUDRATE");
-  EXPECT_EQ(param->get_key_id(), 0x40520001);
+  EXPECT_EQ(param->get_key_id().all, 0x40520001);
   
   // Look up a non-existent parameter
   auto non_existent = loader_->get_parameter_by_name("NON_EXISTENT");
@@ -243,13 +244,17 @@ TEST_F(UbxCfgParameterLoaderTest, ParameterLookupByKeyId)
   EXPECT_TRUE(loader_->load());
   
   // Look up a parameter by key ID
-  auto param = loader_->get_parameter_by_key_id(0x40520001);
+  ubx::cfg::ubx_key_id_t key_id;
+  key_id.all = 0x40520001;
+  auto param = loader_->get_parameter_by_key_id(key_id);
   ASSERT_TRUE(param.has_value());
   EXPECT_EQ(param->get_name(), "CFG_UART1_BAUDRATE");
-  EXPECT_EQ(param->get_key_id(), 0x40520001);
+  EXPECT_EQ(param->get_key_id().all, 0x40520001);
   
   // Look up a non-existent parameter
-  auto non_existent = loader_->get_parameter_by_key_id(0x12345678);
+  ubx::cfg::ubx_key_id_t non_existent_key;
+  non_existent_key.all = 0x12345678;
+  auto non_existent = loader_->get_parameter_by_key_id(non_existent_key);
   EXPECT_FALSE(non_existent.has_value());
 }
 

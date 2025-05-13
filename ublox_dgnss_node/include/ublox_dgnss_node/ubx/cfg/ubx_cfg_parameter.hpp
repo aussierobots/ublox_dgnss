@@ -30,7 +30,7 @@
 
 #include "ublox_dgnss_node/ubx/ubx_cfg.hpp"
 
-namespace ubx::cfg
+namespace ubx::cfg {
 
 /**
  * @brief Represents a behavior change in a parameter for a specific firmware version
@@ -103,16 +103,16 @@ public:
   const std::string & get_name() const;
 
   /**
-   * @brief Get the parameter key ID
-   * @return Parameter key ID
+   * @brief Get the parameter's key ID
+   * @return The parameter's key ID
    */
-  const ubx_key_id_t & get_key_id() const;
+  ::ubx::cfg::ubx_key_id_t get_key_id() const;
 
   /**
-   * @brief Get the parameter type
-   * @return Parameter type
+   * @brief Get the parameter's type
+   * @return The parameter's type
    */
-  const ubx_type_t & get_type() const;
+  ::ubx::ubx_type_t get_type() const;
 
   /**
    * @brief Get the parameter scale
@@ -121,10 +121,10 @@ public:
   double get_scale() const;
 
   /**
-   * @brief Get the parameter unit
-   * @return Parameter unit
+   * @brief Get the parameter's unit
+   * @return The parameter's unit
    */
-  const ubx_unit_t & get_unit() const;
+  ::ubx::cfg::ubx_unit_t get_unit() const;
 
   /**
    * @brief Get the applicable device types
@@ -242,10 +242,10 @@ public:
 
 private:
   std::string name_;                                  ///< Parameter name
-  ubx_key_id_t key_id_;                               ///< Parameter key ID
-  ubx_type_t type_;                                   ///< Parameter type
+  ::ubx::cfg::ubx_key_id_t key_id_;                               ///< Parameter key ID
+  ::ubx::ubx_type_t type_;                                   ///< Parameter type
   double scale_;                                      ///< Parameter scale
-  ubx_unit_t unit_;                                   ///< Parameter unit
+  ::ubx::cfg::ubx_unit_t unit_;                                   ///< Parameter unit
   std::vector<std::string> applicable_devices_;       ///< List of applicable device types
   std::string description_;                           ///< Parameter description
   std::string group_;                                 ///< Parameter group

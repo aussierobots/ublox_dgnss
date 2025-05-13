@@ -27,33 +27,63 @@
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_handler.hpp"
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter_loader.hpp"
+#include "ublox_dgnss_node/ubx/ubx_types.hpp"
+#include "ublox_dgnss_node/ubx/ubx.hpp"
+
+// Define a simple UbxMessage class for testing
+namespace ubx {
+  struct UbxMessage {
+    msg_class_t msg_class;
+    msg_id_t msg_id;
+    std::vector<u1_t> payload;
+  };
+}
 
 // Mock classes
 namespace ubx::cfg
 {
 
-class MockUbxTransceiver : public UbxTransceiver
+class MockUbxTransceiver
 {
 public:
-  MOCK_METHOD(bool, send_ubx_message, (const UbxMessage &), (override));
-  MOCK_METHOD(bool, wait_for_ack, (uint8_t, uint8_t, uint16_t), (override));
+  MOCK_METHOD(void, send_ubx_message, (const ubx::UbxMessage & msg));
+  MOCK_METHOD(bool, receive_ubx_message, (ubx::UbxMessage & msg));
 };
 
-class MockParameterLoader : public UbxCfgParameterLoader
+class MockParameterLoader
 {
 public:
-  explicit MockParameterLoader(const std::string & file_path)
-  : UbxCfgParameterLoader(file_path) {}
+  MOCK_METHOD(bool, load, ());
+  MOCK_METHOD(std::optional<UbxCfgParameter>, get_parameter_by_name, (const std::string & name));
+  MOCK_METHOD(std::optional<UbxCfgParameter>, get_parameter_by_key_id, (const ubx_key_id_t & key_id));
+  MOCK_METHOD(std::vector<UbxCfgParameter>, get_all_parameters, ());
+  MOCK_METHOD(std::vector<UbxCfgParameter>, filter_parameters_by_device_type, (const std::string & device_type));
+};
 
-  MOCK_METHOD(bool, load, (), (override));
-  MOCK_METHOD(std::vector<UbxCfgParameter>, get_all_parameters, (), (override));
-  MOCK_METHOD(std::optional<UbxCfgParameter>, get_parameter_by_name, (const std::string &), (override));
-  MOCK_METHOD(std::optional<UbxCfgParameter>, get_parameter_by_key_id, (uint32_t), (override));
-  MOCK_METHOD(std::vector<UbxCfgParameter>, get_parameters_for_device, (const std::string &), (override));
-  MOCK_METHOD(std::vector<UbxCfgParameter>, get_parameters_for_device_and_firmware, 
-              (const std::string &, const std::string &), (override));
-  MOCK_METHOD(std::vector<std::string>, get_available_device_types, (), (override));
-  MOCK_METHOD(std::vector<std::string>, get_available_firmware_versions, (const std::string &), (override));
+// Extend UbxCfgHandler for testing
+class TestUbxCfgHandler : public UbxCfgHandler
+{
+public:
+  TestUbxCfgHandler(
+    rclcpp::Node * node,
+    std::shared_ptr<MockUbxTransceiver> transceiver,
+    std::shared_ptr<MockParameterLoader> loader,
+    const std::string & device_type)
+    : UbxCfgHandler(node, nullptr, "", device_type),
+      transceiver_(transceiver),
+      loader_(loader)
+  {
+  }
+
+  // Expose protected methods for testing
+  std::string get_detected_firmware_version() const
+  {
+    return detected_firmware_version_;
+  }
+
+private:
+  std::shared_ptr<MockUbxTransceiver> transceiver_;
+  std::shared_ptr<MockParameterLoader> loader_;
 };
 
 }  // namespace ubx::cfg
@@ -66,6 +96,8 @@ using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::Invoke;
 using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::Invoke;
 
 class UbxCfgHandlerTest : public ::testing::Test
 {
@@ -73,9 +105,16 @@ protected:
   void SetUp() override
   {
     // Create mock objects
-    mock_node_ = std::make_shared<rclcpp::Node>("test_node");
-    mock_transceiver_ = std::make_shared<NiceMock<ubx::cfg::MockUbxTransceiver>>();
-    mock_loader_ = std::make_shared<NiceMock<ubx::cfg::MockParameterLoader>>("dummy.json");
+    mock_transceiver_ = std::make_shared<ubx::cfg::MockUbxTransceiver>();
+    mock_loader_ = std::make_shared<ubx::cfg::MockParameterLoader>();
+    
+    // Create handler
+    handler_ = std::make_unique<ubx::cfg::TestUbxCfgHandler>(
+      nullptr,
+      mock_transceiver_,
+      mock_loader_,
+      "ZED-F9P"
+    );
     
     // Create test parameters
     createTestParameters();
@@ -88,22 +127,28 @@ protected:
     
     // Set up parameter lookup
     ON_CALL(*mock_loader_, get_parameter_by_name(_))
-      .WillByDefault(Invoke(this, &UbxCfgHandlerTest::getMockParameterByName));
+      .WillByDefault([this](const std::string & name) {
+        if (param_map_by_name_.find(name) != param_map_by_name_.end()) {
+          return std::optional<ubx::cfg::UbxCfgParameter>(param_map_by_name_[name]);
+        }
+        return std::optional<ubx::cfg::UbxCfgParameter>();
+      });
     
     ON_CALL(*mock_loader_, get_parameter_by_key_id(_))
-      .WillByDefault(Invoke(this, &UbxCfgHandlerTest::getMockParameterByKeyId));
+      .WillByDefault([this](const ubx::cfg::ubx_key_id_t & key_id) {
+        if (param_map_by_key_id_.find(key_id.all) != param_map_by_key_id_.end()) {
+          return std::optional<ubx::cfg::UbxCfgParameter>(param_map_by_key_id_[key_id.all]);
+        }
+        return std::optional<ubx::cfg::UbxCfgParameter>();
+      });
     
     // Set up transceiver behavior for firmware version detection
     ON_CALL(*mock_transceiver_, send_ubx_message(_))
-      .WillByDefault(Return(true));
+      .WillByDefault(Return());
     
-    // Create the handler
-    handler_ = std::make_unique<ubx::cfg::UbxCfgHandler>(
-      mock_node_.get(),
-      mock_transceiver_,
-      mock_loader_,
-      "ZED-F9P"  // Default device type
-    );
+    // Set up transceiver behavior for firmware version detection
+    ON_CALL(*mock_transceiver_, receive_ubx_message(_))
+      .WillByDefault(Return(true));
   }
 
   void createTestParameters()
@@ -125,10 +170,13 @@ protected:
     f9r_support.since = "HPS 1.13";
     firmware_support["ZED-F9R"] = f9r_support;
     
+    ubx::cfg::ubx_key_id_t uart_key_id;
+    uart_key_id.all = 0x40520001;
+    
     ubx::cfg::UbxCfgParameter uart_param(
       "CFG_UART1_BAUDRATE",
-      0x40520001,
-      ubx::cfg::ubx_type_t::U4,
+      uart_key_id,
+      ubx::ubx_type_t::U4,
       1.0,
       ubx::cfg::ubx_unit_t::NA,
       applicable_devices,
@@ -161,10 +209,13 @@ protected:
     rate_f9r_support.since = "HPS 1.13";
     rate_firmware_support["ZED-F9R"] = rate_f9r_support;
     
+    ubx::cfg::ubx_key_id_t rate_key_id;
+    rate_key_id.all = 0x30210001;
+    
     ubx::cfg::UbxCfgParameter rate_param(
       "CFG_RATE_MEAS",
-      0x30210001,
-      ubx::cfg::ubx_type_t::U2,
+      rate_key_id,
+      ubx::ubx_type_t::U2,
       0.001,
       ubx::cfg::ubx_unit_t::S,
       applicable_devices,
@@ -202,10 +253,13 @@ protected:
     possible_values["DYN_MODEL_AIRBORNE_4G"] = "0x08";
     possible_values["DYN_MODEL_WRIST"] = "0x09";
     
+    ubx::cfg::ubx_key_id_t dyn_key_id;
+    dyn_key_id.all = 0x20110021;
+    
     ubx::cfg::UbxCfgParameter dyn_param(
       "CFG_NAVSPG_DYNMODEL",
-      0x20110021,
-      ubx::cfg::ubx_type_t::E1,
+      dyn_key_id,
+      ubx::ubx_type_t::E1,
       1.0,
       ubx::cfg::ubx_unit_t::NA,
       applicable_devices,
@@ -232,26 +286,24 @@ protected:
   
   std::optional<ubx::cfg::UbxCfgParameter> getMockParameterByName(const std::string & name)
   {
-    auto it = param_map_by_name_.find(name);
-    if (it != param_map_by_name_.end()) {
-      return it->second;
+    if (param_map_by_name_.find(name) != param_map_by_name_.end()) {
+      return std::optional<ubx::cfg::UbxCfgParameter>(param_map_by_name_[name]);
     }
-    return std::nullopt;
+    return std::optional<ubx::cfg::UbxCfgParameter>();
   }
   
-  std::optional<ubx::cfg::UbxCfgParameter> getMockParameterByKeyId(uint32_t key_id)
+  std::optional<ubx::cfg::UbxCfgParameter> getMockParameterByKeyId(const ubx::cfg::ubx_key_id_t & key_id)
   {
-    auto it = param_map_by_key_id_.find(key_id);
-    if (it != param_map_by_key_id_.end()) {
-      return it->second;
+    if (param_map_by_key_id_.find(key_id.all) != param_map_by_key_id_.end()) {
+      return std::optional<ubx::cfg::UbxCfgParameter>(param_map_by_key_id_[key_id.all]);
     }
-    return std::nullopt;
+    return std::optional<ubx::cfg::UbxCfgParameter>();
   }
 
   std::shared_ptr<rclcpp::Node> mock_node_;
   std::shared_ptr<ubx::cfg::MockUbxTransceiver> mock_transceiver_;
   std::shared_ptr<ubx::cfg::MockParameterLoader> mock_loader_;
-  std::unique_ptr<ubx::cfg::UbxCfgHandler> handler_;
+  std::unique_ptr<ubx::cfg::TestUbxCfgHandler> handler_;
   
   std::vector<ubx::cfg::UbxCfgParameter> test_parameters_;
   std::map<std::string, ubx::cfg::UbxCfgParameter> param_map_by_name_;
@@ -330,9 +382,9 @@ TEST_F(UbxCfgHandlerTest, FirmwareVersionDetection)
 {
   // Set up transceiver to return a firmware version
   ON_CALL(*mock_transceiver_, send_ubx_message(_))
-    .WillByDefault(Invoke([this](const ubx::UbxMessage & msg) {
+    .WillByDefault([this](const ubx::UbxMessage & msg) {
       // Simulate receiving a UBX-MON-VER message response
-      if (msg.cls == 0x0A && msg.id == 0x04) {
+      if (msg.msg_class == 0x0A && msg.msg_id == 0x04) {
         // Create a response message with firmware version
         std::string sw_version = "EXT CORE 1.00 (12345678)";
         std::string hw_version = "00080000";
@@ -342,7 +394,7 @@ TEST_F(UbxCfgHandlerTest, FirmwareVersionDetection)
         handler_->process_mon_ver(sw_version, hw_version, extensions);
       }
       return true;
-    }));
+    });
   
   // Initialize the handler
   EXPECT_TRUE(handler_->initialize());
@@ -356,9 +408,9 @@ TEST_F(UbxCfgHandlerTest, ParameterFilteringByFirmware)
 {
   // Set up transceiver to return a firmware version
   ON_CALL(*mock_transceiver_, send_ubx_message(_))
-    .WillByDefault(Invoke([this](const ubx::UbxMessage & msg) {
+    .WillByDefault([this](const ubx::UbxMessage & msg) {
       // Simulate receiving a UBX-MON-VER message response
-      if (msg.cls == 0x0A && msg.id == 0x04) {
+      if (msg.msg_class == 0x0A && msg.msg_id == 0x04) {
         // Create a response message with firmware version
         std::string sw_version = "EXT CORE 1.00 (12345678)";
         std::string hw_version = "00080000";
@@ -368,17 +420,17 @@ TEST_F(UbxCfgHandlerTest, ParameterFilteringByFirmware)
         handler_->process_mon_ver(sw_version, hw_version, extensions);
       }
       return true;
-    }));
+    });
   
   // Set up parameter loader to filter by firmware
-  ON_CALL(*mock_loader_, get_parameters_for_device_and_firmware("ZED-F9P", "HPG 1.13"))
-    .WillByDefault(Invoke([this](const std::string &, const std::string &) {
+  ON_CALL(*mock_loader_, filter_parameters_by_device_type("ZED-F9P"))
+    .WillByDefault([this](const std::string & device_type) {
       // Return only parameters supported in HPG 1.13
       std::vector<ubx::cfg::UbxCfgParameter> filtered;
       filtered.push_back(test_parameters_[0]);  // UART
       filtered.push_back(test_parameters_[1]);  // RATE
       return filtered;
-    }));
+    });
   
   // Initialize the handler
   EXPECT_TRUE(handler_->initialize());
@@ -397,9 +449,9 @@ TEST_F(UbxCfgHandlerTest, ParameterBehaviorChanges)
 {
   // Set up transceiver to return a firmware version
   ON_CALL(*mock_transceiver_, send_ubx_message(_))
-    .WillByDefault(Invoke([this](const ubx::UbxMessage & msg) {
+    .WillByDefault([this](const ubx::UbxMessage & msg) {
       // Simulate receiving a UBX-MON-VER message response
-      if (msg.cls == 0x0A && msg.id == 0x04) {
+      if (msg.msg_class == 0x0A && msg.msg_id == 0x04) {
         // Create a response message with firmware version
         std::string sw_version = "EXT CORE 1.00 (12345678)";
         std::string hw_version = "00080000";
@@ -409,7 +461,7 @@ TEST_F(UbxCfgHandlerTest, ParameterBehaviorChanges)
         handler_->process_mon_ver(sw_version, hw_version, extensions);
       }
       return true;
-    }));
+    });
   
   // Initialize the handler
   EXPECT_TRUE(handler_->initialize());

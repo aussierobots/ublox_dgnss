@@ -31,11 +31,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
-#include "ublox_dgnss_node/usb/connection.hpp"
+#include "ublox_dgnss_node/usb.hpp"
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter_loader.hpp"
-#include "ublox_dgnss_node/ubx/mon/ver.hpp"
+#include "ublox_dgnss_node/ubx/mon/ubx_mon_ver.hpp"
 
-namespace ubx::cfg
+namespace ubx::cfg {
 
 /**
  * @brief Class for handling UBX-CFG operations
@@ -146,7 +146,9 @@ private:
    * @param value ROS parameter value
    * @return UBX value
    */
-  value_t ros_to_ubx_value(const UbxCfgParameter & param, const rclcpp::ParameterValue & value);
+  ::ubx::value_t ros_to_ubx_value(
+    const UbxCfgParameter & param,
+    const rclcpp::ParameterValue & value);
 
   /**
    * @brief Convert a UBX value to a ROS parameter value
@@ -154,7 +156,9 @@ private:
    * @param value UBX value
    * @return ROS parameter value
    */
-  rclcpp::ParameterValue ubx_to_ros_value(const UbxCfgParameter & param, const value_t & value);
+  rclcpp::ParameterValue ubx_to_ros_value(
+    const UbxCfgParameter & param,
+    const ::ubx::value_t & value);
 
   rclcpp::Node * node_;                                  ///< ROS node
   std::shared_ptr<usb::Connection> usbc_;                ///< USB connection
@@ -162,7 +166,7 @@ private:
   std::string firmware_version_;                         ///< Firmware version
   UbxCfgParameterLoader parameter_loader_;               ///< Parameter loader
   std::unordered_map<std::string, UbxCfgParameter> registered_parameters_;  ///< Map of registered parameter names to parameters
-  std::function<rcl_interfaces::msg::SetParametersResult(const std::vector<rclcpp::Parameter> &)> parameter_callback_handle_;  ///< Parameter callback handle
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;  ///< Parameter callback handle
 };
 
 }  // namespace ubx::cfg

@@ -24,14 +24,14 @@
 #include <sstream>
 #include <iomanip>
 
-namespace ubx::cfg
+namespace ubx::cfg {
 
 UbxCfgParameter::UbxCfgParameter(
   const std::string & name,
-  const ubx_key_id_t & key_id,
-  const ubx_type_t & type,
+  const ::ubx::cfg::ubx_key_id_t & key_id,
+  const ::ubx::ubx_type_t & type,
   double scale,
-  const ubx_unit_t & unit,
+  const ::ubx::cfg::ubx_unit_t & unit,
   const std::vector<std::string> & applicable_devices,
   const std::string & description,
   const std::string & group,
@@ -65,12 +65,12 @@ const std::string & UbxCfgParameter::get_name() const
   return name_;
 }
 
-const ubx_key_id_t & UbxCfgParameter::get_key_id() const
+::ubx::cfg::ubx_key_id_t UbxCfgParameter::get_key_id() const
 {
   return key_id_;
 }
 
-const ubx_type_t & UbxCfgParameter::get_type() const
+::ubx::ubx_type_t UbxCfgParameter::get_type() const
 {
   return type_;
 }
@@ -80,7 +80,7 @@ double UbxCfgParameter::get_scale() const
   return scale_;
 }
 
-const ubx_unit_t & UbxCfgParameter::get_unit() const
+::ubx::cfg::ubx_unit_t UbxCfgParameter::get_unit() const
 {
   return unit_;
 }

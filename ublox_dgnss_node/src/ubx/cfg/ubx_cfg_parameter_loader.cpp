@@ -24,12 +24,9 @@
 #include <algorithm>
 #include <filesystem>
 
-// Include nlohmann/json library
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
-namespace ubx::cfg
-
-using json = nlohmann::json;
+namespace ubx::cfg {
 
 UbxCfgParameterLoader::UbxCfgParameterLoader(const std::string & file_path)
 : file_path_(file_path)
@@ -58,7 +55,7 @@ bool UbxCfgParameterLoader::load()
     }
 
     // Parse the JSON
-    json j;
+    ::nlohmann::json j;
     file >> j;
 
     // Check if the file has the required fields
@@ -86,7 +83,7 @@ bool UbxCfgParameterLoader::load()
         UbxCfgParameter param = parse_parameter(json_param);
         parameters_.push_back(param);
         name_to_parameter_[param.get_name()] = param;
-        key_id_to_parameter_[param.get_key_id()] = param;
+        key_id_to_parameter_[param.get_key_id().key_id()] = param;
       } catch (const ParameterLoadException & e) {
         // Log the error and continue with the next parameter
         std::cerr << "Error parsing parameter: " << e.what() << std::endl;
@@ -94,7 +91,7 @@ bool UbxCfgParameterLoader::load()
     }
 
     return true;
-  } catch (const json::exception & e) {
+  } catch (const nlohmann::json::exception & e) {
     throw ParameterLoadException("JSON parsing error: " + std::string(e.what()));
   } catch (const std::exception & e) {
     throw ParameterLoadException("Error loading parameters: " + std::string(e.what()));
@@ -114,7 +111,7 @@ std::optional<UbxCfgParameter> UbxCfgParameterLoader::get_parameter_by_name(
 std::optional<UbxCfgParameter> UbxCfgParameterLoader::get_parameter_by_key_id(
   const ubx_key_id_t & key_id) const
 {
-  auto it = key_id_to_parameter_.find(key_id);
+  auto it = key_id_to_parameter_.find(key_id.key_id());
   if (it != key_id_to_parameter_.end()) {
     return it->second;
   }
@@ -173,88 +170,85 @@ const std::string & UbxCfgParameterLoader::get_file_path() const
   return file_path_;
 }
 
-UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const json & json_param)
+UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const ::nlohmann::json & json_param)
 {
   // Check if the parameter has the required fields
   if (!json_param.contains("name") || !json_param.contains("key_id") ||
     !json_param.contains("type") || !json_param.contains("scale") ||
-    !json_param.contains("unit") || !json_param.contains("applicable_devices"))
+    !json_param.contains("unit") || !json_param.contains("applicable_devices") ||
+    !json_param.contains("description") || !json_param.contains("group") ||
+    !json_param.contains("firmware_support"))
   {
     throw ParameterLoadException("Parameter is missing required fields");
   }
 
-  // Parse the parameter fields
-  std::string name = json_param["name"].get<std::string>();
-  std::string key_id_str = json_param["key_id"].get<std::string>();
-  std::string type_str = json_param["type"].get<std::string>();
-  double scale = json_param["scale"].get<double>();
-  std::string unit_str = json_param["unit"].get<std::string>();
-  std::vector<std::string> applicable_devices = json_param["applicable_devices"].get<std::vector<std::string>>();
-  std::string description = json_param.contains("description") ?
-    json_param["description"].get<std::string>() : "";
-  std::string group = json_param.contains("group") ?
-    json_param["group"].get<std::string>() : "";
-
-  // Parse the key ID
-  ubx_key_id_t key_id;
   try {
-    // Remove "0x" prefix if present
-    std::string key_id_val = key_id_str;
-    if (key_id_str.substr(0, 2) == "0x") {
-      key_id_val = key_id_str.substr(2);
+    // Extract parameter properties
+    std::string name = json_param["name"];
+    std::string key_id_val = json_param["key_id"];
+    std::string type_str = json_param["type"];
+    double scale = json_param["scale"];
+    std::string unit_str = json_param["unit"];
+    std::vector<std::string> applicable_devices = json_param["applicable_devices"];
+    std::string description = json_param["description"];
+    std::string group = json_param["group"];
+
+    // Parse key_id
+    ::ubx::cfg::ubx_key_id_t key_id;
+    key_id.all = std::stoul(key_id_val, nullptr, 16);
+
+    // Parse type
+    ::ubx::ubx_type_t type = parse_ubx_type(type_str);
+
+    // Parse unit
+    ::ubx::cfg::ubx_unit_t unit = parse_ubx_unit(unit_str);
+
+    // Parse firmware support
+    auto firmware_support = parse_firmware_support(json_param["firmware_support"]);
+
+    // Parse optional fields
+    std::map<std::string, std::string> possible_values;
+    if (json_param.contains("possible_values")) {
+      possible_values = parse_possible_values(json_param["possible_values"]);
     }
-    key_id = std::stoul(key_id_val, nullptr, 16);
-  } catch (const std::exception &) {
-    throw ParameterLoadException("Invalid key ID: " + key_id_str);
+
+    std::string default_value = "";
+    if (json_param.contains("default_value")) {
+      default_value = json_param["default_value"];
+    }
+
+    std::optional<std::string> min_value = std::nullopt;
+    if (json_param.contains("min_value")) {
+      min_value = json_param["min_value"].get<std::string>();
+    }
+
+    std::optional<std::string> max_value = std::nullopt;
+    if (json_param.contains("max_value")) {
+      max_value = json_param["max_value"].get<std::string>();
+    }
+
+    // Create and return the parameter
+    return UbxCfgParameter(
+      name,
+      key_id,
+      type,
+      scale,
+      unit,
+      applicable_devices,
+      description,
+      group,
+      firmware_support,
+      possible_values,
+      default_value,
+      min_value,
+      max_value);
+  } catch (const std::exception & e) {
+    throw ParameterLoadException("Error parsing parameter: " + std::string(e.what()));
   }
-
-  // Parse the type
-  ubx_type_t type = parse_ubx_type(type_str);
-
-  // Parse the unit
-  ubx_unit_t unit = parse_ubx_unit(unit_str);
-
-  // Parse firmware support information
-  std::map<std::string, FirmwareSupport> firmware_support;
-  if (json_param.contains("firmware_support")) {
-    firmware_support = parse_firmware_support(json_param["firmware_support"]);
-  }
-
-  // Parse possible values for enum types
-  std::map<std::string, std::string> possible_values;
-  if (json_param.contains("possible_values")) {
-    possible_values = parse_possible_values(json_param["possible_values"]);
-  }
-
-  // Parse default value
-  std::string default_value = json_param.contains("default_value") ?
-    json_param["default_value"].get<std::string>() : "";
-
-  // Parse min/max values
-  std::optional<std::string> min_value = json_param.contains("min_value") ?
-    std::optional<std::string>(json_param["min_value"].get<std::string>()) : std::nullopt;
-  std::optional<std::string> max_value = json_param.contains("max_value") ?
-    std::optional<std::string>(json_param["max_value"].get<std::string>()) : std::nullopt;
-
-  // Create and return the parameter
-  return UbxCfgParameter(
-    name,
-    key_id,
-    type,
-    scale,
-    unit,
-    applicable_devices,
-    description,
-    group,
-    firmware_support,
-    possible_values,
-    default_value,
-    min_value,
-    max_value);
 }
 
 std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_support(
-  const json & json_support)
+  const ::nlohmann::json & json_support)
 {
   std::map<std::string, FirmwareSupport> result;
 
@@ -285,7 +279,7 @@ std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_sup
   return result;
 }
 
-BehaviorChange UbxCfgParameterLoader::parse_behavior_change(const json & json_change)
+BehaviorChange UbxCfgParameterLoader::parse_behavior_change(const ::nlohmann::json & json_change)
 {
   // Check if the behavior change has the required fields
   if (!json_change.contains("version") || !json_change.contains("description")) {
@@ -301,7 +295,7 @@ BehaviorChange UbxCfgParameterLoader::parse_behavior_change(const json & json_ch
 }
 
 std::map<std::string, std::string> UbxCfgParameterLoader::parse_possible_values(
-  const json & json_values)
+  const ::nlohmann::json & json_values)
 {
   std::map<std::string, std::string> result;
 
@@ -312,64 +306,49 @@ std::map<std::string, std::string> UbxCfgParameterLoader::parse_possible_values(
   return result;
 }
 
-ubx_type_t UbxCfgParameterLoader::parse_ubx_type(const std::string & type_str)
+::ubx::ubx_type_t UbxCfgParameterLoader::parse_ubx_type(const std::string & type_str)
 {
-  if (type_str == "L") {
-    return ubx_type_t::L;
-  } else if (type_str == "U1") {
-    return ubx_type_t::U1;
-  } else if (type_str == "U2") {
-    return ubx_type_t::U2;
-  } else if (type_str == "U4") {
-    return ubx_type_t::U4;
-  } else if (type_str == "I1") {
-    return ubx_type_t::I1;
-  } else if (type_str == "I2") {
-    return ubx_type_t::I2;
-  } else if (type_str == "I4") {
-    return ubx_type_t::I4;
-  } else if (type_str == "R4") {
-    return ubx_type_t::R4;
-  } else if (type_str == "R8") {
-    return ubx_type_t::R8;
-  } else if (type_str == "E1") {
-    return ubx_type_t::E1;
-  } else if (type_str == "X1") {
-    return ubx_type_t::X1;
-  } else if (type_str == "X2") {
-    return ubx_type_t::X2;
-  } else if (type_str == "X4") {
-    return ubx_type_t::X4;
-  } else {
+  if (type_str == "L") return ::ubx::L;
+  else if (type_str == "U1") return ::ubx::U1;
+  else if (type_str == "I1") return ::ubx::I1;
+  else if (type_str == "E1") return ::ubx::E1;
+  else if (type_str == "X1") return ::ubx::X1;
+  else if (type_str == "U2") return ::ubx::U2;
+  else if (type_str == "I2") return ::ubx::I2;
+  else if (type_str == "E2") return ::ubx::E2;
+  else if (type_str == "X2") return ::ubx::X2;
+  else if (type_str == "U4") return ::ubx::U4;
+  else if (type_str == "I4") return ::ubx::I4;
+  else if (type_str == "E4") return ::ubx::E4;
+  else if (type_str == "X4") return ::ubx::X4;
+  else if (type_str == "R4") return ::ubx::R4;
+  else if (type_str == "U8") return ::ubx::U8;
+  else if (type_str == "I8") return ::ubx::I8;
+  else if (type_str == "X8") return ::ubx::X8;
+  else if (type_str == "R8") return ::ubx::R8;
+  else {
     throw ParameterLoadException("Invalid UBX type: " + type_str);
   }
 }
 
-ubx_unit_t UbxCfgParameterLoader::parse_ubx_unit(const std::string & unit_str)
+::ubx::cfg::ubx_unit_t UbxCfgParameterLoader::parse_ubx_unit(const std::string & unit_str)
 {
-  if (unit_str == "NA") {
-    return ubx_unit_t::NA;
-  } else if (unit_str == "M") {
-    return ubx_unit_t::M;
-  } else if (unit_str == "S") {
-    return ubx_unit_t::S;
-  } else if (unit_str == "HZ") {
-    return ubx_unit_t::HZ;
-  } else if (unit_str == "M_S") {
-    return ubx_unit_t::M_S;
-  } else if (unit_str == "M_S2") {
-    return ubx_unit_t::M_S2;
-  } else if (unit_str == "DEG") {
-    return ubx_unit_t::DEG;
-  } else if (unit_str == "RAD") {
-    return ubx_unit_t::RAD;
-  } else if (unit_str == "PCT") {
-    return ubx_unit_t::PCT;
-  } else if (unit_str == "BYTES") {
-    return ubx_unit_t::BYTES;
-  } else if (unit_str == "MS") {
-    return ubx_unit_t::MS;
-  } else {
+  if (unit_str == "NA") return ::ubx::cfg::NA;
+  else if (unit_str == "M") return ::ubx::cfg::M;
+  else if (unit_str == "Y") return ::ubx::cfg::Y;
+  else if (unit_str == "MONTH") return ::ubx::cfg::MONTH;
+  else if (unit_str == "D") return ::ubx::cfg::D;
+  else if (unit_str == "H") return ::ubx::cfg::H;
+  else if (unit_str == "MIN") return ::ubx::cfg::MIN;
+  else if (unit_str == "S") return ::ubx::cfg::S;
+  else if (unit_str == "HZ") return ::ubx::cfg::HZ;
+  else if (unit_str == "MA") return ::ubx::cfg::MA;
+  else if (unit_str == "MS") return ::ubx::cfg::MS;
+  else if (unit_str == "DEG") return ::ubx::cfg::DEG;
+  else if (unit_str == "MM") return ::ubx::cfg::MM;
+  else if (unit_str == "CM") return ::ubx::cfg::CM;
+  else if (unit_str == "MPS") return ::ubx::cfg::MPS;
+  else {
     throw ParameterLoadException("Invalid UBX unit: " + unit_str);
   }
 }
