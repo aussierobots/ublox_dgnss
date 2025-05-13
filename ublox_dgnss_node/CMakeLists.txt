@@ -32,11 +32,25 @@ find_package(rtcm_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
 
+# Add nlohmann/json dependency
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+  include(FetchContent)
+  FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+  )
+  FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
 include_directories(include SYSTEM)
 
 add_library(ublox_dgnss_components SHARED
   src/usb.cpp
   src/ublox_dgnss_node.cpp
+  src/ubx/cfg/ubx_cfg_parameter.cpp
+  src/ubx/cfg/ubx_cfg_parameter_loader.cpp
+  src/ubx/cfg/ubx_cfg_handler.cpp
 )
 
 target_compile_definitions(ublox_dgnss_components
@@ -54,6 +68,7 @@ ament_target_dependencies(ublox_dgnss_components
 
 target_link_libraries(ublox_dgnss_components
   usb-1.0
+  nlohmann_json::nlohmann_json
 )
 
 rclcpp_components_register_node(ublox_dgnss_components
