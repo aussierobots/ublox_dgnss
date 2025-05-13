@@ -118,8 +118,10 @@ install(TARGETS
 
 
 if(BUILD_TESTING)
-  # Enable linting tests but disable functional tests
+  # Enable linting tests and our new minimal tests
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
   
   # Set to true for linters we want to run
   set(ament_cmake_copyright_FOUND TRUE)
@@ -130,60 +132,34 @@ if(BUILD_TESTING)
   set(ament_cmake_uncrustify_FOUND TRUE)
   set(ament_cmake_xmllint_FOUND TRUE)
   
+  # Common test settings
+  set(TEST_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ublox_ubx_msgs_INCLUDE_DIRS}
+  )
+  
+  set(TEST_LIBRARIES
+    ublox_dgnss_components
+    ${ublox_ubx_msgs_LIBRARIES}
+  )
+  
+  # Common RPATH settings for all test targets
+  set(TEST_RPATH_PROPERTIES
+    INSTALL_RPATH "$ORIGIN;$ORIGIN/../lib;${CMAKE_INSTALL_PREFIX}/lib"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+  
+  # Add our new transceiver test
+  ament_add_gmock(test_ubx_transceiver
+    test/ubx/test_ubx_transceiver.cpp
+    src/ubx/mock_ubx_transceiver.cpp
+  )
+  target_link_libraries(test_ubx_transceiver ${TEST_LIBRARIES})
+  target_include_directories(test_ubx_transceiver PUBLIC ${TEST_INCLUDE_DIRS})
+  set_target_properties(test_ubx_transceiver PROPERTIES ${TEST_RPATH_PROPERTIES})
+  
   # Run all linters (except those turned off above)
   ament_lint_auto_find_test_dependencies()
-  
-  # Functional tests are temporarily disabled while resolving build issues
-  # # Common test settings
-  # set(TEST_INCLUDE_DIRS
-  #   ${CMAKE_CURRENT_SOURCE_DIR}/include
-  #   ${ublox_ubx_msgs_INCLUDE_DIRS}
-  # )
-  # 
-  # set(TEST_LIBRARIES
-  #   ublox_dgnss_components
-  #   ${ublox_ubx_msgs_LIBRARIES}
-  # )
-  # 
-  # # Common RPATH settings for all test targets
-  # set(TEST_RPATH_PROPERTIES
-  #   INSTALL_RPATH "$ORIGIN;$ORIGIN/../lib;${CMAKE_INSTALL_PREFIX}/lib"
-  #   BUILD_WITH_INSTALL_RPATH TRUE
-  # )
-  # 
-  # # UbxCfgParameter tests (uses GTest only)
-  # ament_add_gtest(test_ubx_cfg_parameter
-  #   test/ubx/cfg/test_ubx_cfg_parameter.cpp
-  # )
-  # target_link_libraries(test_ubx_cfg_parameter ${TEST_LIBRARIES})
-  # target_include_directories(test_ubx_cfg_parameter PUBLIC ${TEST_INCLUDE_DIRS})
-  # set_target_properties(test_ubx_cfg_parameter PROPERTIES ${TEST_RPATH_PROPERTIES})
-  # 
-  # # UbxCfgParameterLoader tests (uses GTest only)
-  # ament_add_gtest(test_ubx_cfg_parameter_loader
-  #   test/ubx/cfg/test_ubx_cfg_parameter_loader.cpp
-  # )
-  # target_link_libraries(test_ubx_cfg_parameter_loader ${TEST_LIBRARIES})
-  # target_include_directories(test_ubx_cfg_parameter_loader PUBLIC ${TEST_INCLUDE_DIRS})
-  # set_target_properties(test_ubx_cfg_parameter_loader PROPERTIES ${TEST_RPATH_PROPERTIES})
-  # 
-  # # UbxCfgHandler tests (uses GMock)
-  # ament_add_gmock(test_ubx_cfg_handler
-  #   test/ubx/cfg/test_ubx_cfg_handler.cpp
-  # )
-  # target_link_libraries(test_ubx_cfg_handler ${TEST_LIBRARIES})
-  # target_include_directories(test_ubx_cfg_handler PUBLIC ${TEST_INCLUDE_DIRS})
-  # set_target_properties(test_ubx_cfg_handler PROPERTIES ${TEST_RPATH_PROPERTIES})
-  # 
-  # # New UbxCfgHandler tests (uses GMock)
-  # ament_add_gmock(test_ubx_cfg_handler_new
-  #   test/ubx/cfg/test_ubx_cfg_handler_new.cpp
-  # )
-  # target_link_libraries(test_ubx_cfg_handler_new ${TEST_LIBRARIES})
-  # target_include_directories(test_ubx_cfg_handler_new PUBLIC ${TEST_INCLUDE_DIRS})
-  # set_target_properties(test_ubx_cfg_handler_new PROPERTIES ${TEST_RPATH_PROPERTIES})
-
-  message(STATUS "Running only linter tests; functional tests are disabled")
 endif()
 
 ament_package()
