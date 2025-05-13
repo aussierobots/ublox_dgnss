@@ -158,6 +158,14 @@ if(BUILD_TESTING)
   target_include_directories(test_ubx_transceiver PUBLIC ${TEST_INCLUDE_DIRS})
   set_target_properties(test_ubx_transceiver PROPERTIES ${TEST_RPATH_PROPERTIES})
   
+  # Add test for UbxCfgItem
+  ament_add_gtest(test_ubx_cfg_item
+    test/ubx/cfg/test_ubx_cfg_item.cpp
+  )
+  target_link_libraries(test_ubx_cfg_item ${TEST_LIBRARIES})
+  target_include_directories(test_ubx_cfg_item PUBLIC ${TEST_INCLUDE_DIRS})
+  set_target_properties(test_ubx_cfg_item PROPERTIES ${TEST_RPATH_PROPERTIES})
+  
   # Run all linters (except those turned off above)
   ament_lint_auto_find_test_dependencies()
 endif()
