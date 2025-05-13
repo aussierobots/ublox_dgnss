@@ -172,14 +172,24 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_ubx_cfg_parameter ${TEST_LIBRARIES})
   ament_target_dependencies(test_ubx_cfg_parameter
-    ublox_ubx_msgs
-    ublox_ubx_interfaces
+    "rclcpp"
   )
   target_include_directories(test_ubx_cfg_parameter PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${TEST_INCLUDE_DIRS}
   )
   set_target_properties(test_ubx_cfg_parameter PROPERTIES ${TEST_RPATH_PROPERTIES})
+
+  # Test for UbxCfgParameterLoader
+  ament_add_gmock(test_ubx_cfg_parameter_loader
+    test/ubx/cfg/test_ubx_cfg_parameter_loader.cpp
+  )
+  target_link_libraries(test_ubx_cfg_parameter_loader ${TEST_LIBRARIES})
+  target_include_directories(test_ubx_cfg_parameter_loader PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TEST_INCLUDE_DIRS}
+  )
+  set_target_properties(test_ubx_cfg_parameter_loader PROPERTIES ${TEST_RPATH_PROPERTIES})
   
   # Run all linters (except those turned off above)
   ament_lint_auto_find_test_dependencies()
