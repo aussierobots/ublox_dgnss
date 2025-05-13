@@ -31,10 +31,23 @@ def extract_parameters(hpp_file: str) -> List[Dict[str, Any]]:
     
     for enum_name, enum_content in enum_matches:
         values = {}
-        value_pattern = r'([A-Z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+)'
+        # Changed the regex to capture both numeric (e.g., '0') and hex (e.g., '0x01') values
+        value_pattern = r'([A-Z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+|\d+)'
         value_matches = re.findall(value_pattern, enum_content)
         for value_name, value in value_matches:
-            values[value_name] = value
+            # Ensure all values are in hex format with 0x prefix
+            if value.startswith('0x'):
+                hex_value = value
+            else:
+                # Convert decimal to hex with 0x prefix and at least 2 digits
+                try:
+                    int_val = int(value)
+                    hex_value = f"0x{int_val:02x}"
+                except ValueError:
+                    hex_value = value  # Fallback if not a valid number
+            
+            # Store the value with the original enum identifier
+            values[value_name] = hex_value
         enum_values[enum_name] = values
     
     # Map parameter types to applicable devices and firmware versions
@@ -134,7 +147,10 @@ def extract_parameters(hpp_file: str) -> List[Dict[str, Any]]:
             # Find the corresponding enum
             for enum_name, values in enum_values.items():
                 if name.endswith(enum_name) or enum_name in name:
-                    possible_values = values
+                    # Use fully qualified enum names (DYN_MODEL_PORT instead of PORT)
+                    possible_values = {}
+                    for key, val in values.items():
+                        possible_values[key] = val
                     break
             
             # If no enum values found, provide placeholder values

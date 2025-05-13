@@ -166,6 +166,21 @@ if(BUILD_TESTING)
   target_include_directories(test_ubx_cfg_item PUBLIC ${TEST_INCLUDE_DIRS})
   set_target_properties(test_ubx_cfg_item PROPERTIES ${TEST_RPATH_PROPERTIES})
   
+  # Add test for UbxCfgParameter
+  ament_add_gtest(test_ubx_cfg_parameter
+    test/ubx/cfg/test_ubx_cfg_parameter.cpp
+  )
+  target_link_libraries(test_ubx_cfg_parameter ${TEST_LIBRARIES})
+  ament_target_dependencies(test_ubx_cfg_parameter
+    ublox_ubx_msgs
+    ublox_ubx_interfaces
+  )
+  target_include_directories(test_ubx_cfg_parameter PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TEST_INCLUDE_DIRS}
+  )
+  set_target_properties(test_ubx_cfg_parameter PROPERTIES ${TEST_RPATH_PROPERTIES})
+  
   # Run all linters (except those turned off above)
   ament_lint_auto_find_test_dependencies()
 endif()
