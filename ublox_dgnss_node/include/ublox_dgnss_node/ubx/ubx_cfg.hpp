@@ -168,13 +168,13 @@ inline void buf_append_keyvalue(std::vector<u1_t> * buf, key_value_t * kv)
       buf_append_x2(buf, kv->ubx_value.x2);
       break;
     case U4:
-      buf_append_u4(buf, kv->ubx_value.u2);
+      buf_append_u4(buf, kv->ubx_value.u4);
       break;
     case I4:
-      buf_append_i4(buf, kv->ubx_value.i2);
+      buf_append_i4(buf, kv->ubx_value.i4);
       break;
     case X4:
-      buf_append_x4(buf, kv->ubx_value.x2);
+      buf_append_x4(buf, kv->ubx_value.x4);
       break;
     case R4:
       buf_append_r4(buf, kv->ubx_value.r4);
