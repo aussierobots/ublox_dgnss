@@ -81,13 +81,19 @@ The refactoring has made significant progress. The following tasks have been com
 
 13. **UbxCfgParameterLoader Tests**: Successfully implemented and fixed tests for the `UbxCfgParameterLoader` class in a new test file `test_ubx_cfg_parameter_loader.cpp`. All tests are now passing.
 
+14. **UbxCfgHandler Tests**: Fixed the `test_ubx_cfg_handler_new.cpp` file to properly test the UbxCfgHandler class, including:
+    - Corrected UBX-MON-VER message mock implementation with proper UBX protocol framing
+    - Fixed firmware version extraction and validation in test fixtures
+    - Implemented proper mocking for device-specific parameter applicability tests
+    - Added comprehensive tests for parameter initialization and error handling
+
 ### Remaining Tasks
 
 1. ✅ **Parameter Test Refactoring**: Successfully updated the `test_ubx_cfg_parameter.cpp` test file and fixed all failing tests.
 
 2. ✅ **UbxCfgParameterLoader Test Implementation**: Created and fixed the test file `test_ubx_cfg_parameter_loader.cpp` to properly test parameter loading functionality, with all tests now passing.
 
-3. ⏳ **UbxCfgHandler Testing**: Complete the implementation and fix any issues with the new approach to testing the `UbxCfgHandler` class using the `MockUbxTransceiver`.
+3. ✅ **UbxCfgHandler Testing**: Completed implementation and fixed all issues with testing the `UbxCfgHandler` class using the `MockUbxTransceiver`. All tests now pass successfully.
 
 4. **UbxTransceiverFactory Tests**: Create and implement tests for the `UbxTransceiverFactory` class to ensure it correctly creates instances of the appropriate transceiver implementation.
 

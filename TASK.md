@@ -74,6 +74,10 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Fix logical test failures in UbxCfgParameterLoader tests
   - [x] Create development environment setup script
   - [x] Fix signedness comparison warnings
+  - [x] Fix UbxCfgHandler test issues
+    - [x] Implement proper UBX-MON-VER mock response with correct framing
+    - [x] Fix firmware version extraction and validation
+    - [x] Fix parameter initialization and device-specific applicability tests
 
 - [x] Improve test coverage and documentation
   - [x] Refactor test_ubx_cfg_parameter.cpp to use original enum identifiers

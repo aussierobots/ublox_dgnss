@@ -191,6 +191,20 @@ if(BUILD_TESTING)
   )
   set_target_properties(test_ubx_cfg_parameter_loader PROPERTIES ${TEST_RPATH_PROPERTIES})
   
+  # Test for UbxCfgHandler with MockUbxTransceiver
+  ament_add_gmock(test_ubx_cfg_handler_new
+    test/ubx/cfg/test_ubx_cfg_handler_new.cpp
+  )
+  target_link_libraries(test_ubx_cfg_handler_new ${TEST_LIBRARIES})
+  ament_target_dependencies(test_ubx_cfg_handler_new
+    "rclcpp"
+  )
+  target_include_directories(test_ubx_cfg_handler_new PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TEST_INCLUDE_DIRS}
+  )
+  set_target_properties(test_ubx_cfg_handler_new PROPERTIES ${TEST_RPATH_PROPERTIES})
+  
   # Run all linters (except those turned off above)
   ament_lint_auto_find_test_dependencies()
 endif()

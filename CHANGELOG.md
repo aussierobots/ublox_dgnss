@@ -10,6 +10,11 @@
   - Corrected firmware version support check to properly handle "until" version
   - Enhanced enum value validation to check against max_value
   - Updated test expectations to match implementation behavior
+- Fixed UbxCfgHandler test issues
+  - Implemented proper UBX-MON-VER mock response with correct UBX protocol framing
+  - Fixed firmware version extraction and validation in test fixtures
+  - Corrected mock expectations for device-specific parameter applicability tests
+  - Resolved initialization failures in parameter handling tests
 - Fixed code quality issues
   - Eliminated signedness comparison warnings in `ubx_cfg_handler.cpp`
 
