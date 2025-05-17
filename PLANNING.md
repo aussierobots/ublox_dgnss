@@ -52,37 +52,63 @@ Based on code analysis, the current implementation defines and handles UBX-CFG p
 
 ## Proposed Solution
 
-We will implement a data-driven approach using JSON configuration files with the following components:
+We will implement a data-driven approach using configuration files with the following components:
 
-### 1. Parameter Definition File (JSON)
+### Configuration File Format: TOML vs JSON
 
-The JSON schema will include:
+While the initial implementation plan specified JSON as the configuration file format, we're now adopting TOML (Tom's Obvious, Minimal Language) instead. This decision offers several advantages for our use case:
 
-```json
-{
-  "version": "1.0.0",
-  "device_types": ["ZED-F9P", "ZED-F9R"],
-  "parameters": [
-    {
-      "name": "CFG_INFMSG_UBX_USB",
-      "key_id": "0x20920004",
-      "type": "X1",
-      "scale": 1.0,
-      "unit": "NA",
-      "applicable_devices": ["ZED-F9P", "ZED-F9R"],
-      "description": "Information message configuration for UBX protocol on USB",
-      "possible_values": {
-        "INFMSG_ERROR": "0x01",
-        "INFMSG_WARNING": "0x02",
-        "INFMSG_NOTICE": "0x04",
-        "INFMSG_TEST": "0x08",
-        "INFMSG_DEBUG": "0x10"
-      },
-      "default_value": "0x00"
-    }
-    // ... more parameters
-  ]
-}
+#### Benefits of TOML
+
+1. **Improved Readability**: TOML provides a more human-readable format with clear hierarchical structure, making parameter files easier to maintain and edit by developers.
+
+2. **Native Comment Support**: Unlike JSON, TOML natively supports comments, allowing for better in-file documentation of parameters, their usage, and any implementation notes.
+
+3. **Less Error-Prone Syntax**: TOML doesn't require trailing commas and has more lenient syntax rules, reducing the chances of syntax errors during manual edits.
+
+4. **Better Date/Time Handling**: Built-in support for date/time formats is beneficial for firmware version information and release dates.
+
+5. **More Natural Configuration Format**: TOML was specifically designed as a configuration file format, whereas JSON was designed as a data interchange format.
+
+#### Implementation Impact
+
+This change affects:
+
+1. **File Format**: All parameter definition files will use the `.toml` extension instead of `.json`
+2. **Parsing Code**: The `UbxCfgParameterLoader` will use a TOML parser (toml11) instead of the previously planned nlohmann/json library
+3. **Schema Validation**: Our validation approach will need to account for TOML's structure
+4. **Documentation**: All examples will use TOML syntax
+
+The core architecture and class relationships remain unchanged; only the serialization format and parsing implementation are affected.
+
+### 1. Parameter Definition File (TOML)
+
+The TOML schema will include:
+
+```toml
+# UBX-CFG Parameters for ZED-F9P/F9R devices
+version = "1.0.0"
+device_types = ["ZED-F9P", "ZED-F9R"]
+
+[[parameters]]
+name = "CFG_INFMSG_UBX_USB"
+key_id = "0x20920004"
+type = "X1"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Information message configuration for UBX protocol on USB"
+
+[parameters.possible_values]
+INFMSG_ERROR = "0x01"
+INFMSG_WARNING = "0x02"
+INFMSG_NOTICE = "0x04"
+INFMSG_TEST = "0x08"
+INFMSG_DEBUG = "0x10"
+
+default_value = "0x00"
+
+# ... more parameters
 ```
 
 ### 2. C++ Implementation
@@ -160,7 +186,7 @@ class UbxCfgParameterLoader {
 public:
   UbxCfgParameterLoader(const std::string& file_path);
   
-  // Load parameters from JSON file
+  // Load parameters from TOML file
   bool load();
   
   // Get parameter by name
@@ -230,7 +256,7 @@ The implementation of the UBX-CFG parameter system with firmware version support
 
 2. **Separation of Concerns**:
    - `UbxCfgParameter`: Encapsulates parameter attributes and provides value conversion/validation
-   - `UbxCfgParameterLoader`: Handles loading and filtering parameters from JSON files
+   - `UbxCfgParameterLoader`: Handles loading and filtering parameters from TOML files
    - `UbxCfgHandler`: Manages parameter operations with the device and ROS integration
 
 3. **Firmware Version Support**:
@@ -283,7 +309,7 @@ The implementation will follow these phases:
 ### Phase 3: Integration
 1. Update `UbloxDGNSSNode` to use the new parameter system
 2. Ensure backward compatibility
-3. Update build system to include JSON files
+3. Update build system to include TOML files
 4. Add firmware version parameter to filter parameters
 
 ### Phase 4: Complete Parameter Set
@@ -298,13 +324,15 @@ The implementation will follow these phases:
 
 ## Technical Considerations
 
-### JSON Parsing
-- We will use the nlohmann/json library for JSON parsing
+### TOML Parsing
+- We will use the toml11 library for TOML parsing
 - This library is header-only and easy to integrate
+- It provides a similar API to nlohmann/json for easy transition
 
 ### Parameter Validation
-- The JSON schema will include constraints for parameter validation
+- While TOML doesn't have a standard schema validation system like JSON Schema, we will implement validation in the loader
 - The UbxCfgParameterLoader will validate parameters during loading
+- Custom validation functions will ensure parameter integrity
 
 ### Backward Compatibility
 - The new system will maintain compatibility with existing parameter names

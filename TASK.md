@@ -86,6 +86,41 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Add detailed diagnostics to test cases to aid in debugging
   - [x] Document parameter handling behavior with nonexistent firmware versions
 
+### Phase 2.5: JSON to TOML Conversion
+
+- [ ] Research and select a TOML parsing library
+  - [ ] Evaluate toml11 and cpptoml libraries
+  - [ ] Test basic parsing functionality
+  - [ ] Verify compatibility with ROS 2 build system
+
+- [ ] Update build system for TOML support
+  - [ ] Add dependency on chosen TOML library in CMakeLists.txt
+  - [ ] Update package.xml if needed
+  - [ ] Configure FetchContent to download the library if not found
+
+- [ ] Convert existing JSON parameter files to TOML
+  - [ ] Convert sample parameter file
+  - [ ] Convert full parameter file
+  - [ ] Create conversion script for future use
+  - [ ] Update schema validation approach
+
+- [ ] Refactor `UbxCfgParameterLoader` class
+  - [ ] Update header includes
+  - [ ] Modify method signatures to use TOML types
+  - [ ] Reimplement the `load()` method for TOML parsing
+  - [ ] Update parameter parsing methods
+  - [ ] Adjust error handling for TOML parser exceptions
+
+- [ ] Update tests for TOML compatibility
+  - [ ] Convert test data from JSON to TOML
+  - [ ] Update validation logic in tests
+  - [ ] Add TOML-specific test cases
+
+- [ ] Update documentation for TOML format
+  - [ ] Update README.md with TOML examples
+  - [ ] Create TOML schema documentation
+  - [ ] Update code comments and API documentation
+
 ### Phase 3: Integration
 
 - [ ] Update `UbloxDGNSSNode` to use the new parameter system
@@ -103,11 +138,11 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [ ] Implement fallback mechanisms for backward compatibility
 
 - [ ] Update build system
-  - [ ] Add dependencies for JSON parsing (nlohmann/json)
+  - [ ] Add dependencies for TOML parsing (toml11)
   - [ ] Configure installation of parameter files
   - [ ] Update CMakeLists.txt to include new source files
   - [ ] Configure package.xml with new dependencies
-  - [ ] Set up proper installation paths for JSON files
+  - [ ] Set up proper installation paths for TOML files
 
 ### Phase 4: Complete Parameter Set
 
@@ -141,7 +176,7 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [ ] Provide examples of parameter usage
 
 - [ ] Create detailed documentation for parameter file format
-  - [ ] Document JSON schema structure
+  - [ ] Document TOML structure
   - [ ] Explain parameter properties and their meanings
   - [ ] Provide examples of parameter definitions
 
@@ -177,6 +212,7 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 | 2025-05-13 | Firmware version support | Completed | Added firmware version information to parameter definitions |
 | 2025-05-14 | UbxCfgParameter test refactoring | Completed | Updated tests to use original enum identifiers and consistent formatting |
 | 2025-05-14 | UbxCfgParameterLoader tests | Completed | Fixed JSON structure and implemented comprehensive tests for parameter loading functionality |
+| 2025-05-17 | Decision to use TOML instead of JSON | In Progress | Determined TOML offers better readability and maintainability for configuration files |
 
 ## Discovered During Work
 
@@ -198,7 +234,7 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 
 ## Technical Considerations
 
-- **JSON Parsing Library**: We will use nlohmann/json for JSON parsing as it's header-only and widely used
+- **TOML Parsing Library**: We will use toml11 for TOML parsing as it's header-only and provides a similar API to nlohmann/json
 - **Parameter Validation**: We need robust validation to ensure parameters are correctly defined and used
 - **Error Handling**: Clear error messages are essential for debugging parameter issues
 - **Performance**: The parameter loader should be efficient, especially for large parameter sets
