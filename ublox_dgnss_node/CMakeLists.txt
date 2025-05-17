@@ -254,6 +254,24 @@ if(BUILD_TESTING)
     test/toml_test.toml
     DESTINATION lib/${PROJECT_NAME}/test
   )
+  
+  # Test for TOML configuration parsing
+  add_executable(test_toml_config_parser test/test_toml_config_parser.cpp)
+  if(TARGET toml11::toml11)
+    target_link_libraries(test_toml_config_parser
+      toml11::toml11
+    )
+  else()
+    # If no target is available, manually set include directories
+    if(DEFINED TOML11_INCLUDE_DIR)
+      target_include_directories(test_toml_config_parser PRIVATE ${TOML11_INCLUDE_DIR})
+    else()
+      target_include_directories(test_toml_config_parser PRIVATE ${toml11_SOURCE_DIR})
+    endif()
+  endif()
+  install(TARGETS test_toml_config_parser
+    DESTINATION lib/${PROJECT_NAME}
+  )
 
   # Add all test targets to test dependencies
   ament_add_gtest_executable(dependency_dummy test/dependency_dummy.cpp)

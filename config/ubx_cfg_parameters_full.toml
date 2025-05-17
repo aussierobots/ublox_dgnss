@@ -1,0 +1,1998 @@
+# UBX-CFG Full Parameters Configuration File
+# TOML version of the configuration (converted from JSON)
+
+version = "1.0.0"
+device_types = ["ZED-F9P", "ZED-F9R"]
+
+# Firmware version information
+[firmware_versions]
+
+# ZED-F9P firmware versions
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.13"
+description = "Early production release"
+release_date = "2020-06-15"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.30"
+description = "Production release with improved RTK performance"
+release_date = "2022-01-15"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.32"
+description = "Latest production release with enhanced RTK performance"
+release_date = "2024-01-14"
+
+# ZED-F9R firmware versions
+[[firmware_versions.ZED-F9R]]
+version = "HPS 1.13"
+description = "Early production release"
+release_date = "2020-08-10"
+
+[[firmware_versions.ZED-F9R]]
+version = "HPS 1.20"
+description = "Production release with improved dead reckoning"
+release_date = "2022-03-10"
+
+[[firmware_versions.ZED-F9R]]
+version = "HPS 1.30"
+description = "Latest production release with enhanced dead reckoning"
+release_date = "2024-01-14"
+
+# Parameters configuration
+# Parameter: CFG_INFMSG_UBX_USB
+[[parameters]]
+name = "CFG_INFMSG_UBX_USB"
+key_id = "0x20920004"
+type = "X1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_INFMSG_UBX_USB"
+group = "INFMSG"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_INFMSG_NMEA_USB
+[[parameters]]
+name = "CFG_INFMSG_NMEA_USB"
+key_id = "0x20920009"
+type = "X1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_INFMSG_NMEA_USB"
+group = "INFMSG"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1INPROT_UBX
+[[parameters]]
+name = "CFG_UART1INPROT_UBX"
+key_id = "0x10730001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1INPROT_UBX"
+group = "UART1INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1INPROT_NMEA
+[[parameters]]
+name = "CFG_UART1INPROT_NMEA"
+key_id = "0x10730002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1INPROT_NMEA"
+group = "UART1INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1INPROT_RTCM3X
+[[parameters]]
+name = "CFG_UART1INPROT_RTCM3X"
+key_id = "0x10730004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1INPROT_RTCM3X"
+group = "UART1INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1INPROT_SPARTN
+[[parameters]]
+name = "CFG_UART1INPROT_SPARTN"
+key_id = "0x10730005"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1INPROT_SPARTN"
+group = "UART1INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1OUTPROT_UBX
+[[parameters]]
+name = "CFG_UART1OUTPROT_UBX"
+key_id = "0x10740001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1OUTPROT_UBX"
+group = "UART1OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1OUTPROT_NMEA
+[[parameters]]
+name = "CFG_UART1OUTPROT_NMEA"
+key_id = "0x10740002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1OUTPROT_NMEA"
+group = "UART1OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART1OUTPROT_RTCM3X
+[[parameters]]
+name = "CFG_UART1OUTPROT_RTCM3X"
+key_id = "0x10740004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART1OUTPROT_RTCM3X"
+group = "UART1OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2_BAUDRATE
+[[parameters]]
+name = "CFG_UART2_BAUDRATE"
+key_id = "0x40530001"
+type = "U4"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2_BAUDRATE"
+group = "UART2"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2INPROT_UBX
+[[parameters]]
+name = "CFG_UART2INPROT_UBX"
+key_id = "0x10750001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2INPROT_UBX"
+group = "UART2INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2INPROT_NMEA
+[[parameters]]
+name = "CFG_UART2INPROT_NMEA"
+key_id = "0x10750002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2INPROT_NMEA"
+group = "UART2INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2INPROT_RTCM3X
+[[parameters]]
+name = "CFG_UART2INPROT_RTCM3X"
+key_id = "0x10750004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2INPROT_RTCM3X"
+group = "UART2INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2INPROT_SPARTN
+[[parameters]]
+name = "CFG_UART2INPROT_SPARTN"
+key_id = "0x10750005"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2INPROT_SPARTN"
+group = "UART2INPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2OUTPROT_UBX
+[[parameters]]
+name = "CFG_UART2OUTPROT_UBX"
+key_id = "0x10760001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2OUTPROT_UBX"
+group = "UART2OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2OUTPROT_NMEA
+[[parameters]]
+name = "CFG_UART2OUTPROT_NMEA"
+key_id = "0x10760002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2OUTPROT_NMEA"
+group = "UART2OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_UART2OUTPROT_RTCM3X
+[[parameters]]
+name = "CFG_UART2OUTPROT_RTCM3X"
+key_id = "0x10760004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_UART2OUTPROT_RTCM3X"
+group = "UART2OUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBINPROT_UBX
+[[parameters]]
+name = "CFG_USBINPROT_UBX"
+key_id = "0x10770001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBINPROT_UBX"
+group = "USBINPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBINPROT_NMEA
+[[parameters]]
+name = "CFG_USBINPROT_NMEA"
+key_id = "0x10770002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBINPROT_NMEA"
+group = "USBINPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBINPROT_RTCM3X
+[[parameters]]
+name = "CFG_USBINPROT_RTCM3X"
+key_id = "0x10770004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBINPROT_RTCM3X"
+group = "USBINPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBOUTPROT_UBX
+[[parameters]]
+name = "CFG_USBOUTPROT_UBX"
+key_id = "0x10780001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBOUTPROT_UBX"
+group = "USBOUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBOUTPROT_NMEA
+[[parameters]]
+name = "CFG_USBOUTPROT_NMEA"
+key_id = "0x10780002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBOUTPROT_NMEA"
+group = "USBOUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_USBOUTPROT_RTCM3X
+[[parameters]]
+name = "CFG_USBOUTPROT_RTCM3X"
+key_id = "0x10780004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_USBOUTPROT_RTCM3X"
+group = "USBOUTPROT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SEC_SPOOFDET_SIM_SIG_DIS
+[[parameters]]
+name = "CFG_SEC_SPOOFDET_SIM_SIG_DIS"
+key_id = "0x10f6005d"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SEC_SPOOFDET_SIM_SIG_DIS"
+group = "SEC"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SEC_JAMDET_SENSITIVITY_HI
+[[parameters]]
+name = "CFG_SEC_JAMDET_SENSITIVITY_HI"
+key_id = "0x10f60051"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SEC_JAMDET_SENSITIVITY_HI"
+group = "SEC"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GPS_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GPS_ENA"
+key_id = "0x1031001f"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GPS_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GPS_L1CA_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GPS_L1CA_ENA"
+key_id = "0x10310001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GPS_L1CA_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GPS_L2C_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GPS_L2C_ENA"
+key_id = "0x10310003"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GPS_L2C_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_SBAS_ENA
+[[parameters]]
+name = "CFG_SIGNAL_SBAS_ENA"
+key_id = "0x10310020"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_SBAS_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_SBAS_L1CA_ENA
+[[parameters]]
+name = "CFG_SIGNAL_SBAS_L1CA_ENA"
+key_id = "0x10310005"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_SBAS_L1CA_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GAL_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GAL_ENA"
+key_id = "0x10310021"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GAL_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GAL_E1_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GAL_E1_ENA"
+key_id = "0x10310007"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GAL_E1_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GAL_E5B_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GAL_E5B_ENA"
+key_id = "0x1031000a"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GAL_E5B_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_BDS_ENA
+[[parameters]]
+name = "CFG_SIGNAL_BDS_ENA"
+key_id = "0x10310022"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_BDS_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_BDS_B1_ENA
+[[parameters]]
+name = "CFG_SIGNAL_BDS_B1_ENA"
+key_id = "0x1031000d"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_BDS_B1_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_BDS_B2_ENA
+[[parameters]]
+name = "CFG_SIGNAL_BDS_B2_ENA"
+key_id = "0x1031000e"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_BDS_B2_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_QZSS_ENA
+[[parameters]]
+name = "CFG_SIGNAL_QZSS_ENA"
+key_id = "0x10310024"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_QZSS_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_QZSS_L1CA_ENA
+[[parameters]]
+name = "CFG_SIGNAL_QZSS_L1CA_ENA"
+key_id = "0x10310012"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_QZSS_L1CA_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_QZSS_L1S_ENA
+[[parameters]]
+name = "CFG_SIGNAL_QZSS_L1S_ENA"
+key_id = "0x10310014"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_QZSS_L1S_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_QZSS_L2C_ENA
+[[parameters]]
+name = "CFG_SIGNAL_QZSS_L2C_ENA"
+key_id = "0x10310015"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_QZSS_L2C_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GLO_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GLO_ENA"
+key_id = "0x10310025"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GLO_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GLO_L1_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GLO_L1_ENA"
+key_id = "0x10310018"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GLO_L1_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SIGNAL_GLO_L2_ENA
+[[parameters]]
+name = "CFG_SIGNAL_GLO_L2_ENA"
+key_id = "0x1031001a"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SIGNAL_GLO_L2_ENA"
+group = "SIGNAL"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SPARTN_USE_SOURCE
+[[parameters]]
+name = "CFG_SPARTN_USE_SOURCE"
+key_id = "0x20a70001"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SPARTN_USE_SOURCE"
+group = "SPARTN"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_TMODE_MODE
+[[parameters]]
+name = "CFG_TMODE_MODE"
+key_id = "0x20030001"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_TMODE_MODE"
+group = "TMODE"
+default_value = 0x00
+applicable_devices = ["ZED-F9P"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_POS_TYPE
+[[parameters]]
+name = "CFG_TMODE_POS_TYPE"
+key_id = "0x20030002"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_TMODE_POS_TYPE"
+group = "TMODE"
+default_value = 0x00
+applicable_devices = ["ZED-F9P"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_X
+[[parameters]]
+name = "CFG_TMODE_ECEF_X"
+key_id = "0x40030003"
+type = "I4"
+scale = 1.0
+unit = "CM"
+description = "Configuration parameter for CFG_TMODE_ECEF_X"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_Y
+[[parameters]]
+name = "CFG_TMODE_ECEF_Y"
+key_id = "0x40030004"
+type = "I4"
+scale = 1.0
+unit = "CM"
+description = "Configuration parameter for CFG_TMODE_ECEF_Y"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_Z
+[[parameters]]
+name = "CFG_TMODE_ECEF_Z"
+key_id = "0x40030005"
+type = "I4"
+scale = 1.0
+unit = "CM"
+description = "Configuration parameter for CFG_TMODE_ECEF_Z"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_X_HP
+[[parameters]]
+name = "CFG_TMODE_ECEF_X_HP"
+key_id = "0x20030006"
+type = "I1"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_ECEF_X_HP"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_Y_HP
+[[parameters]]
+name = "CFG_TMODE_ECEF_Y_HP"
+key_id = "0x20030007"
+type = "I1"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_ECEF_Y_HP"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_ECEF_Z_HP
+[[parameters]]
+name = "CFG_TMODE_ECEF_Z_HP"
+key_id = "0x20030008"
+type = "I1"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_ECEF_Z_HP"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_HEIGHT
+[[parameters]]
+name = "CFG_TMODE_HEIGHT"
+key_id = "0x4003000b"
+type = "I4"
+scale = 1.0
+unit = "CM"
+description = "Configuration parameter for CFG_TMODE_HEIGHT"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_HEIGHT_HP
+[[parameters]]
+name = "CFG_TMODE_HEIGHT_HP"
+key_id = "0x2003000e"
+type = "I1"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_HEIGHT_HP"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_FIXED_POS_ACC
+[[parameters]]
+name = "CFG_TMODE_FIXED_POS_ACC"
+key_id = "0x4003000f"
+type = "U4"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_FIXED_POS_ACC"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_SVIN_MIN_DUR
+[[parameters]]
+name = "CFG_TMODE_SVIN_MIN_DUR"
+key_id = "0x40030010"
+type = "U4"
+scale = 1.0
+unit = "S"
+description = "Configuration parameter for CFG_TMODE_SVIN_MIN_DUR"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_TMODE_SVIN_ACC_LIMIT
+[[parameters]]
+name = "CFG_TMODE_SVIN_ACC_LIMIT"
+key_id = "0x40030011"
+type = "U4"
+scale = 0.1
+unit = "MM"
+description = "Configuration parameter for CFG_TMODE_SVIN_ACC_LIMIT"
+group = "TMODE"
+applicable_devices = ["ZED-F9P"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+
+# Parameter: CFG_NAVHPG_DGNSSMODE
+[[parameters]]
+name = "CFG_NAVHPG_DGNSSMODE"
+key_id = "0x20140011"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_NAVHPG_DGNSSMODE"
+group = "NAVHPG"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_NAVSPG_FIXMODE
+[[parameters]]
+name = "CFG_NAVSPG_FIXMODE"
+key_id = "0x20110011"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_NAVSPG_FIXMODE"
+group = "NAVSPG"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.30"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.20"
+
+# Parameter: CFG_NAVSPG_INIFIX3D
+[[parameters]]
+name = "CFG_NAVSPG_INIFIX3D"
+key_id = "0x10110013"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_NAVSPG_INIFIX3D"
+group = "NAVSPG"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.30"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.20"
+
+# Parameter: CFG_NAVSPG_UTCSTANDARD
+[[parameters]]
+name = "CFG_NAVSPG_UTCSTANDARD"
+key_id = "0x2011001c"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_NAVSPG_UTCSTANDARD"
+group = "NAVSPG"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.30"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.20"
+
+# Parameter: CFG_NAVSPG_DYNMODEL
+[[parameters]]
+name = "CFG_NAVSPG_DYNMODEL"
+key_id = "0x20110021"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_NAVSPG_DYNMODEL"
+group = "NAVSPG"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.30"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.20"
+
+# Parameter: CFG_ODO_USE_ODO
+[[parameters]]
+name = "CFG_ODO_USE_ODO"
+key_id = "0x10220001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_USE_ODO"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_USE_COG
+[[parameters]]
+name = "CFG_ODO_USE_COG"
+key_id = "0x10220002"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_USE_COG"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_OUTLPVEL
+[[parameters]]
+name = "CFG_ODO_OUTLPVEL"
+key_id = "0x10220003"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_OUTLPVEL"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_OUTLPCOG
+[[parameters]]
+name = "CFG_ODO_OUTLPCOG"
+key_id = "0x10220004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_OUTLPCOG"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_PROFILE
+[[parameters]]
+name = "CFG_ODO_PROFILE"
+key_id = "0x20220005"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_PROFILE"
+group = "ODO"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_COGMAXSPEED
+[[parameters]]
+name = "CFG_ODO_COGMAXSPEED"
+key_id = "0x20220021"
+type = "U1"
+scale = 1.0
+unit = "MPS"
+description = "Configuration parameter for CFG_ODO_COGMAXSPEED"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_COGMAXPOSACC
+[[parameters]]
+name = "CFG_ODO_COGMAXPOSACC"
+key_id = "0x20220022"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_COGMAXPOSACC"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_VELLPGAIN
+[[parameters]]
+name = "CFG_ODO_VELLPGAIN"
+key_id = "0x20220031"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_VELLPGAIN"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ODO_COGLPGAIN
+[[parameters]]
+name = "CFG_ODO_COGLPGAIN"
+key_id = "0x20220032"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ODO_COGLPGAIN"
+group = "ODO"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_RATE_MEAS
+[[parameters]]
+name = "CFG_RATE_MEAS"
+key_id = "0x30210001"
+type = "U2"
+scale = 0.001
+unit = "S"
+description = "Configuration parameter for CFG_RATE_MEAS"
+group = "RATE"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.32"
+description = "Improved handling and performance"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+[[parameters.firmware_support.ZED-F9R.behavior_changes]]
+version = "HPS 1.30"
+description = "Improved handling and performance"
+
+# Parameter: CFG_RATE_NAV
+[[parameters]]
+name = "CFG_RATE_NAV"
+key_id = "0x30210002"
+type = "U2"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_RATE_NAV"
+group = "RATE"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.32"
+description = "Improved handling and performance"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+[[parameters.firmware_support.ZED-F9R.behavior_changes]]
+version = "HPS 1.30"
+description = "Improved handling and performance"
+
+# Parameter: CFG_RATE_TIMEREF
+[[parameters]]
+name = "CFG_RATE_TIMEREF"
+key_id = "0x30210003"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_RATE_TIMEREF"
+group = "RATE"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.32"
+description = "Improved handling and performance"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+[[parameters.firmware_support.ZED-F9R.behavior_changes]]
+version = "HPS 1.30"
+description = "Improved handling and performance"
+
+# Parameter: CFG_SFIMU_AUTO_MNTALG_ENA
+[[parameters]]
+name = "CFG_SFIMU_AUTO_MNTALG_ENA"
+key_id = "0x10060027"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SFIMU_AUTO_MNTALG_ENA"
+group = "SFIMU"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFIMU_IMU_MNTALG_YAW
+[[parameters]]
+name = "CFG_SFIMU_IMU_MNTALG_YAW"
+key_id = "0x4006002d"
+type = "U4"
+scale = 0.001
+unit = "DEG"
+description = "Configuration parameter for CFG_SFIMU_IMU_MNTALG_YAW"
+group = "SFIMU"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFIMU_IMU_MNTALG_PITCH
+[[parameters]]
+name = "CFG_SFIMU_IMU_MNTALG_PITCH"
+key_id = "0x3006002e"
+type = "I2"
+scale = 0.001
+unit = "DEG"
+description = "Configuration parameter for CFG_SFIMU_IMU_MNTALG_PITCH"
+group = "SFIMU"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFIMU_IMU_MNTALG_ROLL
+[[parameters]]
+name = "CFG_SFIMU_IMU_MNTALG_ROLL"
+key_id = "0x3006002f"
+type = "I2"
+scale = 0.001
+unit = "DEG"
+description = "Configuration parameter for CFG_SFIMU_IMU_MNTALG_ROLL"
+group = "SFIMU"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFODO_COMBINE_TICKS
+[[parameters]]
+name = "CFG_SFODO_COMBINE_TICKS"
+key_id = "0x10070001"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SFODO_COMBINE_TICKS"
+group = "SFODO"
+applicable_devices = ["ZED-F9R"]
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFODO_COUNT_MAX
+[[parameters]]
+name = "CFG_SFODO_COUNT_MAX"
+key_id = "0x40070009"
+type = "U4"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SFODO_COUNT_MAX"
+group = "SFODO"
+applicable_devices = ["ZED-F9R"]
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFODO_DIS_AUTOCOUNTMAX
+[[parameters]]
+name = "CFG_SFODO_DIS_AUTOCOUNTMAX"
+key_id = "0x10070004"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SFODO_DIS_AUTOCOUNTMAX"
+group = "SFODO"
+applicable_devices = ["ZED-F9R"]
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFODO_DIS_AUTODIRPINPOL
+[[parameters]]
+name = "CFG_SFODO_DIS_AUTODIRPINPOL"
+key_id = "0x10070005"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_SFODO_DIS_AUTODIRPINPOL"
+group = "SFODO"
+applicable_devices = ["ZED-F9R"]
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_SFODO_LATENCY
+[[parameters]]
+name = "CFG_SFODO_LATENCY"
+key_id = "0x3007000a"
+type = "U2"
+scale = 1.0
+unit = "MS"
+description = "Configuration parameter for CFG_SFODO_LATENCY"
+group = "SFODO"
+applicable_devices = ["ZED-F9R"]
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_STATUS_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_STATUS_USB"
+key_id = "0x2091001d"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_STATUS_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_SVIN_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_SVIN_USB"
+key_id = "0x2091008b"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_SVIN_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_CLOCK_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_CLOCK_USB"
+key_id = "0x20910068"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_CLOCK_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_COV_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_COV_USB"
+key_id = "0x20910086"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_COV_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_DOP_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_DOP_USB"
+key_id = "0x2091003b"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_DOP_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_EOE_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_EOE_USB"
+key_id = "0x20910162"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_EOE_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_POSECEF_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_POSECEF_USB"
+key_id = "0x20910027"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_POSECEF_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB"
+key_id = "0x20910031"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_POSLLH_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_POSLLH_USB"
+key_id = "0x2091002c"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_POSLLH_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB"
+key_id = "0x20910036"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_ODO_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_ODO_USB"
+key_id = "0x20910081"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_ODO_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_ORB_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_ORB_USB"
+key_id = "0x20910013"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_ORB_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_SAT_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_SAT_USB"
+key_id = "0x20910018"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_SAT_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_SIG_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_SIG_USB"
+key_id = "0x20910348"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_SIG_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_PVT_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_PVT_USB"
+key_id = "0x20910009"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_PVT_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_RELPOSNED_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_RELPOSNED_USB"
+key_id = "0x20910090"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_RELPOSNED_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_TIMEUTC_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_TIMEUTC_USB"
+key_id = "0x2091005e"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_TIMEUTC_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_VELECEF_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_VELECEF_USB"
+key_id = "0x20910040"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_VELECEF_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_NAV_VELNED_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_VELNED_USB"
+key_id = "0x20910045"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_NAV_VELNED_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_RXM_RTCM_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_RXM_RTCM_USB"
+key_id = "0x2091026b"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_RXM_RTCM_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_RXM_COR_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_RXM_COR_USB"
+key_id = "0x209106b9"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_RXM_COR_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_RXM_MEASX_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_RXM_MEASX_USB"
+key_id = "0x20910207"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_RXM_MEASX_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_RXM_RAWX_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_RXM_RAWX_USB"
+key_id = "0x209102a7"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_RXM_RAWX_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_MON_COMMS_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_MON_COMMS_USB"
+key_id = "0x20910352"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_MON_COMMS_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_RXM_SPARTN_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_RXM_SPARTN_USB"
+key_id = "0x20910608"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_RXM_SPARTN_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_ESF_MEAS_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_ESF_MEAS_USB"
+key_id = "0x2091027a"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_ESF_MEAS_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_ESF_STATUS_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_ESF_STATUS_USB"
+key_id = "0x20910108"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_ESF_STATUS_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_SEC_SIG_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_SEC_SIG_USB"
+key_id = "0x20910637"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_SEC_SIG_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_UBX_SEC_SIGLOG_USB
+[[parameters]]
+name = "CFG_MSGOUT_UBX_SEC_SIGLOG_USB"
+key_id = "0x2091068c"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_UBX_SEC_SIGLOG_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1005_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1005_USB"
+key_id = "0x209102c0"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1005_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1077_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1077_USB"
+key_id = "0x209102cf"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1077_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1087_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1087_USB"
+key_id = "0x209102d4"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1087_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1097_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1097_USB"
+key_id = "0x2091031b"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1097_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1127_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1127_USB"
+key_id = "0x209102d9"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1127_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1230_USB
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1230_USB"
+key_id = "0x20910306"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1230_USB"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1074_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1074_UART2"
+key_id = "0x20910360"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1074_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1084_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1084_UART2"
+key_id = "0x20910365"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1084_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1094_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1094_UART2"
+key_id = "0x2091036a"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1094_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1124_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1124_UART2"
+key_id = "0x2091036f"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1124_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE1230_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE1230_UART2"
+key_id = "0x20910305"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE1230_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2
+[[parameters]]
+name = "CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2"
+key_id = "0x20910300"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2"
+group = "MSGOUT"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ITFM_BBTHRESHOLD
+[[parameters]]
+name = "CFG_ITFM_BBTHRESHOLD"
+key_id = "0x20410001"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ITFM_BBTHRESHOLD"
+group = "ITFM"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ITFM_CWTHRESHOLD
+[[parameters]]
+name = "CFG_ITFM_CWTHRESHOLD"
+key_id = "0x20410002"
+type = "U1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ITFM_CWTHRESHOLD"
+group = "ITFM"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ITFM_ENABLE
+[[parameters]]
+name = "CFG_ITFM_ENABLE"
+key_id = "0x1041000d"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ITFM_ENABLE"
+group = "ITFM"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ITFM_ANTSETTING
+[[parameters]]
+name = "CFG_ITFM_ANTSETTING"
+key_id = "0x20410010"
+type = "E1"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ITFM_ANTSETTING"
+group = "ITFM"
+default_value = 0x00
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.possible_values]
+UNKNOWN_0 = "0x00"
+UNKNOWN_1 = "0x01"
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+
+# Parameter: CFG_ITFM_ENABLE_AUX
+[[parameters]]
+name = "CFG_ITFM_ENABLE_AUX"
+key_id = "0x10410013"
+type = "L"
+scale = 1.0
+unit = "NA"
+description = "Configuration parameter for CFG_ITFM_ENABLE_AUX"
+group = "ITFM"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
