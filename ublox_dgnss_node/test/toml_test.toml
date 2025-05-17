@@ -1,0 +1,21 @@
+# Test TOML file for verifying toml11 integration
+version = "1.0.0"
+device_types = ["ZED-F9P", "ZED-F9R"]
+
+[[parameters]]
+name = "CFG_INFMSG_UBX_USB"
+key_id = "0x20920004"
+type = "X1"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Information message configuration for UBX protocol on USB"
+
+[parameters.possible_values]
+INFMSG_ERROR = "0x01"
+INFMSG_WARNING = "0x02"
+INFMSG_NOTICE = "0x04"
+INFMSG_TEST = "0x08"
+INFMSG_DEBUG = "0x10"
+
+default_value = "0x00"

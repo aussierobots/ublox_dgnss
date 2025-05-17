@@ -63,6 +63,33 @@ if(NOT nlohmann_json_FOUND)
   FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
+# Add toml11 dependency
+find_package(toml11 QUIET)
+if(NOT toml11_FOUND)
+  include(FetchContent)
+  FetchContent_Declare(
+    toml11
+    URL https://github.com/ToruNiina/toml11/archive/refs/tags/v3.7.1.tar.gz
+    URL_HASH SHA256=afeaa9aa0416d4b6b2cd3897ca55d9317084103077b32a852247d8efd4cf6068
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+  FetchContent_MakeAvailable(toml11)
+  
+  # Set up toml11 include directories
+  # Based on toml11's own CMakeLists.txt, the main header is at the root level
+  # and other headers are in the toml/ subdirectory
+  message(STATUS "Setting up toml11 include paths from: ${toml11_SOURCE_DIR}")
+  include_directories(${toml11_SOURCE_DIR})
+  
+  # Also create our own target if toml11 didn't create one
+  if(NOT TARGET toml11::toml11)
+    add_library(toml11_local INTERFACE)
+    target_include_directories(toml11_local INTERFACE ${toml11_SOURCE_DIR})
+    add_library(toml11::toml11 ALIAS toml11_local)
+    message(STATUS "Created toml11::toml11 alias target")
+  endif()
+endif()
+
 include_directories(include SYSTEM)
 
 add_library(ublox_dgnss_components SHARED
@@ -91,6 +118,7 @@ ament_target_dependencies(ublox_dgnss_components
 target_link_libraries(ublox_dgnss_components
   usb-1.0
   nlohmann_json::nlohmann_json
+  toml11::toml11
 )
 
 # Set RPATH for finding shared libraries at runtime
@@ -205,7 +233,33 @@ if(BUILD_TESTING)
   )
   set_target_properties(test_ubx_cfg_handler_new PROPERTIES ${TEST_RPATH_PROPERTIES})
   
-  # Run all linters (except those turned off above)
+  # Test for toml11 integration
+  add_executable(test_toml_parser test/test_toml_parser.cpp)
+  if(TARGET toml11::toml11)
+    target_link_libraries(test_toml_parser
+      toml11::toml11
+    )
+  else()
+    # If no target is available, manually set include directories
+    if(DEFINED TOML11_INCLUDE_DIR)
+      target_include_directories(test_toml_parser PRIVATE ${TOML11_INCLUDE_DIR})
+    else()
+      target_include_directories(test_toml_parser PRIVATE ${toml11_SOURCE_DIR})
+    endif()
+  endif()
+  install(TARGETS test_toml_parser
+    DESTINATION lib/${PROJECT_NAME}
+  )
+  install(FILES
+    test/toml_test.toml
+    DESTINATION lib/${PROJECT_NAME}/test
+  )
+
+  # Add all test targets to test dependencies
+  ament_add_gtest_executable(dependency_dummy test/dependency_dummy.cpp)
+  target_link_libraries(dependency_dummy ${TEST_LIBRARIES})
+
+  # Add tests for ament_lint_auto
   ament_lint_auto_find_test_dependencies()
 endif()
 
