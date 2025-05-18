@@ -157,6 +157,11 @@ std::vector<std::string> UbxCfgParameterLoader::get_available_device_types() con
   return device_types_;
 }
 
+bool UbxCfgParameterLoader::has_device_type(const std::string & device_type) const
+{
+  return std::find(device_types_.begin(), device_types_.end(), device_type) != device_types_.end();
+}
+
 std::vector<std::string> UbxCfgParameterLoader::get_available_firmware_versions(
   const std::string & device_type) const
 {

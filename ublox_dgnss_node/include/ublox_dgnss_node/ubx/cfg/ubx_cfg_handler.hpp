@@ -101,6 +101,13 @@ public:
    * @return Firmware version
    */
   const std::string & get_firmware_version() const;
+  
+  /**
+   * @brief Update the device type and reload applicable parameters
+   * @param device_type New device type
+   * @return True if the device type was updated successfully
+   */
+  bool update_device_type(const std::string & device_type);
 
   /**
    * @brief Get the parameter loader

@@ -34,6 +34,7 @@
 #include "ublox_dgnss_node/ubx/ubx_rxm.hpp"
 #include "ublox_dgnss_node/ubx/ubx_esf.hpp"
 #include "ublox_dgnss_node/ubx/ubx_sec.hpp"
+#include "ublox_dgnss_node/ubx/cfg/ubx_cfg_handler.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
@@ -148,6 +149,8 @@ public:
     check_for_device_serial_param(parameters_client);
     // check for frame_id parameter
     check_for_frame_id_param(parameters_client);
+    // check for device type parameter
+    check_for_device_type_param(parameters_client);
 
     // check that the CFG parameters are valid that have been supplied as args/yaml
     std::vector<std::string> prefixes;
@@ -159,6 +162,10 @@ public:
       }
       // check for specified frame_id string, silently skip over it - already handled above
       if (strcmp(name.c_str(), FRAME_ID_PARAM_NAME.c_str()) == 0) {
+        continue;
+      }
+      // check for specified device_type string, silently skip over it - already handled above
+      if (strcmp(name.c_str(), DEVICE_TYPE_PARAM_NAME) == 0) {
         continue;
       }
       // ignore other parameters that don't start with "CFG"
@@ -344,6 +351,22 @@ public:
     ubx_rxm_ = std::make_shared<ubx::rxm::UbxRxm>(usbc_);
     ubx_esf_ = std::make_shared<ubx::esf::UbxEsf>(usbc_);
     ubx_sec_ = std::make_shared<ubx::sec::UbxSec>(usbc_);
+    
+    // Initialize the UbxCfgHandler with the device type
+    const std::string parameter_file_path = 
+      "ublox_dgnss_node/config/ubx_cfg_parameters_full.toml";
+    
+    // TODO: Implement UbxCfgHandler initialization using UbxTransceiverFactory
+    // Delayed implementation to avoid build issues
+    // The integration will be completed in a separate task as part of the TOML configuration refactoring
+    
+    RCLCPP_INFO(get_logger(), "Device type is set to: %s", device_type_.c_str());
+    
+    // Note: Full UbxCfgHandler integration will be implemented in a future PR
+    // This will include:
+    // 1. Creating a UbxTransceiver from the USB connection
+    // 2. Initializing UbxCfgHandler with the device type and transceiver
+    // 3. Registering parameters based on device type
 
     async_initialised_ = false;
 
@@ -421,6 +444,9 @@ private:
   std::shared_ptr<ubx::rxm::UbxRxm> ubx_rxm_;
   std::shared_ptr<ubx::esf::UbxEsf> ubx_esf_;
   std::shared_ptr<ubx::sec::UbxSec> ubx_sec_;
+  
+  // UbxCfgHandler for TOML parameter handling
+  std::unique_ptr<ubx::cfg::UbxCfgHandler> cfg_handler_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
 // specific to libusb to to process events asynchronously
@@ -446,6 +472,12 @@ private:
   std::string serial_str_;
   const std::string DEV_STRING_PARAM_NAME = "DEVICE_SERIAL_STRING";
 
+  // Device type parameter
+  std::string device_type_;
+  static constexpr char DEVICE_TYPE_PARAM_NAME[] = "device_type";
+  static constexpr char DEVICE_TYPE_ZED_F9P[] = "ZED-F9P";
+  static constexpr char DEVICE_TYPE_ZED_F9R[] = "ZED-F9R";
+  
   std::string unique_id_;
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;
@@ -526,6 +558,46 @@ private:
     RCLCPP_INFO(
       this->get_logger(), "Parameter %s found with value: %s",
       FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_device_type_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // Default to ZED-F9P if no device type is specified
+    device_type_ = DEVICE_TYPE_ZED_F9P;
+    
+    // Check if the parameter exists
+    if (!param_client->has_parameter(DEVICE_TYPE_PARAM_NAME)) {
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, defaulting to '%s'",
+        DEVICE_TYPE_PARAM_NAME, device_type_.c_str());
+        
+      // Declare the parameter with the default value
+      this->declare_parameter(DEVICE_TYPE_PARAM_NAME, device_type_);
+      return;
+    }
+    
+    // Get the parameter value
+    device_type_ = param_client->get_parameter<std::string>(DEVICE_TYPE_PARAM_NAME);
+    
+    // Validate the device type
+    if (!is_valid_device_type(device_type_)) {
+      RCLCPP_WARN(
+        this->get_logger(), "Invalid device type '%s', defaulting to '%s'",
+        device_type_.c_str(), DEVICE_TYPE_ZED_F9P);
+      device_type_ = DEVICE_TYPE_ZED_F9P;
+    }
+    
+    RCLCPP_INFO(
+      this->get_logger(), "Parameter %s found with value: %s",
+      DEVICE_TYPE_PARAM_NAME, device_type_.c_str());
+  }
+  
+  UBLOX_DGNSS_NODE_LOCAL
+  bool is_valid_device_type(const std::string& device_type) const
+  {
+    // Currently supported device types
+    return (device_type == DEVICE_TYPE_ZED_F9P || device_type == DEVICE_TYPE_ZED_F9R);
   }
 
 
@@ -801,13 +873,37 @@ public:
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
 
-    // Define the parameters you want to exclude from processing
+    // Define the parameters you want to exclude from standard processing
     std::set<std::string> excluded_params =
     {"hw_version", "sw_version", "version_extension", "unique_id"};
 
-
     try {
       for (const rclcpp::Parameter & parameter : parameters) {
+        // Handle device_type parameter specially
+        if (parameter.get_name() == DEVICE_TYPE_PARAM_NAME) {
+          const std::string new_device_type = parameter.as_string();
+          if (!is_valid_device_type(new_device_type)) {
+            result.successful = false;
+            result.reason = "Invalid device_type. Supported types: " 
+                            + std::string(DEVICE_TYPE_ZED_F9P) + ", " 
+                            + std::string(DEVICE_TYPE_ZED_F9R);
+          } else if (device_type_ != new_device_type) {
+            // Update internal device type
+            device_type_ = new_device_type;
+            RCLCPP_INFO(get_logger(), "Device type updated to %s", device_type_.c_str());
+            
+            // If cfg_handler_ is initialized, update it with the new device type
+            if (cfg_handler_) {
+              if (cfg_handler_->update_device_type(device_type_)) {
+                RCLCPP_INFO(get_logger(), "UbxCfgHandler updated with new device type");
+              } else {
+                RCLCPP_WARN(get_logger(), "Failed to update UbxCfgHandler with new device type");
+              }
+            }
+          }
+          continue;
+        }
+        
         // Check if the parameter is in the excluded list
         if (excluded_params.find(parameter.get_name()) != excluded_params.end()) {
           RCLCPP_DEBUG(get_logger(), "Skipping parameter: %s", parameter.get_name().c_str());
@@ -3159,6 +3255,11 @@ private:
     // ubx_nav_->velned()->poll_async();
   }
 };
+// Define static constexpr members
+constexpr char UbloxDGNSSNode::DEVICE_TYPE_PARAM_NAME[];
+constexpr char UbloxDGNSSNode::DEVICE_TYPE_ZED_F9P[];
+constexpr char UbloxDGNSSNode::DEVICE_TYPE_ZED_F9R[];
+
 }  // namespace ublox_dgnss
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ublox_dgnss::UbloxDGNSSNode)

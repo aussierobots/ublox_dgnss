@@ -336,6 +336,54 @@ const std::string & UbxCfgHandler::get_firmware_version() const
   return firmware_version_;
 }
 
+bool UbxCfgHandler::update_device_type(const std::string & device_type)
+{
+  try {
+    // Check if device type is valid
+    if (!parameter_loader_.has_device_type(device_type)) {
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "Invalid device type: %s", device_type.c_str());
+      return false;
+    }
+    
+    // Update device type
+    device_type_ = device_type;
+    RCLCPP_INFO(
+      node_->get_logger(),
+      "Updated device type to: %s", device_type_.c_str());
+    
+    // Clear registered parameters
+    if (!registered_parameters_.empty()) {
+      // Undeclare all previously registered parameters
+      for (const auto& [name, param] : registered_parameters_) {
+        node_->undeclare_parameter(name);
+      }
+      registered_parameters_.clear();
+    }
+    
+    // Optionally re-detect firmware version
+    // This could be made configurable if needed
+    // firmware_version_ = detect_firmware_version();
+    
+    // Re-register parameters applicable to this device type
+    bool success = register_parameters();
+    if (!success) {
+      RCLCPP_ERROR(
+        node_->get_logger(),
+        "Failed to register parameters for device type: %s", device_type_.c_str());
+      return false;
+    }
+    
+    return true;
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(
+      node_->get_logger(),
+      "Error updating device type: %s", e.what());
+    return false;
+  }
+}
+
 const UbxCfgParameterLoader & UbxCfgHandler::get_parameter_loader() const
 {
   return parameter_loader_;

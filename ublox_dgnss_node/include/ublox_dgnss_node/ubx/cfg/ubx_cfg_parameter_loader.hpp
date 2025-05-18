@@ -110,6 +110,13 @@ public:
    * @return Vector of available device types
    */
   std::vector<std::string> get_available_device_types() const;
+  
+  /**
+   * @brief Check if a device type is valid/available
+   * @param device_type Device type to check
+   * @return True if the device type is valid, false otherwise
+   */
+  bool has_device_type(const std::string & device_type) const;
 
   /**
    * @brief Get the available firmware versions for a device type
