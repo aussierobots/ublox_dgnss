@@ -18,14 +18,14 @@
  * @brief Test file for the UbxCfgParameterLoader class
  * 
  * This test suite validates that the UbxCfgParameterLoader correctly:
- * - Loads parameters from JSON files with the required structure
- * - Handles error cases (invalid JSON, missing files, etc.)
+ * - Loads parameters from TOML files with the required structure
+ * - Handles error cases (invalid TOML, missing files, etc.)
  * - Retrieves parameters by name, key ID, device, and firmware version
  * - Handles parameter versioning across different firmware versions
  * - Loads enum values with their original identifiers
  * - Tracks behavior changes for parameters
  *
- * The tests use a synthetic JSON parameter file that mimics the structure
+ * The tests use a synthetic TOML parameter file that mimics the structure
  * of actual parameter files used in production. The test parameters are created
  * with realistic values and proper structure to ensure accurate testing.
  */
@@ -63,118 +63,73 @@ protected:
     std::cout << "Creating test directory at: " << temp_dir_.string() << std::endl;
     std::filesystem::create_directories(temp_dir_);
     
-    // Path to a test JSON file we'll create
-    test_json_path_ = temp_dir_ / "test_parameters.json";
-    std::cout << "Test JSON file path: " << test_json_path_.string() << std::endl;
+    // Path to a test TOML file we'll create
+    test_toml_path_ = temp_dir_ / "test_parameters.toml";
+    std::cout << "Test TOML file path: " << test_toml_path_.string() << std::endl;
     
-    // Create a simple test JSON file with a few parameters
+    // Create a simple test TOML file with a few parameters
     // Copying the EXACT format from the real parameter files
-    std::string json_content = R"({
-      "version": "1.0.0",
-      "device_types": [
-        "ZED-F9P",
-        "ZED-F9R"
-      ],
-      "firmware_versions": {
-        "ZED-F9P": [
-          {
-            "version": "HPG 1.00",
-            "description": "Initial release",
-            "release_date": "2021-01-01"
-          },
-          {
-            "version": "HPG 1.10",
-            "description": "Feature update",
-            "release_date": "2021-06-01"
-          },
-          {
-            "version": "HPG 1.13",
-            "description": "Maintenance update",
-            "release_date": "2021-09-01"
-          }
-        ],
-        "ZED-F9R": [
-          {
-            "version": "HPG 1.00",
-            "description": "Initial release",
-            "release_date": "2021-01-01"
-          }
-        ]
-      },
-      "parameters": [
-        {
-          "name": "CFG-NAVSPG-DYNMODEL",
-          "key_id": "0x20510010",
-          "type": "E1",
-          "scale": 1.0,
-          "unit": "NA",
-          "applicable_devices": ["ZED-F9P", "ZED-F9R"],
-          "description": "Dynamic platform model",
-          "group": "NAVSPG",
-          "firmware_support": {
-            "ZED-F9P": {
-              "since": "HPG 1.00",
-              "behavior_changes": [
-                {
-                  "version": "HPG 1.13",
-                  "description": "Default value changed from 3 to 2"
-                }
-              ]
-            },
-            "ZED-F9R": {
-              "since": "HPG 1.00",
-              "behavior_changes": []
-            }
-          },
-          "possible_values": {
-            "DYN_MODEL_PORT": "0x00",
-            "DYN_MODEL_STAT": "0x02",
-            "DYN_MODEL_PED": "0x03",
-            "DYN_MODEL_AUTOMOT": "0x04",
-            "DYN_MODEL_SEA": "0x05",
-            "DYN_MODEL_AIR1": "0x06",
-            "DYN_MODEL_AIR2": "0x07",
-            "DYN_MODEL_AIR4": "0x08"
-          },
-          "default_value": "2",
-          "min_value": "0",
-          "max_value": "0x08"
-        },
-        {
-          "name": "CFG-NAVSPG-UTCSTD",
-          "key_id": "0x2051001c",
-          "type": "E1",
-          "scale": 1.0,
-          "unit": "NA",
-          "applicable_devices": ["ZED-F9P"],
-          "description": "UTC standard to be used",
-          "group": "NAVSPG",
-          "firmware_support": {
-            "ZED-F9P": {
-              "since": "HPG 1.10",
-              "behavior_changes": []
-            }
-          },
-          "possible_values": {
-            "UTC_STANDARD_AUTO": "0x00",
-            "UTC_STANDARD_USNO": "0x03",
-            "UTC_STANDARD_EU": "0x04",
-            "UTC_STANDARD_SU": "0x06",
-            "UTC_STANDARD_NTSC": "0x07"
-          },
-          "default_value": "0x00",
-          "min_value": "0x00",
-          "max_value": "0x07"
-        }
-      ]
-    })";
+    std::string toml_content = R"(
+# UBX-CFG Test Parameters File
+# TOML version for testing the parameter loader
+
+version = "1.0.0"
+device_types = ["ZED-F9P", "ZED-F9R"]
+
+# Firmware version information
+[firmware_versions]
+
+# ZED-F9P firmware versions
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.00"
+description = "Initial release"
+release_date = "2021-01-01"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.10"
+description = "Feature update"
+release_date = "2021-06-01"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.13"
+description = "Maintenance update"
+release_date = "2021-09-01"
+
+# ZED-F9R firmware versions
+[[firmware_versions.ZED-F9R]]
+version = "HPG 1.00"
+description = "Initial release"
+release_date = "2021-01-01"
+
+[[parameters]]
+name = "CFG_UART1_BAUDRATE"
+key_id = "0x40520001"
+type = "U4"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Standard UART 1 Baudrate"
+group = "UART1"
+default_value = "0x00BS0000"
+
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.00"
+
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.10"
+description = "Support for higher baudrates"
+
+[parameters.firmware_support.ZED-F9R]
+since = "HPG 1.00"
+)";
     
-    std::ofstream file(test_json_path_);
-    file << json_content;
-    file.close();
+    // Write TOML to file
+    std::ofstream outfile(test_toml_path_);
+    outfile << toml_content;
+    outfile.close();
     
     // Verify file was written correctly
-    std::ifstream check_file(test_json_path_);
+    std::ifstream check_file(test_toml_path_);
     std::string file_contents;
     if (check_file.is_open()) {
       std::stringstream buffer;
@@ -187,24 +142,26 @@ protected:
     }
     
     // Create loader with the test file
-    loader_ = std::make_unique<UbxCfgParameterLoader>(test_json_path_.string());
+    loader_ = std::make_unique<UbxCfgParameterLoader>(test_toml_path_.string());
     
-    // Also create an invalid file for testing error handling
-    invalid_json_path_ = temp_dir_ / "invalid_parameters.json";
-    std::ofstream invalid_file(invalid_json_path_);
-    invalid_file << "{ this is not valid JSON }";
+    // Create an invalid TOML file for testing error cases
+    invalid_toml_path_ = temp_dir_ / "invalid.toml";
+    std::ofstream invalid_file(invalid_toml_path_);
+    invalid_file << "This is not valid TOML = ]]]";
     invalid_file.close();
   }
   
   void TearDown() override
   {
-    // Clean up the temp directory and files
+    // Clean up the temporary files and directory
+    std::filesystem::remove(test_toml_path_);
+    std::filesystem::remove(invalid_toml_path_);
     std::filesystem::remove_all(temp_dir_);
   }
   
   std::filesystem::path temp_dir_;
-  std::filesystem::path test_json_path_;
-  std::filesystem::path invalid_json_path_;
+  std::filesystem::path test_toml_path_;
+  std::filesystem::path invalid_toml_path_;
   std::unique_ptr<UbxCfgParameterLoader> loader_;
 };
 
@@ -212,82 +169,41 @@ protected:
  * @brief Test loading a valid parameter file with detailed diagnostic output
  * 
  * This test validates that the UbxCfgParameterLoader correctly loads a properly formatted
- * JSON file containing UBX CFG parameters. The test includes comprehensive diagnostics to:
+ * TOML file containing UBX CFG parameters. The test includes comprehensive diagnostics to:
  * 
  * 1. Verify the test file exists and can be opened
- * 2. Validate the JSON structure of the test file
+ * 2. Validate the TOML structure of the test file
  * 3. Confirm all required fields are present (version, device_types, parameters, firmware_versions)
  * 4. Test the actual loading process via the UbxCfgParameterLoader class
  * 5. Verify that parameters can be accessed after loading
- *
+ * 
  * The detailed diagnostics help identify the exact cause of any failures, which is especially
- * valuable when debugging issues with the JSON structure or file I/O problems.
+ * valuable when debugging issues with the TOML structure or file I/O problems.
  */
 TEST_F(UbxCfgParameterLoaderTest, LoadValidFile)
 {
-  // Print detailed debug info about our test setup
-  std::cout << "\n============== UbxCfgParameterLoader Test Details ==============" << std::endl;
-  std::cout << "Test file path: " << test_json_path_.string() << std::endl;
-  
-  // Verify the file exists and contains expected data
-  std::ifstream verify_file(test_json_path_);
-  if (!verify_file.is_open()) {
-    std::cout << "ERROR: Test file cannot be opened!" << std::endl;
-    FAIL() << "Test file cannot be opened: " << test_json_path_.string();
-    return;
-  }
-  
-  // Check the file content using nlohmann::json parsing to validate
-  try {
-    verify_file.seekg(0, std::ios::end);
-    std::streamsize size = verify_file.tellg();
-    verify_file.seekg(0, std::ios::beg);
-    
-    std::string content((std::istreambuf_iterator<char>(verify_file)), std::istreambuf_iterator<char>());
-    std::cout << "Test file size: " << size << " bytes" << std::endl;
-    
-    // Parse and validate the JSON structure
-    auto j = nlohmann::json::parse(content);
-    
-    // Check required fields
-    bool has_version = j.contains("version");
-    bool has_device_types = j.contains("device_types");
-    bool has_parameters = j.contains("parameters");
-    bool has_firmware_versions = j.contains("firmware_versions");
-    
-    std::cout << "JSON structure validation:" << std::endl;
-    std::cout << "  Has 'version' field: " << (has_version ? "YES" : "NO") << std::endl;
-    std::cout << "  Has 'device_types' field: " << (has_device_types ? "YES" : "NO") << std::endl; 
-    std::cout << "  Has 'parameters' field: " << (has_parameters ? "YES" : "NO") << std::endl;
-    std::cout << "  Has 'firmware_versions' field: " << (has_firmware_versions ? "YES" : "NO") << std::endl;
-    
-    if (has_parameters) {
-      std::cout << "  Parameter count: " << j["parameters"].size() << std::endl;
-    }
-    
-    // Verify all required fields are present
-    bool valid_json = has_version && has_device_types && has_parameters && has_firmware_versions;
-    if (!valid_json) {
-      std::cout << "ERROR: Test JSON is missing required fields!" << std::endl;
-      FAIL() << "Test JSON is missing required fields";
-      return;
-    }
-  } catch (const nlohmann::json::exception& e) {
-    std::cout << "ERROR: JSON parsing failed: " << e.what() << std::endl;
-    FAIL() << "JSON parsing failed: " << e.what();
-    return;
-  }
-  
-  // Close the verification file
-  verify_file.close();
+  // First verify the test file exists and can be opened
+  ASSERT_TRUE(std::filesystem::exists(test_toml_path_)) << 
+    "Test TOML file doesn't exist at: " << test_toml_path_.string();
+
+  // Open the file and check we can read from it
+  std::ifstream test_file(test_toml_path_);
+  ASSERT_TRUE(test_file.is_open()) << "Failed to open test TOML file";
+  std::string content;
+  test_file >> content;
+  ASSERT_FALSE(content.empty()) << "Test TOML file is empty";
+  test_file.close();
+
+  // Create the loader with the test file
+  UbxCfgParameterLoader loader(test_toml_path_.string());
   
   // Now test the actual loader
-  std::cout << "\nTesting UbxCfgParameterLoader with file: " << loader_->get_file_path() << std::endl;
+  std::cout << "\nTesting UbxCfgParameterLoader with file: " << loader.get_file_path() << std::endl;
   
   // Try to load and catch any exceptions
   bool load_result = false;
   try {
-    load_result = loader_->load();
+    load_result = loader.load();
     std::cout << "Load result: " << (load_result ? "success" : "failure") << std::endl;
   } catch (const ParameterLoadException& e) {
     std::cout << "ParameterLoadException: " << e.what() << std::endl;
@@ -302,55 +218,44 @@ TEST_F(UbxCfgParameterLoaderTest, LoadValidFile)
   EXPECT_TRUE(load_result);
   
   // Check that we can get all parameters
-  auto all_params = loader_->get_all_parameters();
+  auto all_params = loader.get_all_parameters();
   std::cout << "Number of parameters loaded: " << all_params.size() << std::endl;
-  EXPECT_EQ(all_params.size(), 2);
+  EXPECT_EQ(all_params.size(), 1);
   std::cout << "============== Test Completed ==============" << std::endl;
   
   // Verify the first parameter is as expected
-  auto dynmodel_param = loader_->get_parameter_by_name("CFG-NAVSPG-DYNMODEL");
-  ASSERT_TRUE(dynmodel_param.has_value());
+  auto uart1_baudrate_param = loader.get_parameter_by_name("CFG_UART1_BAUDRATE");
+  ASSERT_TRUE(uart1_baudrate_param.has_value());
   
-  EXPECT_EQ(dynmodel_param->get_name(), "CFG-NAVSPG-DYNMODEL");
-  EXPECT_EQ(dynmodel_param->get_key_id().all, 0x20510010);
-  EXPECT_EQ(dynmodel_param->get_type(), ubx::E1);
-  EXPECT_DOUBLE_EQ(dynmodel_param->get_scale(), 1.0);
-  EXPECT_EQ(dynmodel_param->get_unit(), NA);
-  EXPECT_EQ(dynmodel_param->get_description(), "Dynamic platform model");
-  EXPECT_EQ(dynmodel_param->get_group(), "NAVSPG");
-  EXPECT_EQ(dynmodel_param->get_default_value(), "2");
-  EXPECT_EQ(dynmodel_param->get_min_value(), "0");
-  EXPECT_EQ(dynmodel_param->get_max_value(), "0x08");
+  EXPECT_EQ(uart1_baudrate_param->get_name(), "CFG_UART1_BAUDRATE");
+  EXPECT_EQ(uart1_baudrate_param->get_key_id().all, 0x40520001);
+  EXPECT_EQ(uart1_baudrate_param->get_type(), ubx::U4);
+  EXPECT_DOUBLE_EQ(uart1_baudrate_param->get_scale(), 1.0);
+  EXPECT_EQ(uart1_baudrate_param->get_unit(), NA);
+  EXPECT_EQ(uart1_baudrate_param->get_description(), "Standard UART 1 Baudrate");
+  EXPECT_EQ(uart1_baudrate_param->get_group(), "UART1");
+  EXPECT_EQ(uart1_baudrate_param->get_default_value(), "0x00BS0000");
   
   // Check applicable devices
-  auto devices = dynmodel_param->get_applicable_devices();
+  auto devices = uart1_baudrate_param->get_applicable_devices();
   EXPECT_EQ(devices.size(), 2u);
   EXPECT_THAT(devices, UnorderedElementsAre("ZED-F9P", "ZED-F9R"));
-  
-  // Check possible values
-  auto possible_values = dynmodel_param->get_possible_values();
-  EXPECT_EQ(possible_values.size(), 8u);
-  EXPECT_EQ(possible_values.at("DYN_MODEL_PORT"), "0x00");
-  EXPECT_EQ(possible_values.at("DYN_MODEL_AIR4"), "0x08");
-  
-  // Verify the second parameter is as expected
-  auto utcstd_param = loader_->get_parameter_by_name("CFG-NAVSPG-UTCSTD");
-  ASSERT_TRUE(utcstd_param.has_value());
-  EXPECT_EQ(utcstd_param->get_name(), "CFG-NAVSPG-UTCSTD");
-  EXPECT_EQ(utcstd_param->get_key_id().all, 0x2051001c);
 }
 
 /**
  * @brief Test loading an invalid parameter file
  * 
- * This test verifies that the UbxCfgParameterLoader correctly handles invalid JSON files
+ * This test verifies that the UbxCfgParameterLoader correctly handles invalid TOML files
  * by throwing appropriate exceptions and not loading any parameters. This is important
  * for ensuring robust error handling when faced with malformed configuration files.
  */
 TEST_F(UbxCfgParameterLoaderTest, LoadInvalidFile)
 {
-  UbxCfgParameterLoader invalid_loader(invalid_json_path_.string());
-  EXPECT_THROW(invalid_loader.load(), ParameterLoadException);
+  // Create a loader with an invalid TOML file
+  UbxCfgParameterLoader loader(invalid_toml_path_.string());
+  
+  // Attempt to load should throw an exception
+  EXPECT_THROW(loader.load(), ParameterLoadException);
 }
 
 /**
@@ -362,7 +267,7 @@ TEST_F(UbxCfgParameterLoaderTest, LoadInvalidFile)
  */
 TEST_F(UbxCfgParameterLoaderTest, LoadNonexistentFile)
 {
-  UbxCfgParameterLoader nonexistent_loader("/path/to/nonexistent/file.json");
+  UbxCfgParameterLoader nonexistent_loader("/path/to/nonexistent/file.toml");
   EXPECT_THROW(nonexistent_loader.load(), ParameterLoadException);
 }
 

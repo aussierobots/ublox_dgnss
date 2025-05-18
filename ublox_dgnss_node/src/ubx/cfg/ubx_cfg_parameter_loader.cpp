@@ -14,7 +14,7 @@
 
 /**
  * @file ubx_cfg_parameter_loader.cpp
- * @brief Implementation of the UbxCfgParameterLoader class for loading UBX-CFG parameters from JSON files
+ * @brief Implementation of the UbxCfgParameterLoader class for loading UBX-CFG parameters from TOML files
  */
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter_loader.hpp"
@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <filesystem>
 
-#include <nlohmann/json.hpp>
+#include <toml.hpp>
 
 namespace ubx::cfg
 {
@@ -55,33 +55,34 @@ bool UbxCfgParameterLoader::load()
       throw ParameterLoadException("Failed to open parameter file: " + file_path_);
     }
 
-    // Parse the JSON
-    ::nlohmann::json j;
-    file >> j;
+    // Parse the TOML
+    toml::value data = toml::parse(file_path_);
 
     // Check if the file has the required fields
-    if (!j.contains("version") || !j.contains("device_types") || !j.contains("parameters")) {
+    if (!data.contains("version") || !data.contains("device_types") || !data.contains("parameters")) {
       throw ParameterLoadException("Parameter file is missing required fields");
     }
 
     // Get the device types
-    device_types_ = j["device_types"].get<std::vector<std::string>>();
+    device_types_ = toml::get<std::vector<std::string>>(data.at("device_types"));
 
     // Get the firmware versions if available
-    if (j.contains("firmware_versions")) {
-      for (const auto & [device_type, versions] : j["firmware_versions"].items()) {
+    if (data.contains("firmware_versions")) {
+      const auto& firmware_versions = toml::find(data, "firmware_versions");
+      for (const auto& [device_type, versions_array] : firmware_versions.as_table()) {
         std::vector<std::string> version_list;
-        for (const auto & version : versions) {
-          version_list.push_back(version["version"].get<std::string>());
+        for (const auto& version : versions_array.as_array()) {
+          version_list.push_back(toml::find<std::string>(version, "version"));
         }
         firmware_versions_[device_type] = version_list;
       }
     }
 
     // Parse the parameters
-    for (const auto & json_param : j["parameters"]) {
+    const auto& parameters = toml::find(data, "parameters").as_array();
+    for (const auto& toml_param : parameters) {
       try {
-        UbxCfgParameter param = parse_parameter(json_param);
+        UbxCfgParameter param = parse_parameter(toml_param);
         parameters_.push_back(param);
         name_to_parameter_[param.get_name()] = param;
         key_id_to_parameter_[param.get_key_id().key_id()] = param;
@@ -92,8 +93,8 @@ bool UbxCfgParameterLoader::load()
     }
 
     return true;
-  } catch (const nlohmann::json::exception & e) {
-    throw ParameterLoadException("JSON parsing error: " + std::string(e.what()));
+  } catch (const toml::exception& e) {
+    throw ParameterLoadException("TOML parsing error: " + std::string(e.what()));
   } catch (const std::exception & e) {
     throw ParameterLoadException("Error loading parameters: " + std::string(e.what()));
   }
@@ -171,28 +172,28 @@ const std::string & UbxCfgParameterLoader::get_file_path() const
   return file_path_;
 }
 
-UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const ::nlohmann::json & json_param)
+UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const toml::value & toml_param)
 {
   // Check if the parameter has the required fields
-  if (!json_param.contains("name") || !json_param.contains("key_id") ||
-    !json_param.contains("type") || !json_param.contains("scale") ||
-    !json_param.contains("unit") || !json_param.contains("applicable_devices") ||
-    !json_param.contains("description") || !json_param.contains("group") ||
-    !json_param.contains("firmware_support"))
+  if (!toml_param.contains("name") || !toml_param.contains("key_id") ||
+    !toml_param.contains("type") || !toml_param.contains("scale") ||
+    !toml_param.contains("unit") || !toml_param.contains("applicable_devices") ||
+    !toml_param.contains("description") || !toml_param.contains("group") ||
+    !toml_param.contains("firmware_support"))
   {
     throw ParameterLoadException("Parameter is missing required fields");
   }
 
   try {
     // Extract parameter properties
-    std::string name = json_param["name"];
-    std::string key_id_val = json_param["key_id"];
-    std::string type_str = json_param["type"];
-    double scale = json_param["scale"];
-    std::string unit_str = json_param["unit"];
-    std::vector<std::string> applicable_devices = json_param["applicable_devices"];
-    std::string description = json_param["description"];
-    std::string group = json_param["group"];
+    std::string name = toml::find<std::string>(toml_param, "name");
+    std::string key_id_val = toml::find<std::string>(toml_param, "key_id");
+    std::string type_str = toml::find<std::string>(toml_param, "type");
+    double scale = toml::find<double>(toml_param, "scale");
+    std::string unit_str = toml::find<std::string>(toml_param, "unit");
+    std::vector<std::string> applicable_devices = toml::find<std::vector<std::string>>(toml_param, "applicable_devices");
+    std::string description = toml::find<std::string>(toml_param, "description");
+    std::string group = toml::find<std::string>(toml_param, "group");
 
     // Parse key_id
     ::ubx::cfg::ubx_key_id_t key_id;
@@ -205,27 +206,27 @@ UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const ::nlohmann::json & 
     ::ubx::cfg::ubx_unit_t unit = parse_ubx_unit(unit_str);
 
     // Parse firmware support
-    auto firmware_support = parse_firmware_support(json_param["firmware_support"]);
+    auto firmware_support = parse_firmware_support(toml::find(toml_param, "firmware_support"));
 
     // Parse optional fields
     std::map<std::string, std::string> possible_values;
-    if (json_param.contains("possible_values")) {
-      possible_values = parse_possible_values(json_param["possible_values"]);
+    if (toml_param.contains("possible_values")) {
+      possible_values = parse_possible_values(toml::find(toml_param, "possible_values"));
     }
 
     std::string default_value = "";
-    if (json_param.contains("default_value")) {
-      default_value = json_param["default_value"];
+    if (toml_param.contains("default_value")) {
+      default_value = toml::find<std::string>(toml_param, "default_value");
     }
 
     std::optional<std::string> min_value = std::nullopt;
-    if (json_param.contains("min_value")) {
-      min_value = json_param["min_value"].get<std::string>();
+    if (toml_param.contains("min_value")) {
+      min_value = toml::find<std::string>(toml_param, "min_value");
     }
 
     std::optional<std::string> max_value = std::nullopt;
-    if (json_param.contains("max_value")) {
-      max_value = json_param["max_value"].get<std::string>();
+    if (toml_param.contains("max_value")) {
+      max_value = toml::find<std::string>(toml_param, "max_value");
     }
 
     // Create and return the parameter
@@ -249,11 +250,11 @@ UbxCfgParameter UbxCfgParameterLoader::parse_parameter(const ::nlohmann::json & 
 }
 
 std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_support(
-  const ::nlohmann::json & json_support)
+  const toml::value & toml_support)
 {
   std::map<std::string, FirmwareSupport> result;
 
-  for (const auto & [device_type, support] : json_support.items()) {
+  for (const auto & [device_type, support] : toml_support.as_table()) {
     FirmwareSupport firmware_support;
 
     // Check if the support has the required fields
@@ -263,15 +264,16 @@ std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_sup
     }
 
     // Parse the support fields
-    firmware_support.since = support["since"].get<std::string>();
+    firmware_support.since = toml::find<std::string>(support, "since");
     if (support.contains("until")) {
-      firmware_support.until = support["until"].get<std::string>();
+      firmware_support.until = toml::find<std::string>(support, "until");
     }
 
     // Parse behavior changes
     if (support.contains("behavior_changes")) {
-      for (const auto & json_change : support["behavior_changes"]) {
-        firmware_support.behavior_changes.push_back(parse_behavior_change(json_change));
+      const auto& behavior_changes = toml::find(support, "behavior_changes").as_array();
+      for (const auto & toml_change : behavior_changes) {
+        firmware_support.behavior_changes.push_back(parse_behavior_change(toml_change));
       }
     }
 
@@ -281,28 +283,28 @@ std::map<std::string, FirmwareSupport> UbxCfgParameterLoader::parse_firmware_sup
   return result;
 }
 
-BehaviorChange UbxCfgParameterLoader::parse_behavior_change(const ::nlohmann::json & json_change)
+BehaviorChange UbxCfgParameterLoader::parse_behavior_change(const toml::value & toml_change)
 {
   // Check if the behavior change has the required fields
-  if (!json_change.contains("version") || !json_change.contains("description")) {
+  if (!toml_change.contains("version") || !toml_change.contains("description")) {
     throw ParameterLoadException("Behavior change is missing required fields");
   }
 
   // Parse the behavior change fields
   BehaviorChange change;
-  change.version = json_change["version"].get<std::string>();
-  change.description = json_change["description"].get<std::string>();
+  change.version = toml::find<std::string>(toml_change, "version");
+  change.description = toml::find<std::string>(toml_change, "description");
 
   return change;
 }
 
 std::map<std::string, std::string> UbxCfgParameterLoader::parse_possible_values(
-  const ::nlohmann::json & json_values)
+  const toml::value & toml_values)
 {
   std::map<std::string, std::string> result;
 
-  for (const auto & [name, value] : json_values.items()) {
-    result[name] = value.get<std::string>();
+  for (const auto & [name, value] : toml_values.as_table()) {
+    result[name] = toml::get<std::string>(value);
   }
 
   return result;

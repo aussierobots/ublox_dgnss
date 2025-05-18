@@ -79,19 +79,19 @@ protected:
     std::cout << "Creating test directory at: " << temp_dir_.string() << std::endl;
     std::filesystem::create_directories(temp_dir_);
     
-    // Path to a test JSON file we'll create
-    test_json_path_ = temp_dir_ / "test_parameters.json";
-    std::cout << "Test JSON file path: " << test_json_path_.string() << std::endl;
+    // Path to a test TOML file we'll create
+    test_toml_path_ = temp_dir_ / "test_parameters.toml";
+    std::cout << "Test TOML file path: " << test_toml_path_.string() << std::endl;
     
-    // Create a simple test JSON file with parameters
-    std::string json_content = createTestParameterJson();
+    // Create a simple test TOML file with parameters
+    std::string toml_content = createTestParameterToml();
     
-    std::ofstream file(test_json_path_);
-    file << json_content;
+    std::ofstream file(test_toml_path_);
+    file << toml_content;
     file.close();
     
     // Verify file was written correctly
-    std::ifstream check_file(test_json_path_);
+    std::ifstream check_file(test_toml_path_);
     std::string file_contents;
     if (check_file.is_open()) {
       std::stringstream buffer;
@@ -122,7 +122,7 @@ protected:
       node_.get(),
       mock_transceiver_,
       "ZED-F9P",
-      test_json_path_.string());
+      test_toml_path_.string());
   }
 
   void TearDown() override
@@ -141,100 +141,129 @@ protected:
   }
 
   /**
-   * @brief Create test parameter JSON content
-   * @return JSON content as string
+   * @brief Create test parameter TOML content
+   * @return TOML content as string
    */
-  std::string createTestParameterJson()
+  std::string createTestParameterToml()
   {
-    return R"({
-      "version": "1.0.0",
-      "device_types": [
-        "ZED-F9P",
-        "ZED-F9R"
-      ],
-      "firmware_versions": {
-        "ZED-F9P": [
-          {
-            "version": "RE 1.00",
-            "description": "Initial release",
-            "release_date": "2021-01-01"
-          }
-        ],
-        "ZED-F9R": [
-          {
-            "version": "RE 1.00",
-            "description": "Initial release",
-            "release_date": "2021-01-01"
-          }
-        ]
-      },
-      "parameters": [
-        {
-          "name": "CFG-NAVSPG-DYNMODEL",
-          "key_id": "0x20510010",
-          "type": "E1",
-          "scale": 1.0,
-          "unit": "NA",
-          "applicable_devices": ["ZED-F9P", "ZED-F9R"],
-          "description": "Dynamic platform model",
-          "group": "NAVSPG",
-          "firmware_support": {
-            "ZED-F9P": {
-              "since": "RE 1.00",
-              "behavior_changes": [
-                {
-                  "version": "RE 1.00",
-                  "description": "Default value changed from 3 to 2"
-                }
-              ]
-            },
-            "ZED-F9R": {
-              "since": "RE 1.00",
-              "behavior_changes": []
-            }
-          },
-          "possible_values": {
-            "DYN_MODEL_PORT": "0x00",
-            "DYN_MODEL_STAT": "0x02",
-            "DYN_MODEL_PED": "0x03",
-            "DYN_MODEL_AUTOMOT": "0x04",
-            "DYN_MODEL_SEA": "0x05",
-            "DYN_MODEL_AIR1": "0x06",
-            "DYN_MODEL_AIR2": "0x07",
-            "DYN_MODEL_AIR4": "0x08"
-          },
-          "default_value": "0x02",
-          "min_value": "0x00",
-          "max_value": "0x08"
-        },
-        {
-          "name": "CFG-NAVSPG-UTCSTD",
-          "key_id": "0x2051001c",
-          "type": "E1",
-          "scale": 1.0,
-          "unit": "NA",
-          "applicable_devices": ["ZED-F9P"],
-          "description": "UTC standard to be used",
-          "group": "NAVSPG",
-          "firmware_support": {
-            "ZED-F9P": {
-              "since": "RE 1.00",
-              "behavior_changes": []
-            }
-          },
-          "possible_values": {
-            "UTC_STANDARD_AUTO": "0x00",
-            "UTC_STANDARD_USNO": "0x03",
-            "UTC_STANDARD_EU": "0x04",
-            "UTC_STANDARD_SU": "0x06",
-            "UTC_STANDARD_NTSC": "0x07"
-          },
-          "default_value": "0x00",
-          "min_value": "0x00",
-          "max_value": "0x07"
-        }
-      ]
-    })";
+    // Create a simple but valid TOML file for testing
+    return R"(# UBX-CFG Test Parameters File
+# TOML version for testing the UbxCfgHandler
+
+version = "1.0.0"
+device_types = ["ZED-F9P", "ZED-F9R"]
+
+# Firmware version information
+[firmware_versions]
+
+# ZED-F9P firmware versions
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.00"
+description = "Initial release"
+release_date = "2021-01-01"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.10"
+description = "Feature update"
+release_date = "2021-06-01"
+
+[[firmware_versions.ZED-F9P]]
+version = "HPG 1.13"
+description = "Maintenance update"
+release_date = "2021-09-01"
+
+# ZED-F9R firmware versions
+[[firmware_versions.ZED-F9R]]
+version = "HPG 1.00"
+description = "Initial release"
+release_date = "2021-01-01"
+
+[[firmware_versions.ZED-F9R]]
+version = "HPG 1.10"
+description = "Feature update"
+release_date = "2021-06-01"
+
+# Parameters configuration
+[[parameters]]
+name = "CFG_UART1_BAUDRATE"
+key_id = "0x40520001"
+type = "U4"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Standard UART 1 Baudrate"
+group = "UART1"
+default_value = "0x00040800"
+
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.00"
+
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.10"
+description = "Support for higher baudrates"
+
+[parameters.firmware_support.ZED-F9R]
+since = "HPG 1.00"
+
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_PVT_UART1"
+key_id = "0x20910006"
+type = "U1"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Output rate of the UBX-NAV-PVT message on port UART1"
+group = "MSGOUT"
+default_value = "0x01"
+
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.00"
+
+[parameters.firmware_support.ZED-F9R]
+since = "HPG 1.00"
+
+[[parameters]]
+name = "CFG_MSGOUT_UBX_NAV_PVT_USB"
+key_id = "0x20910007"
+type = "U1"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P"]
+description = "Output rate of the UBX-NAV-PVT message on port USB"
+group = "MSGOUT"
+default_value = "0x01"
+
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.00"
+
+[[parameters]]
+name = "CFG_NAVSPG_DYNMODEL"
+key_id = "0x20110021"
+type = "E1"
+scale = 1.0
+unit = "NA"
+applicable_devices = ["ZED-F9P", "ZED-F9R"]
+description = "Dynamic platform model"
+group = "NAVSPG"
+default_value = "0x00"
+
+[parameters.possible_values]
+DYN_MODEL_PORT = "0x00"
+DYN_MODEL_STATIONARY = "0x02"
+DYN_MODEL_PEDESTRIAN = "0x03"
+DYN_MODEL_AUTOMOTIVE = "0x04"
+DYN_MODEL_SEA = "0x05"
+DYN_MODEL_AIRBORNE_1G = "0x06"
+DYN_MODEL_AIRBORNE_2G = "0x07"
+DYN_MODEL_AIRBORNE_4G = "0x08"
+DYN_MODEL_WRIST = "0x09"
+
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.00"
+
+[parameters.firmware_support.ZED-F9R]
+since = "HPG 1.00"
+)";
   }
 
   /**
@@ -331,7 +360,7 @@ protected:
 
   // Test directory and files
   std::filesystem::path temp_dir_;
-  std::filesystem::path test_json_path_;
+  std::filesystem::path test_toml_path_;   ///< Path to test parameter file
   // ROS node
   std::shared_ptr<rclcpp::Node> node_;
   // Mock transceiver
@@ -536,7 +565,7 @@ TEST_F(UbxCfgHandlerTest, ParameterDeviceApplicability)
       return ubx::ReadResult{ubx::ReadStatus::SUCCESS};
     });
   
-  UbxCfgHandler f9r_handler(f9r_node.get(), f9r_mock_transceiver, "ZED-F9R", test_json_path_.string());
+  UbxCfgHandler f9r_handler(f9r_node.get(), f9r_mock_transceiver, "ZED-F9R", test_toml_path_.string());
   ASSERT_TRUE(f9r_handler.initialize());
   
   // DYNMODEL should be applicable to both device types

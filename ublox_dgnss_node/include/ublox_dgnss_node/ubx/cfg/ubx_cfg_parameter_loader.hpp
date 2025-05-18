@@ -14,7 +14,7 @@
 
 /**
  * @file ubx_cfg_parameter_loader.hpp
- * @brief Definition of the UbxCfgParameterLoader class for loading UBX-CFG parameters from JSON files
+ * @brief Definition of the UbxCfgParameterLoader class for loading UBX-CFG parameters from TOML files
  */
 
 #ifndef UBLOX_DGNSS_NODE__UBX__CFG__UBX_CFG_PARAMETER_LOADER_HPP_
@@ -30,7 +30,7 @@
 
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_parameter.hpp"
 
-#include <nlohmann/json.hpp>
+#include <toml.hpp>
 
 namespace ubx::cfg
 {
@@ -46,9 +46,9 @@ public:
 };
 
 /**
- * @brief Class for loading UBX-CFG parameters from JSON files
+ * @brief Class for loading UBX-CFG parameters from TOML files
  *
- * This class is responsible for loading parameter definitions from JSON files,
+ * This class is responsible for loading parameter definitions from TOML files,
  * validating them, and providing access to the parameters. It also supports
  * filtering parameters by device type and firmware version.
  */
@@ -126,37 +126,37 @@ public:
 
 private:
   /**
-   * @brief Parse a parameter from JSON
-   * @param json_param JSON parameter object
+   * @brief Parse a parameter from TOML
+   * @param toml_param TOML parameter object
    * @return Parsed parameter
    * @throw ParameterLoadException if there was an error parsing the parameter
    */
-  UbxCfgParameter parse_parameter(const ::nlohmann::json & json_param);
+  UbxCfgParameter parse_parameter(const toml::value & toml_param);
 
   /**
-   * @brief Parse firmware support information from JSON
-   * @param json_support JSON firmware support object
+   * @brief Parse firmware support information from TOML
+   * @param toml_support TOML firmware support object
    * @return Map of device type to firmware support information
    * @throw ParameterLoadException if there was an error parsing the firmware support
    */
   std::map<std::string, FirmwareSupport> parse_firmware_support(
-    const ::nlohmann::json & json_support);
+    const toml::value & toml_support);
 
   /**
-   * @brief Parse a behavior change from JSON
-   * @param json_change JSON behavior change object
+   * @brief Parse a behavior change from TOML
+   * @param toml_change TOML behavior change object
    * @return Parsed behavior change
    * @throw ParameterLoadException if there was an error parsing the behavior change
    */
-  BehaviorChange parse_behavior_change(const ::nlohmann::json & json_change);
+  BehaviorChange parse_behavior_change(const toml::value & toml_change);
 
   /**
-   * @brief Parse possible values from JSON
-   * @param json_values JSON possible values object
+   * @brief Parse possible values from TOML
+   * @param toml_values TOML possible values object
    * @return Map of possible value names to values
    * @throw ParameterLoadException if there was an error parsing the possible values
    */
-  std::map<std::string, std::string> parse_possible_values(const ::nlohmann::json & json_values);
+  std::map<std::string, std::string> parse_possible_values(const toml::value & toml_values);
 
   /**
    * @brief Parse a UBX type string into a ubx_type_t enum value
