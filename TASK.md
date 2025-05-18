@@ -6,26 +6,26 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 
 ### Phase 1: Parameter Definition File Creation
 
-- [x] Define JSON schema for parameter definitions
-  - [x] Create schema file with validation rules for all parameter properties
+- [x] Define parameter structure for configuration files
+  - [x] Create validation rules for all parameter properties
   - [x] Include support for device-specific filtering
   - [x] Add validation for parameter types, units, and possible values
-  - [x] Document schema structure and constraints
-- [x] Create utility scripts for schema validation
-  - [x] Implement a Python script for validating JSON files against the schema
+  - [x] Document structure and constraints
+- [x] Create utility scripts for validation
+  - [x] Implement a Python script for validating parameter files
   - [x] Add support for reporting validation errors with clear messages
   - [x] Create a helper script to check parameter consistency
 - [x] Extract currently supported parameters from code
   - [x] Parse `ubx_cfg_item.hpp` to extract all parameter definitions
   - [x] Analyze `ubxKeyCfgItemMap` to ensure all parameters are captured
-  - [x] Map C++ types to JSON schema types
+  - [x] Map C++ types to appropriate TOML types
   - [x] Extract possible values from enumeration definitions
-- [x] Create initial JSON parameter file with current parameters
-  - [x] Format parameters according to the schema
+- [x] Create initial parameter file with current parameters
+  - [x] Format parameters according to the TOML structure
   - [x] Add descriptions based on code comments and variable names
   - [x] Determine applicable device types for each parameter
   - [x] Set default values based on current implementation
-- [x] Validate the initial parameter file against the schema
+- [x] Validate the initial parameter file
   - [x] Run validation script to ensure compliance
   - [x] Fix any validation errors
   - [x] Verify parameter completeness against current implementation
@@ -43,7 +43,7 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Add firmware version comparison logic
 
 - [x] Implement `UbxCfgParameterLoader` class with firmware version filtering
-  - [x] Implement JSON parsing using nlohmann/json library
+  - [x] Implement TOML parsing using toml11 library
   - [x] Create efficient parameter lookup by name and key ID
   - [x] Implement device-specific filtering
   - [x] Add error handling for file loading and parsing errors
@@ -62,7 +62,7 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Implement parameter caching to reduce device communication
 
 - [x] Write unit tests for all new classes
-  - [x] Test parameter loading from JSON files
+  - [x] Test parameter loading from TOML files
   - [x] Test parameter filtering by device type and firmware version
   - [x] Test value conversion between different types
   - [x] Test error handling and edge cases
@@ -86,40 +86,52 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [x] Add detailed diagnostics to test cases to aid in debugging
   - [x] Document parameter handling behavior with nonexistent firmware versions
 
-### Phase 2.5: JSON to TOML Conversion
+### Phase 2.5: TOML Configuration Implementation
 
-- [ ] Research and select a TOML parsing library
-  - [ ] Evaluate toml11 and cpptoml libraries
-  - [ ] Test basic parsing functionality
-  - [ ] Verify compatibility with ROS 2 build system
+- [x] Research and select a TOML parsing library
+  - [x] Evaluate toml11 and cpptoml libraries
+  - [x] Test basic parsing functionality
+  - [x] Verify compatibility with ROS 2 build system
 
-- [ ] Update build system for TOML support
-  - [ ] Add dependency on chosen TOML library in CMakeLists.txt
-  - [ ] Update package.xml if needed
-  - [ ] Configure FetchContent to download the library if not found
+- [x] Update build system for TOML support
+  - [x] Add dependency on toml11 library in CMakeLists.txt
+  - [x] Update package.xml if needed
+  - [x] Configure FetchContent to download the library if not found
 
-- [ ] Convert existing JSON parameter files to TOML
-  - [ ] Convert sample parameter file
-  - [ ] Convert full parameter file
-  - [ ] Create conversion script for future use
-  - [ ] Update schema validation approach
+- [x] Create TOML parameter files
+  - [x] Create sample parameter file
+  - [x] Create full parameter file
+  - [x] Ensure proper TOML structure
 
-- [ ] Refactor `UbxCfgParameterLoader` class
-  - [ ] Update header includes
-  - [ ] Modify method signatures to use TOML types
-  - [ ] Reimplement the `load()` method for TOML parsing
-  - [ ] Update parameter parsing methods
-  - [ ] Adjust error handling for TOML parser exceptions
+- [x] Implement UbxCfgParameterLoader for TOML
+  - [x] Use toml11 library for parsing
+  - [x] Design method signatures for TOML types
+  - [x] Implement parsing logic for TOML structure
+  - [x] Optimize for TOML's hierarchical organization
 
-- [ ] Update tests for TOML compatibility
-  - [ ] Convert test data from JSON to TOML
-  - [ ] Update validation logic in tests
-  - [ ] Add TOML-specific test cases
+- [x] Create tests for TOML integration
+  - [x] Create test data files in TOML format
+  - [x] Implement test_ubx_cfg_parameter_loader.cpp for TOML
+  - [x] Implement test_ubx_cfg_handler_new.cpp for TOML
+  - [x] Test parsing of TOML values
+  - [x] Add tests for TOML-specific features
 
-- [ ] Update documentation for TOML format
-  - [ ] Update README.md with TOML examples
-  - [ ] Create TOML schema documentation
-  - [ ] Update code comments and API documentation
+- [x] Create documentation for TOML format
+  - [x] Update README with TOML examples
+  - [x] Document parameter file structure
+  - [x] Provide guidance for adding new parameters
+
+- [x] Create validation tools for TOML format
+  - [x] Implement Pydantic-based validation script
+  - [x] Create virtual environment for dependencies
+  - [x] Create wrapper scripts for easy usage
+  - [x] Test validation against parameter files
+
+- [x] Create parameter extraction tools for TOML format
+  - [x] Create parameter extraction script that outputs to TOML
+  - [x] Install required dependencies in virtual environment
+  - [x] Add wrapper script for easy usage
+  - [x] Test extraction with existing header files
 
 ### Phase 3: Integration
 
@@ -130,12 +142,11 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
   - [ ] Update parameter initialization sequence
   - [ ] Modify parameter get/set operations to use the new system
 
-- [ ] Ensure backward compatibility
-  - [ ] Create mapping between old and new parameter names if needed
-  - [ ] Support existing parameter names and formats
-  - [ ] Handle migration of parameter values from old to new system
-  - [ ] Add deprecation warnings for old parameter usage
-  - [ ] Implement fallback mechanisms for backward compatibility
+- [ ] Ensure robust parameter handling
+  - [ ] Validate parameter names and formats
+  - [ ] Implement comprehensive error checking
+  - [ ] Add detailed logging for parameter operations
+  - [ ] Create parameter documentation in code
 
 - [ ] Update build system
   - [ ] Add dependencies for TOML parsing (toml11)

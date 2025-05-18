@@ -14,14 +14,12 @@ The UBX-CFG parameter system uses a data-driven approach to manage configuration
 ## Directory Structure
 
 - `schema/`: Contains schema and validation utilities
-  - `ubx_cfg_parameters_schema.json`: Schema definition for parameter files (legacy JSON format)
-  - `validate_parameters.py`: Script to validate parameter files against the schema
-  - `extract_parameters.py`: Script to extract parameters from the C++ code
+  - `validate_toml_parameters.py`: Script to validate TOML parameter files
+  - `extract_parameters_toml.py`: Script to extract parameters from C++ code to TOML format
+  - `validate_toml.sh`: Wrapper script for validating TOML files
+  - `extract_toml.sh`: Wrapper script for extracting parameters to TOML
 - `ubx_cfg_parameters_sample.toml`: Sample parameter file with a subset of parameters
 - `ubx_cfg_parameters_full.toml`: Complete parameter file with all supported parameters
-- Legacy JSON files are also maintained for backward compatibility:
-  - `ubx_cfg_parameters_sample.json`: Legacy JSON sample parameter file
-  - `ubx_cfg_parameters_full.json`: Legacy JSON complete parameter file
 
 ## Parameter File Format
 
@@ -110,35 +108,87 @@ This information allows the driver to:
 
 ### Validation
 
-We're transitioning validation scripts to support TOML. For now, you can still validate the legacy JSON files using:
+Validate TOML parameter files using our Pydantic-based validation tool:
 
 ```bash
-python config/schema/validate_parameters.py config/ubx_cfg_parameters_full.json
+./config/schema/validate_toml.sh config/ubx_cfg_parameters_full.toml
 ```
 
-Note: We'll be updating the validation utilities to work directly with TOML files in future releases.
+This validates that your TOML file conforms to the expected schema and provides detailed error messages when it doesn't.
 
 ### Parameter Extraction
 
-To extract parameters from C++ code (output still in JSON format, but can be converted to TOML):
+To extract parameters directly from C++ code to TOML format:
 
 ```bash
-python config/schema/extract_parameters.py ublox_dgnss_node/include/ublox_dgnss_node/ubx/ubx_cfg_item.hpp config/ubx_cfg_parameters_full.json
+./config/schema/extract_toml.sh ublox_dgnss_node/include/ublox_dgnss_node/ubx/ubx_cfg_item.hpp config/ubx_cfg_parameters_full.toml
 ```
 
-You can convert the resulting JSON to TOML using the provided conversion script:
+This uses our TOML extraction tool to analyze the C++ header files and output a complete parameter file in TOML format.
 
-```bash
-python scripts/simple_json_to_toml.py config/ubx_cfg_parameters_full.json config/ubx_cfg_parameters_full.toml
-```
+
+
+## Tool Dependencies
+
+Our TOML tools require the following Python packages:
+
+- `pydantic`: For schema validation
+- `tomli`: For TOML parsing (Python < 3.11)
+- `tomli_w`: For TOML writing
+
+These dependencies are automatically managed through our virtual environment setup. The wrapper scripts (`validate_toml.sh` and `extract_toml.sh`) handle this for you.
 
 ## Adding New Parameters
 
-To add a new parameter:
+To add a new parameter to the TOML configuration file:
 
-1. Add the parameter to the JSON file following the schema
-2. Include firmware version information for each supported device
-3. Validate the updated file using the validation script
+1. Open the TOML file (`ubx_cfg_parameters_full.toml`) in your editor of choice
+
+2. Add a new parameter entry following this template:
+
+```toml
+# Parameter: YOUR_PARAMETER_NAME
+[[parameters]]
+name = "CFG_YOUR_PARAMETER_NAME"
+key_id = "0x20XXXXXX"  # Replace with actual key ID in hex format
+type = "X1"            # Use appropriate UBX type (U1, X2, etc.)
+scale = 1.0
+unit = "NA"            # Or appropriate unit
+applicable_devices = ["ZED-F9P", "ZED-F9R"]  # Adjust as needed
+description = "Description of your parameter"
+group = "GROUP_NAME"    # e.g., INFMSG, NAVSPG, etc.
+default_value = "0x00"  # Default value in appropriate format
+
+# Optional: Add possible values if parameter is an enumeration
+[parameters.possible_values]
+VALUE_NAME_1 = "0x01"
+VALUE_NAME_2 = "0x02"
+
+# Add firmware support information for each applicable device
+[parameters.firmware_support.ZED-F9P]
+since = "HPG 1.13"      # Firmware version when parameter was introduced
+# Optional: Add until field if parameter is deprecated in a specific version
+# until = "HPG 1.32"
+
+# Optional: Add behavior changes if relevant
+[[parameters.firmware_support.ZED-F9P.behavior_changes]]
+version = "HPG 1.30"
+description = "Behavior change description"
+
+# Add firmware support for other devices
+[parameters.firmware_support.ZED-F9R]
+since = "HPS 1.13"
+```
+
+3. Validate your updated file:
+
+```bash
+./config/schema/validate_toml.sh config/ubx_cfg_parameters_full.toml
+```
+
+4. Test the parameter with the UBX-CFG system to ensure it's properly recognized and processed
+
+5. Update any relevant code documentation to reflect the new parameter
 4. Restart the driver to load the new parameter
 
 ## Future Enhancements

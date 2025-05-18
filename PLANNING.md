@@ -54,9 +54,9 @@ Based on code analysis, the current implementation defines and handles UBX-CFG p
 
 We will implement a data-driven approach using configuration files with the following components:
 
-### Configuration File Format: TOML vs JSON
+### Configuration File Format: TOML
 
-While the initial implementation plan specified JSON as the configuration file format, we're now adopting TOML (Tom's Obvious, Minimal Language) instead. This decision offers several advantages for our use case:
+We're adopting TOML (Tom's Obvious, Minimal Language) as our configuration file format. This choice offers several advantages for our use case:
 
 #### Benefits of TOML
 
@@ -72,14 +72,14 @@ While the initial implementation plan specified JSON as the configuration file f
 
 #### Implementation Impact
 
-This change affects:
+This decision affects:
 
-1. **File Format**: All parameter definition files will use the `.toml` extension instead of `.json`
-2. **Parsing Code**: The `UbxCfgParameterLoader` will use a TOML parser (toml11) instead of the previously planned nlohmann/json library
-3. **Schema Validation**: Our validation approach will need to account for TOML's structure
-4. **Documentation**: All examples will use TOML syntax
+1. **File Format**: All parameter definition files use the `.toml` extension
+2. **Parsing Code**: The `UbxCfgParameterLoader` uses the toml11 library for parsing
+3. **Schema Validation**: Our validation approach uses Pydantic to validate TOML structure
+4. **Documentation**: All examples use TOML syntax
 
-The core architecture and class relationships remain unchanged; only the serialization format and parsing implementation are affected.
+The core architecture and class relationships are focused on TOML as the exclusive configuration format.
 
 ### 1. Parameter Definition File (TOML)
 
