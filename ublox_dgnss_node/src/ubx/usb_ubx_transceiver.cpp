@@ -40,6 +40,78 @@ UsbUbxTransceiver::UsbUbxTransceiver(
 {
 }
 
+WriteResult UsbUbxTransceiver::write(std::shared_ptr<const ubx::Frame> frame)
+{
+  WriteResult result;
+  // Send message and wait for ACK
+  bool sent = send_ubx_message(frame);
+  if (!sent) {
+    result.status = AckNack::NONE;
+    return result;
+  }
+  
+  // Wait for ACK/NAK response
+  bool acked = wait_for_ack(frame->msg_class, frame->msg_id);
+  result.status = acked ? AckNack::ACK : AckNack::NACK;
+  return result;
+}
+
+ReadResult UsbUbxTransceiver::read(std::shared_ptr<ubx::Frame> & frame, int timeout_ms)
+{
+  ReadResult result;
+  
+  // Prepare buffer for reading
+  std::vector<u1_t> buffer(1024);  // Use a reasonable buffer size
+  
+  // Receive UBX message
+  int bytes_read = receive_ubx_message(buffer, timeout_ms);
+  
+  if (bytes_read <= 0) {
+    // Handle read errors
+    if (bytes_read == 0) {
+      result.status = ReadStatus::NO_DATA;
+    } else if (bytes_read == -1) {
+      result.status = ReadStatus::ERROR;
+    } else {
+      result.status = ReadStatus::TIMEOUT;
+    }
+    return result;
+  }
+  
+  // Process received data
+  if (!frame) {
+    frame = std::make_shared<ubx::Frame>();
+  }
+  
+  // Set the buffer in the frame
+  frame->buf = std::vector<u1_t>(buffer.begin(), buffer.begin() + bytes_read);
+  
+  // Parse the buffer to populate frame fields
+  if (frame->parse_buf()) {
+    result.status = ReadStatus::SUCCESS;
+  } else {
+    result.status = ReadStatus::ERROR;
+    RCLCPP_ERROR(logger_, "Failed to parse UBX message");
+  }
+  
+  return result;
+}
+
+bool UsbUbxTransceiver::is_open()
+{
+  return is_connected();
+}
+
+bool UsbUbxTransceiver::open()
+{
+  return connect();
+}
+
+void UsbUbxTransceiver::close()
+{
+  disconnect();
+}
+
 bool UsbUbxTransceiver::send_ubx_message(const std::shared_ptr<ubx::Frame> & frame)
 {
   if (!is_connected()) {

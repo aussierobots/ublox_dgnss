@@ -35,6 +35,7 @@
 #include "ublox_dgnss_node/ubx/ubx_esf.hpp"
 #include "ublox_dgnss_node/ubx/ubx_sec.hpp"
 #include "ublox_dgnss_node/ubx/cfg/ubx_cfg_handler.hpp"
+#include "ublox_dgnss_node/ubx/ubx_transceiver_factory.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
@@ -356,17 +357,29 @@ public:
     const std::string parameter_file_path = 
       "ublox_dgnss_node/config/ubx_cfg_parameters_full.toml";
     
-    // TODO: Implement UbxCfgHandler initialization using UbxTransceiverFactory
-    // Delayed implementation to avoid build issues
-    // The integration will be completed in a separate task as part of the TOML configuration refactoring
+    // Initialize the UbxCfgHandler using the factory
+    
+    // Create a UbxTransceiver using the factory
+    auto transceiver = ubx::UbxTransceiverFactory::create_usb_transceiver(
+        this,  // Pass the node for logger access
+        usbc_   // USB connection
+    );
     
     RCLCPP_INFO(get_logger(), "Device type is set to: %s", device_type_.c_str());
     
-    // Note: Full UbxCfgHandler integration will be implemented in a future PR
-    // This will include:
-    // 1. Creating a UbxTransceiver from the USB connection
-    // 2. Initializing UbxCfgHandler with the device type and transceiver
-    // 3. Registering parameters based on device type
+    // Initialize the UbxCfgHandler with the transceiver and device type
+    cfg_handler_ = std::make_unique<ubx::cfg::UbxCfgHandler>(
+      this,            // ROS node
+      transceiver,     // UBX transceiver from factory
+      device_type_,    // Device type
+      parameter_file_path);
+      
+    // Initialize the handler
+    if (!cfg_handler_->initialize()) {
+      RCLCPP_ERROR(get_logger(), "Failed to initialize UbxCfgHandler");
+    } else {
+      RCLCPP_INFO(get_logger(), "UbxCfgHandler initialized successfully");
+    }
 
     async_initialised_ = false;
 

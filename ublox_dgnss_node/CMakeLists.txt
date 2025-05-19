@@ -96,6 +96,7 @@ add_library(ublox_dgnss_components SHARED
   src/usb.cpp
   src/ublox_dgnss_node.cpp
   src/ubx/ubx.cpp
+  src/ubx/ubx_transceiver_factory.cpp
   src/ubx/cfg/ubx_cfg_item.cpp
   src/ubx/cfg/ubx_cfg_parameter.cpp
   src/ubx/cfg/ubx_cfg_parameter_loader.cpp

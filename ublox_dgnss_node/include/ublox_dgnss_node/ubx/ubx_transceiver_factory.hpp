@@ -54,11 +54,13 @@ public:
     rclcpp::Node * node,
     std::shared_ptr<usb::Connection> usbc);
 
+#ifdef UBLOX_DGNSS_TESTING
   /**
    * @brief Create a mock UbxTransceiver for testing
    * @return UbxTransceiver instance
    */
   static std::shared_ptr<UbxTransceiver> create_mock_transceiver();
+#endif // UBLOX_DGNSS_TESTING
 };
 
 }  // namespace ubx

@@ -48,11 +48,43 @@ public:
     rclcpp::Logger logger);
 
   /**
+   * @brief Write a UBX message to the device and get ACK/NAK status.
+   * @param frame Shared pointer to the constant Frame object to be written.
+   * @return WriteResult indicating status of the write and acknowledgement.
+   */
+  WriteResult write(std::shared_ptr<const ubx::Frame> frame) override;
+
+  /**
+   * @brief Read a UBX message from the device.
+   * @param frame Shared pointer to a Frame object to be populated with the read message.
+   * @param timeout_ms Timeout in milliseconds for the read operation.
+   * @return ReadResult indicating status of the read operation.
+   */
+  ReadResult read(std::shared_ptr<ubx::Frame> & frame, int timeout_ms = 1000) override;
+
+  /**
+   * @brief Check if the transceiver is open/connected.
+   * @return True if open/connected, false otherwise.
+   */
+  bool is_open() override;
+
+  /**
+   * @brief Open/connect to the device.
+   * @return True if opening/connection was successful, false otherwise.
+   */
+  bool open() override;
+
+  /**
+   * @brief Close/disconnect from the device.
+   */
+  void close() override;
+
+  /**
    * @brief Send a UBX message
    * @param frame The UBX frame to send
    * @return True if the message was sent successfully
    */
-  bool send_ubx_message(const std::shared_ptr<ubx::Frame> & frame) override;
+  bool send_ubx_message(const std::shared_ptr<ubx::Frame> & frame);
 
   /**
    * @brief Receive a UBX message
@@ -60,7 +92,7 @@ public:
    * @param timeout_ms Timeout in milliseconds
    * @return Number of bytes received, or -1 on error
    */
-  int receive_ubx_message(std::vector<u1_t> & buffer, int timeout_ms = 1000) override;
+  int receive_ubx_message(std::vector<u1_t> & buffer, int timeout_ms = 1000);
 
   /**
    * @brief Wait for an ACK/NAK response to a message
@@ -69,24 +101,24 @@ public:
    * @param timeout_ms Timeout in milliseconds
    * @return True if ACK received, false if NAK or timeout
    */
-  bool wait_for_ack(uint8_t msg_class, uint8_t msg_id, int timeout_ms = 1000) override;
+  bool wait_for_ack(uint8_t msg_class, uint8_t msg_id, int timeout_ms = 1000);
 
   /**
    * @brief Check if the transceiver is connected
    * @return True if connected
    */
-  bool is_connected() override;
+  bool is_connected();
 
   /**
    * @brief Connect to the device
    * @return True if connection successful
    */
-  bool connect() override;
+  bool connect();
 
   /**
    * @brief Disconnect from the device
    */
-  void disconnect() override;
+  void disconnect();
 
 private:
   std::shared_ptr<usb::Connection> usbc_;  ///< USB connection
