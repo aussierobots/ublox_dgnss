@@ -135,36 +135,75 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 
 ### Phase 3: Integration
 
-- [ ] Update `UbloxDGNSSNode` to use the new parameter system
-  - [ ] Add device type parameter with validation
-  - [ ] Initialize parameter handler with appropriate device type
-  - [ ] Set up parameter callbacks for handling changes
+- [x] Update `UbloxDGNSSNode` to use the new parameter system
+  - [x] Add device type parameter with validation
+  - [x] Initialize parameter handler with appropriate device type
+  - [x] Set up parameter callbacks for handling changes
   - [ ] Update parameter initialization sequence
   - [ ] Modify parameter get/set operations to use the new system
+
+- [x] Implement UbxTransceiver interface
+  - [x] Create UbxTransceiverFactory class
+  - [x] Implement RealUsbTransceiver with full functionality
+  - [x] Add proper UBX protocol framing and checksums
+  - [x] Implement memory management for UBX payloads
+  - [x] Add robust error handling and logging
+  - [x] Implement ACK/NAK handling for confirmations
+
+- [x] Fix environment setup
+  - [x] Create setup_dev_env.sh for development environment
+  - [x] Add proper error handling for missing package setups
+  - [x] Update build process for better reliability
 
 - [ ] Ensure robust parameter handling
   - [ ] Validate parameter names and formats
   - [ ] Implement comprehensive error checking
-  - [ ] Add detailed logging for parameter operations
+  - [x] Add detailed logging for parameter operations
   - [ ] Create parameter documentation in code
 
-- [ ] Update build system
-  - [ ] Add dependencies for TOML parsing (toml11)
-  - [ ] Configure installation of parameter files
-  - [ ] Update CMakeLists.txt to include new source files
-  - [ ] Configure package.xml with new dependencies
+- [x] Update build system
+  - [x] Add dependencies for TOML parsing (toml11)
+  - [x] Configure installation of parameter files
+  - [x] Update CMakeLists.txt to include new source files
+  - [x] Configure package.xml with new dependencies
   - [ ] Set up proper installation paths for TOML files
+
+### Phase 3.5: Hardware Testing and Validation
+
+- [ ] Fix test environment issues
+  - [ ] Set up proper paths for shared libraries
+  - [ ] Ensure tests can find libublox_ubx_msgs__rosidl_generator_c.so
+  - [ ] Re-enable disabled test_ubx_cfg_handler test
+  - [ ] Create comprehensive unit tests for RealUsbTransceiver
+
+- [ ] Create hardware test suite
+  - [ ] Develop basic test scripts for hardware validation
+  - [ ] Create test cases for different device types
+  - [ ] Implement parameter change verification tests
+  - [ ] Test device type switching functionality
+
+- [ ] Verify TOML integration
+  - [ ] Create a comprehensive TOML validation suite
+  - [ ] Ensure all TOML files can be parsed properly
+  - [ ] Test parameter filtering by device type with TOML files
+  - [ ] Validate parameter versioning with different firmware versions
 
 ### Phase 4: Complete Parameter Set
 
-- [ ] Extract all parameters from ZED-F9P interface manual (UBX-22008968)
+- [x] Extract core parameters for ZED-F9P and ZED-F9R
+  - [x] Identify essential UBX-CFG parameters for basic functionality
+  - [x] Document parameter properties (key ID, type, scale, unit)
+  - [x] Add descriptions and behavior information
+  - [x] Include device-specific filtering
+
+- [ ] Extract comprehensive parameters from ZED-F9P interface manual (UBX-22008968)
   - [ ] Identify all UBX-CFG parameters in the manual
   - [ ] Document parameter properties (key ID, type, scale, unit)
   - [ ] Add descriptions from the manual
   - [ ] Document possible values and their meanings
   - [ ] Add to parameter file with ZED-F9P device type
 
-- [ ] Extract all parameters from ZED-F9R interface manual (UBX-22010984)
+- [ ] Extract comprehensive parameters from ZED-F9R interface manual (UBX-22010984)
   - [ ] Identify all UBX-CFG parameters in the manual
   - [ ] Document parameter properties (key ID, type, scale, unit)
   - [ ] Add descriptions from the manual
@@ -181,14 +220,25 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 
 ### Phase 5: Documentation and Cleanup
 
+- [x] Document UbxTransceiver implementation
+  - [x] Describe RealUsbTransceiver functionality
+  - [x] Document the UBX protocol handling
+  - [x] Document memory management approach
+  - [x] Explain integration with UbloxDGNSSNode
+
+- [x] Document integration progress
+  - [x] Update TOML_PARAMETER_IMPLEMENTATION.md with current status
+  - [x] Document outstanding issues and next steps
+  - [x] Add detailed implementation notes for each component
+
 - [ ] Update README.md with new parameter system information
   - [ ] Explain the data-driven approach
   - [ ] Document how to configure the device type
   - [ ] Provide examples of parameter usage
 
 - [ ] Create detailed documentation for parameter file format
-  - [ ] Document TOML structure
-  - [ ] Explain parameter properties and their meanings
+  - [x] Document TOML structure basics
+  - [ ] Complete documentation of parameter properties and meanings
   - [ ] Provide examples of parameter definitions
 
 - [ ] Document how to add new parameters
@@ -223,7 +273,9 @@ This document tracks the specific tasks needed to implement the data-driven UBX-
 | 2025-05-13 | Firmware version support | Completed | Added firmware version information to parameter definitions |
 | 2025-05-14 | UbxCfgParameter test refactoring | Completed | Updated tests to use original enum identifiers and consistent formatting |
 | 2025-05-14 | UbxCfgParameterLoader tests | Completed | Fixed JSON structure and implemented comprehensive tests for parameter loading functionality |
-| 2025-05-17 | Decision to use TOML instead of JSON | In Progress | Determined TOML offers better readability and maintainability for configuration files |
+| 2025-05-17 | Decision to use TOML instead of JSON | Completed | Determined TOML offers better readability and maintainability for configuration files |
+| 2025-05-17 | UbxCfgHandler integration | Completed | Successfully integrated UbxCfgHandler with UbloxDGNSSNode, including device type parameter support |
+| 2025-05-19 | RealUsbTransceiver implementation | Completed | Replaced mock with fully functional implementation that handles UBX protocol and interacts with real hardware |
 
 ## Discovered During Work
 
