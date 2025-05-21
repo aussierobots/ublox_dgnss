@@ -247,6 +247,9 @@ public:
       case ubx::UBX_NAV_STATUS:
         status_->frame(frame);
         break;
+      case ubx::UBX_NAV_SVIN:
+        svin_->frame(frame);
+        break;
       case ubx::UBX_NAV_RELPOSNED:
         relposned_->frame(frame);
         break;
