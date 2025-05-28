@@ -90,8 +90,8 @@ public:
       memcpy(&info.rxUsage, ptr, 1); ptr += 1;
       memcpy(&info.rxPeakUsage, ptr, 1); ptr += 1;
       memcpy(&info.overrunErrs, ptr, 2); ptr += 2;
-      memcpy(&info.msgs, ptr, 8); ptr += 8; // 4 x u2_t
-      ptr += 8; // skip reserved1[8]
+      memcpy(&info.msgs, ptr, 8); ptr += 8;  // 4 x u2_t
+      ptr += 8;  // skip reserved1[8]
       memcpy(&info.skipped, ptr, 4); ptr += 4;
       ports.push_back(info);
     }
