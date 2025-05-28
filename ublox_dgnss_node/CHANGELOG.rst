@@ -2,6 +2,11 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed whitespace comment
+* Contributors: Nick Hortovanyi
+
 0.5.6 (2025-05-29)
 ------------------
 * changed ament_target_dependencies to target_link_libraries
