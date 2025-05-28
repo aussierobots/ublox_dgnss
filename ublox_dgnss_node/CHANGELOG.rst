@@ -2,6 +2,20 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* changed ament_target_dependencies to target_link_libraries
+* Merge pull request `#45 <https://github.com/aussierobots/ublox_dgnss/issues/45>`_ from ARK3r/main
+  fix: show correct port_id
+* now it shows reasonable port ids
+* Merge pull request `#43 <https://github.com/aussierobots/ublox_dgnss/issues/43>`_ from bvsam/ubx-nav-svin-fix
+  Fixing UBX-NAV-SVIN reading
+* Merge pull request `#40 <https://github.com/aussierobots/ublox_dgnss/issues/40>`_ from mak22223/main
+  Fixed U4, X4, I4 values interpretation
+* Fixed U4, X4, I4 values interpretation
+* Fixing UBX-NAV-SVIN reading
+* Contributors: ARK3r, Benjamin Sam, Markin Maxim, Nick Hortovanyi
+
 0.5.5 (2025-02-12)
 ------------------
 * Merge pull request `#33 <https://github.com/aussierobots/ublox_dgnss/issues/33>`_ from bvsam/base-rtcm-support
