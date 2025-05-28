@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.6 (2025-05-29)
+------------------
 * changed ament_target_dependencies to target_link_libraries
 * Merge pull request `#45 <https://github.com/aussierobots/ublox_dgnss/issues/45>`_ from ARK3r/main
   fix: show correct port_id
