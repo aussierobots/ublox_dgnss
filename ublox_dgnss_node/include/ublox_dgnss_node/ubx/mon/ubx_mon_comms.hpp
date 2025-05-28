@@ -77,11 +77,23 @@ public:
     memcpy(protIds, ptr, sizeof(protIds));
     ptr += sizeof(protIds);
 
+    // Manually parse each PortInfo field to avoid issues with struct packing/alignment
     for (int i = 0; i < nPorts; ++i) {
       PortInfo info;
-      memcpy(&info, ptr, sizeof(PortInfo));
+      memcpy(&info.portId, ptr, 2); ptr += 2;
+      memcpy(&info.txPending, ptr, 2); ptr += 2;
+      memcpy(&info.txBytes, ptr, 4); ptr += 4;
+      memcpy(&info.txUsage, ptr, 1); ptr += 1;
+      memcpy(&info.txPeakUsage, ptr, 1); ptr += 1;
+      memcpy(&info.rxPending, ptr, 2); ptr += 2;
+      memcpy(&info.rxBytes, ptr, 4); ptr += 4;
+      memcpy(&info.rxUsage, ptr, 1); ptr += 1;
+      memcpy(&info.rxPeakUsage, ptr, 1); ptr += 1;
+      memcpy(&info.overrunErrs, ptr, 2); ptr += 2;
+      memcpy(&info.msgs, ptr, 8); ptr += 8; // 4 x u2_t
+      ptr += 8; // skip reserved1[8]
+      memcpy(&info.skipped, ptr, 4); ptr += 4;
       ports.push_back(info);
-      ptr += sizeof(PortInfo);
     }
   }
 
