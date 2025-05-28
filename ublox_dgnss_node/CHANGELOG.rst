@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.7 (2025-05-29)
+------------------
 * fixed whitespace comment
 * Contributors: Nick Hortovanyi
 
