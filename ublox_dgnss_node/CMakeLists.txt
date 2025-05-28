@@ -43,16 +43,14 @@ target_compile_definitions(ublox_dgnss_components
   PRIVATE "UBLOX_DGNSS_NODE_BUILDING_DLL"
 )
 
-ament_target_dependencies(ublox_dgnss_components
-  rclcpp
-  rclcpp_components
-  std_msgs
-  ublox_ubx_msgs
-  ublox_ubx_interfaces
-  rtcm_msgs
-)
-
-target_link_libraries(ublox_dgnss_components
+target_link_libraries(ublox_dgnss_components PUBLIC
+  ${rtcm_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${ublox_ubx_interfaces_TARGETS}
+  ${ublox_ubx_msgs_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_components::component
+  rclcpp_components::component_manager
   usb-1.0
 )
 
@@ -66,13 +64,6 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
-
-# install(
-#   DIRECTORY launch
-#   DESTINATION share/${PROJECT_NAME}
-# )
-
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

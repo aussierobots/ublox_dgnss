@@ -30,7 +30,6 @@ find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
 # find_package(ublox_dgnss REQUIRED)
 
-
 # include directories
 include_directories(include SYSTEM)
 
@@ -38,17 +37,15 @@ add_library(ublox_nav_sat_fix_hp_components SHARED
   src/ublox_nav_sat_fix_hp_node.cpp
 )
 
-# target_compile_definitions(ublox_nav_sat_fix_hp_components
-#   PRIVATE "UBLOX_NAV_SAT_FIX_HP_NODE_BUILDING_DLL"
-# )
-
-ament_target_dependencies(ublox_nav_sat_fix_hp_components
-  rclcpp
-  rclcpp_components
-  std_msgs
-  sensor_msgs
-  ublox_ubx_msgs
-  ublox_ubx_interfaces
+target_link_libraries(ublox_nav_sat_fix_hp_components PUBLIC
+  ${sensor_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${ublox_ubx_interfaces_TARGETS}
+  ${ublox_ubx_msgs_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_components::component
+  rclcpp_components::component_manager
+  sensor_msgs::sensor_msgs_library
 )
 
 rclcpp_components_register_node(ublox_nav_sat_fix_hp_components

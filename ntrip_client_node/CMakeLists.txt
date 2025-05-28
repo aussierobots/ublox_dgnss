@@ -26,12 +26,13 @@ target_compile_definitions(ntrip_client_components
   PRIVATE "NTRIP_CLIENT_NODE_BUILDING_DLL"
 )
 
-ament_target_dependencies(ntrip_client_components
-  rclcpp
-  rclcpp_components
-  std_msgs
-  rtcm_msgs
-  libcurl_vendor
+target_link_libraries(ntrip_client_components PUBLIC
+  ${rtcm_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  CURL::libcurl
+  rclcpp::rclcpp
+  rclcpp_components::component
+  rclcpp_components::component_manager
 )
 
 rclcpp_components_register_node(ntrip_client_components
