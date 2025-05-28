@@ -8,7 +8,7 @@ Work has started on SPARTN support - basic commands are available to enable it o
 
 This driver will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P and a ZED-F9R connected via USB, under Ubuntu 22.04/24.04. The driver uses libusb api 1.0.
 
-This release works with Rolling, Jazzy, Iron and Humble.
+This release works with Rolling, Kilted, Jazzy and Humble.
 
 You may need to create a udev rule as follows:
 
