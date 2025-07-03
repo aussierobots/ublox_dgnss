@@ -278,20 +278,27 @@ public:
       node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
 
     try {
+      RCLCPP_DEBUG(get_logger(), "Make USB Connection - serial string: '%s'", serial_str_.c_str());
       usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
+      RCLCPP_DEBUG(get_logger(), "setting up usb callbacks ...");
       usbc_->set_in_callback(connection_in_callback);
       usbc_->set_out_callback(connection_out_callback);
       usbc_->set_exception_callback(connection_exception_callback);
       usbc_->set_hotplug_attach_callback(usb_hotplug_attach_callback);
       usbc_->set_hotplug_detach_callback(usb_hotplug_detach_callback);
 
+      RCLCPP_DEBUG(get_logger(), "usbc->init() ...");
       usbc_->init();
-      usbc_->init_async();
 
       if (!usbc_->devh_valid()) {
-        RCLCPP_ERROR(get_logger(), "USBDevice handle not valid. USB device not connected?");
+        RCLCPP_ERROR(get_logger(), "USB Device handle not valid. USB device not connected? .. shutting down");
         rclcpp::shutdown();
+        return;
       }
+
+      RCLCPP_DEBUG(get_logger(), "usbc->init_async() ...");
+      usbc_->init_async();
+
     } catch (std::string const & msg) {
       RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg.c_str());
       if (usbc_ != nullptr) {
@@ -325,10 +332,12 @@ public:
 
     log_usbc();
 
+    RCLCPP_DEBUG(get_logger(), "creating ubx_timer_ ...");
     ubx_queue_.clear();
     ubx_timer_ = create_wall_timer(
       10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
       callback_group_ubx_timer_);
+    RCLCPP_DEBUG(get_logger(), "creating rtcm_timer_ ...");
     rtcm_queue_.clear();
     rtcm_timer_ = create_wall_timer(
       10ms, std::bind(&UbloxDGNSSNode::rtcm_timer_callback, this),
@@ -349,6 +358,7 @@ public:
 
     auto handle_usb_events_callback = [this]() -> void
       {
+        RCLCPP_DEBUG_ONCE(get_logger(), "initial handle_usb_events_callback ...");
         if (usbc_ == nullptr) {
           return;
         }
@@ -370,6 +380,7 @@ public:
         RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
       };
 
+    RCLCPP_DEBUG(get_logger(), "creating handle_usb_events_timer_ ...");
     handle_usb_events_timer_ = create_wall_timer(
       10ms, handle_usb_events_callback,
       callback_group_usb_events_timer_);
@@ -385,16 +396,20 @@ public:
     rclcpp::SubscriptionOptions sub_options;
     sub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
+    RCLCPP_DEBUG(get_logger(), "creating UBXEsfMeas subscription ...");
     ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
       "/ubx_esf_meas_to_device", 10,
       std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
       sub_options);
+
+    RCLCPP_DEBUG(get_logger(), "creating RTCM subscription ...");
     rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
       "/ntrip_client/rtcm", 10,
       std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
       sub_options);
 
     is_initialising_ = false;
+    RCLCPP_DEBUG(get_logger(), "initialisation finished");
   }
 
 
@@ -936,7 +951,7 @@ public:
       return;
     }
 
-    if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->devh_valid()) {
+    if (ubx_esf_->usbc() == nullptr || !ubx_esf_->usbc()->dev_valid()) {
       RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending ubx_esf_meas to device!");
       return;
     }
@@ -957,7 +972,7 @@ public:
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_callback(const rtcm_msgs::msg::Message & msg) const
   {
-    if (usbc_ == nullptr || !usbc_->devh_valid()) {
+    if (usbc_ == nullptr || !usbc_->dev_valid()) {
       RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending rtcm to device!");
       return;
     }
@@ -982,6 +997,8 @@ public:
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_in_callback(libusb_transfer * transfer_in)
   {
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial ublox_in_callback from usb ..");
+
     rclcpp::Time ts = rclcpp::Clock().now();
 
     const char * remove_any_of = "\n\r";
@@ -1051,6 +1068,8 @@ public:
   UBLOX_DGNSS_NODE_PUBLIC
   void ublox_out_callback(libusb_transfer * transfer_out)
   {
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial ublox_out_callback from usb ..");
+
     rclcpp::Time ts = rclcpp::Clock().now();
 
     size_t len = transfer_out->actual_length;
@@ -1146,6 +1165,8 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_timer_callback()
   {
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial ubx_timer_callback ..");
+
     // if we dont have anything to do just return
     if (ubx_queue_.size() == 0) {
       return;
@@ -1181,6 +1202,8 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_timer_callback()
   {
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial rtcm_timer_callback ..");
+
     // if we dont have anything to do just return
     if (rtcm_queue_.size() == 0) {
       return;

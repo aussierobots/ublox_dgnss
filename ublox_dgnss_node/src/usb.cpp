@@ -610,6 +610,12 @@ size_t Connection::queued_transfer_in_num()
 
 void Connection::init_async()
 {
+  if (devh_ == nullptr) {
+    throw UsbException("No device handle set");
+  }
+  if (dev_ == nullptr) {
+    throw UsbException("No device set");
+  }
   if (in_cb_fn_ == nullptr) {
     throw UsbException("No in callback function set");
   }
