@@ -291,14 +291,14 @@ public:
       usbc_->init();
 
       if (!usbc_->devh_valid()) {
-        RCLCPP_ERROR(get_logger(), "USB Device handle not valid. USB device not connected? .. shutting down");
+        RCLCPP_ERROR(get_logger(),
+        "USB Device handle not valid. USB device not connected? .. shutting down");
         rclcpp::shutdown();
         return;
       }
 
       RCLCPP_DEBUG(get_logger(), "usbc->init_async() ...");
       usbc_->init_async();
-
     } catch (std::string const & msg) {
       RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg.c_str());
       if (usbc_ != nullptr) {
