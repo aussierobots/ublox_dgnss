@@ -291,8 +291,9 @@ public:
       usbc_->init();
 
       if (!usbc_->devh_valid()) {
-        RCLCPP_ERROR(get_logger(),
-        "USB Device handle not valid. USB device not connected? .. shutting down");
+        RCLCPP_ERROR(
+          get_logger(),
+          "USB Device handle not valid. USB device not connected? .. shutting down");
         rclcpp::shutdown();
         return;
       }
