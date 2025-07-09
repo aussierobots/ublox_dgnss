@@ -2,6 +2,13 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* formatting changes
+* added debug logging and fixed USB device detection at startup
+* refactored dev_valid and added devh_valid
+* Contributors: Nick Hortovanyi
+
 0.5.7 (2025-05-29)
 ------------------
 * fixed whitespace comment
