@@ -414,8 +414,13 @@ void Connection::callback_out(struct libusb_transfer * transfer)
   }
   libusb_free_transfer(transfer);
   // usb_event_completed_ = 1;
-  bool * completed = reinterpret_cast<bool *>(transfer->user_data);
-  *completed = true;
+  if (transfer->user_data != nullptr) {
+    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+    *completed = true;
+  } else {
+    std::string msg = "completed flag nullptr - this shouldn't happen in callback_out";
+    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+  }
 
   // only queue another transfer in if none outstanding
   if (queued_transfer_in_num() == 0) {
@@ -465,10 +470,15 @@ void Connection::callback_in(struct libusb_transfer * transfer)
 
   libusb_free_transfer(transfer);
 
-  bool * completed = reinterpret_cast<bool *>(transfer->user_data);
-  *completed = true;
+  if (transfer->user_data != nullptr) {
+    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+    *completed = true;
+  } else {
+    std::string msg = "completed flag nullptr - this shouldn't happen in callback_in";
+    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+  }
 
-  // only queue another transfer in if none outstanding
+  // only queue another transfer in if none outstanding and attached
   if (attached_ && queued_transfer_in_num() == 0) {
     try {
       auto transfer_in = make_transfer_in();
