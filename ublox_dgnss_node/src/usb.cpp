@@ -18,6 +18,7 @@
 #include <cstring>
 #include <string>
 #include <memory>
+#include <mutex>
 #include "ublox_dgnss_node/callback.hpp"
 #include "ublox_dgnss_node/usb.hpp"
 
@@ -380,6 +381,9 @@ void Connection::write_buffer(u_char * buf, size_t size)
 
 void Connection::callback_out(struct libusb_transfer * transfer)
 {
+  // Save user_data before freeing transfer
+  void * user_data = transfer->user_data;
+  
   if (transfer->status == libusb_transfer_status::LIBUSB_TRANSFER_COMPLETED) {
     (out_cb_fn_)(transfer);
   } else {
@@ -387,7 +391,6 @@ void Connection::callback_out(struct libusb_transfer * transfer)
     switch (transfer->status) {
       case LIBUSB_TRANSFER_ERROR:
         msg = "Transfer failed";
-        return;
         break;
       case LIBUSB_TRANSFER_TIMED_OUT:
         msg = "Transfer timed out";
@@ -410,27 +413,40 @@ void Connection::callback_out(struct libusb_transfer * transfer)
         msg.append(std::to_string(transfer->status));
         break;
     }
-    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+    (exception_cb_fn_)(UsbException(msg), user_data);
   }
+  
+  // Free transfer before accessing user_data
   libusb_free_transfer(transfer);
-  // usb_event_completed_ = 1;
-  if (transfer->user_data != nullptr) {
-    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+  
+  // Now safely use the saved user_data
+  if (user_data != nullptr) {
+    bool * completed = reinterpret_cast<bool *>(user_data);
     *completed = true;
   } else {
     std::string msg = "completed flag nullptr - this shouldn't happen in callback_out";
-    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+    (exception_cb_fn_)(UsbException(msg), nullptr);
   }
 
+  // Lock before accessing shared data structures
+  std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+  
   // only queue another transfer in if none outstanding
   if (queued_transfer_in_num() == 0) {
-    auto transfer_in = make_transfer_in();
-    submit_transfer(transfer_in, "async submit transfer out - in: ");
+    try {
+      auto transfer_in = make_transfer_in();
+      submit_transfer(transfer_in, "async submit transfer out - in: ");
+    } catch (const UsbException & e) {
+      (exception_cb_fn_)(e, nullptr);
+    }
   }
 }
 
 void Connection::callback_in(struct libusb_transfer * transfer)
 {
+  // Save user_data before freeing transfer
+  void * user_data = transfer->user_data;
+  
   if (transfer->status == libusb_transfer_status::LIBUSB_TRANSFER_COMPLETED) {
     (in_cb_fn_)(transfer);
     err_count_ = 0;
@@ -464,20 +480,25 @@ void Connection::callback_in(struct libusb_transfer * transfer)
         break;
     }
     if (++err_count_ < 10) {
-      (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+      (exception_cb_fn_)(UsbException(msg), user_data);
     }
   }
 
+  // Free transfer before accessing user_data
   libusb_free_transfer(transfer);
 
-  if (transfer->user_data != nullptr) {
-    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+  // Now safely use the saved user_data
+  if (user_data != nullptr) {
+    bool * completed = reinterpret_cast<bool *>(user_data);
     *completed = true;
   } else {
     std::string msg = "completed flag nullptr - this shouldn't happen in callback_in";
-    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
+    (exception_cb_fn_)(UsbException(msg), nullptr);
   }
 
+  // Lock before accessing shared data structures
+  std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+  
   // only queue another transfer in if none outstanding and attached
   if (attached_ && queued_transfer_in_num() == 0) {
     try {
@@ -573,6 +594,12 @@ void Connection::submit_transfer(
     if (transfer->transfer == nullptr) {
       throw UsbException("transfer->transfer is null");
     }
+    
+    // Verify device handle is still valid
+    if (devh_ == nullptr) {
+      throw UsbException("Device handle is null");
+    }
+    
     int rc = libusb_submit_transfer(transfer->transfer);
     if (rc < 0) {
       std::string exception_msg = msg;
@@ -580,6 +607,7 @@ void Connection::submit_transfer(
       throw UsbException(exception_msg);
     }
 
+    // Lock is already held by caller for queue operations
     // only adding those that were succesfully submitted to the queue
     transfer_queue_.push_back(transfer);
 
@@ -590,13 +618,14 @@ void Connection::submit_transfer(
 
 void Connection::cleanup_transfer_queue()
 {
+  // Note: This should be called with transfer_queue_mutex_ already locked
   if (transfer_queue_.size() == 0) {return;}
 
   // remove all completed transfer entries
   auto it = transfer_queue_.begin();
   while (it != transfer_queue_.end()) {
     if ((*it)->completed) {
-      transfer_queue_.erase(it++);
+      it = transfer_queue_.erase(it);
     } else {
       ++it;
     }
@@ -605,10 +634,11 @@ void Connection::cleanup_transfer_queue()
 
 size_t Connection::queued_transfer_in_num()
 {
+  // Note: This should be called with transfer_queue_mutex_ already locked
   if (transfer_queue_.size() == 0) {return 0;}
 
   size_t num = 0;
-  // remove all completed transfer entries
+  // count uncompleted transfer in entries
   for (auto it = transfer_queue_.begin(); it != transfer_queue_.end(); ++it) {
     auto t = it->get();
     if (!t->completed && t->type == USB_IN) {
@@ -638,6 +668,7 @@ void Connection::init_async()
 
   // submit initial transfer in request
   // - at first get a few zero length records
+  std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
   auto transfer_in = make_transfer_in();
   submit_transfer(transfer_in, "init_async transfer: ", false);
 }
@@ -684,6 +715,22 @@ void Connection::shutdown()
 {
   keep_running_ = false;
 
+  // Cancel all pending transfers before closing device
+  {
+    std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+    for (auto& transfer : transfer_queue_) {
+      if (transfer && transfer->transfer && !transfer->completed) {
+        libusb_cancel_transfer(transfer->transfer);
+      }
+    }
+  }
+  
+  // Give some time for transfers to complete
+  for (int i = 0; i < 10 && !transfer_queue_.empty(); i++) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    libusb_handle_events_timeout(ctx_, &timeout_tv_);
+  }
+
   // de register hotplug callbacks
   if (!hp_[0]) {
     libusb_hotplug_deregister_callback(ctx_, hp_[0]);
@@ -693,6 +740,12 @@ void Connection::shutdown()
   }
 
   close_devh();
+  
+  // Final cleanup of any remaining transfers
+  {
+    std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+    transfer_queue_.clear();
+  }
 }
 
 Connection::~Connection()

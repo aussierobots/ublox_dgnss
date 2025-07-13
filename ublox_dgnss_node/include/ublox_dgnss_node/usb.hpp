@@ -27,6 +27,7 @@
 #include <deque>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #define F9_VENDOR_ID      0x1546   // U-Blox AG
 #define F9_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
@@ -111,6 +112,7 @@ private:
   size_t err_count_ = 0;
 
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
+  mutable std::mutex transfer_queue_mutex_;  // Protects transfer_queue_ access
 
 private:
   libusb_device_handle * open_device_with_serial_string(
