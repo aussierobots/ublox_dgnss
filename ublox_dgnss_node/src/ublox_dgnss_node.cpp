@@ -21,6 +21,8 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <sstream>
+#include <iomanip>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
@@ -1006,8 +1008,57 @@ public:
 
     size_t len = transfer_in->actual_length;
     unsigned char * buf = transfer_in->buffer;
+    
+    // Static reassembly buffer for partial UBX frames
+    static std::vector<unsigned char> ubx_reassembly_buffer;
+    static size_t expected_ubx_frame_length = 0;
+    static bool reassembling_ubx = false;
 
     if (len > 0) {
+      // Check if we're in the middle of reassembling a UBX frame
+      if (reassembling_ubx && !ubx_reassembly_buffer.empty()) {
+        // Continue reassembly of partial UBX frame
+        size_t bytes_needed = expected_ubx_frame_length - ubx_reassembly_buffer.size();
+        size_t bytes_to_copy = std::min(bytes_needed, len);
+        
+        // Append data to reassembly buffer
+        ubx_reassembly_buffer.insert(ubx_reassembly_buffer.end(), buf, buf + bytes_to_copy);
+        
+        // Check if we have a complete frame now
+        if (ubx_reassembly_buffer.size() >= expected_ubx_frame_length) {
+          // Process the complete reassembled frame
+          auto frame = std::make_shared<ubx::Frame>();
+          frame->buf.reserve(expected_ubx_frame_length);
+          frame->buf.resize(expected_ubx_frame_length);
+          memcpy(frame->buf.data(), ubx_reassembly_buffer.data(), expected_ubx_frame_length);
+          frame->from_buf_build();
+          ubx_queue_frame_t queue_frame {ts, frame, FrameType::frame_in};
+          {
+            const std::lock_guard<std::mutex> lock(ubx_queue_mutex_);
+            ubx_queue_.push_back(queue_frame);
+          }
+          
+          RCLCPP_DEBUG(get_logger(), "UBX frame reassembled successfully: class 0x%02x id 0x%02x, %zu bytes", 
+                      frame->msg_class, frame->msg_id, expected_ubx_frame_length);
+          
+          // Clear reassembly state
+          ubx_reassembly_buffer.clear();
+          expected_ubx_frame_length = 0;
+          reassembling_ubx = false;
+          
+          // Process any remaining data after the reassembled frame
+          if (bytes_to_copy < len) {
+            libusb_transfer temp_transfer;
+            temp_transfer.buffer = buf + bytes_to_copy;
+            temp_transfer.actual_length = len - bytes_to_copy;
+            ublox_in_callback(&temp_transfer);
+          }
+          return;
+        }
+        // Still need more data, wait for next transfer
+        return;
+      }
+      
       // NMEA string starts with a $
       if (buf[0] == 0x24) {
         buf[len] = 0;
@@ -1018,17 +1069,55 @@ public:
         }
         RCLCPP_INFO(get_logger(), "nmea: %s", buf);
       } else {
-        // UBX starts with 0x65 0x62
+        // UBX frames start with sync bytes 0xb5 0x62 as defined in the manual
         if (len > 2 && buf[0] == ubx::UBX_SYNC_CHAR_1 && buf[1] == ubx::UBX_SYNC_CHAR_2) {
-          auto frame = std::make_shared<ubx::Frame>();
-          frame->buf.reserve(len);
-          frame->buf.resize(len);
-          memcpy(frame->buf.data(), &buf[0], len);
-          frame->from_buf_build();
-          ubx_queue_frame_t queue_frame {ts, frame, FrameType::frame_in};
-          {
-            const std::lock_guard<std::mutex> lock(ubx_queue_mutex_);
-            ubx_queue_.push_back(queue_frame);
+          // Parse UBX frame length to handle variable-length messages like RAWX
+          if (len >= 6) {  // Need at least 6 bytes for header
+            // Extract payload length from bytes 4-5 (little-endian)
+            uint16_t payload_length = buf[4] | (buf[5] << 8);
+            size_t total_frame_length = 6 + payload_length + 2;  // header(6) + payload + checksum(2)
+            
+            // Only process if we have a complete frame
+            if (len >= total_frame_length) {
+              auto frame = std::make_shared<ubx::Frame>();
+              frame->buf.reserve(total_frame_length);
+              frame->buf.resize(total_frame_length);
+              // Copy only the exact UBX frame bytes
+              memcpy(frame->buf.data(), &buf[0], total_frame_length);
+              frame->from_buf_build();
+              ubx_queue_frame_t queue_frame {ts, frame, FrameType::frame_in};
+              {
+                const std::lock_guard<std::mutex> lock(ubx_queue_mutex_);
+                ubx_queue_.push_back(queue_frame);
+              }
+              
+              // Check if there's more data after this frame
+              if (len > total_frame_length) {
+                // Process remaining data recursively
+                size_t remaining_len = len - total_frame_length;
+                unsigned char* remaining_buf = buf + total_frame_length;
+                
+                // Handle remaining data (could be another UBX frame, NMEA, or RTCM3)
+                if (remaining_len > 0) {
+                  libusb_transfer temp_transfer;
+                  temp_transfer.buffer = remaining_buf;
+                  temp_transfer.actual_length = remaining_len;
+                  // Process remaining data
+                  ublox_in_callback(&temp_transfer);
+                }
+              }
+            } else {
+              // Partial frame - start reassembly
+              RCLCPP_DEBUG(get_logger(), "Partial UBX frame received: need %zu bytes, got %zu - starting reassembly", 
+                         total_frame_length, len);
+              
+              // Initialize reassembly buffer
+              ubx_reassembly_buffer.clear();
+              ubx_reassembly_buffer.reserve(total_frame_length);
+              ubx_reassembly_buffer.insert(ubx_reassembly_buffer.end(), buf, buf + len);
+              expected_ubx_frame_length = total_frame_length;
+              reassembling_ubx = true;
+            }
           }
 
           // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
@@ -1267,6 +1356,9 @@ private:
 
     if (ck_a != ubx_f->ck_a || ck_b != ubx_f->ck_b) {
       check_result = false;
+      RCLCPP_WARN(
+        get_logger(), "ubx class: 0x%02x id: 0x%02x in checksum failed! Frame ignored ...",
+        +ubx_f->msg_class, +ubx_f->msg_id);
     }
     return check_result;
   }
