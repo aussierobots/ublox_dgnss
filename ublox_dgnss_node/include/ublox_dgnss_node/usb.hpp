@@ -25,6 +25,7 @@
 #include <string>
 #include <functional>
 #include <deque>
+#include <mutex>
 #include <vector>
 #include <memory>
 
@@ -34,21 +35,35 @@
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
 
-#define IN_BUFFER_SIZE 64 * 40
+#define IN_BUFFER_SIZE 64 * 200
 
 namespace usb
 {
 using UCharVector = std::vector<u_char>;
 enum TransferType {USB_IN, USB_OUT};
+
+enum class USBDriverState
+{
+  DISCONNECTED,           // No USB device
+  CONNECTING,             // Device detected, opening connection
+  CONNECTED,              // USB connected, device accessible
+  ERROR,                  // Error state requiring recovery
+};
+
 struct transfer_t
 {
-  struct libusb_transfer * transfer;
-  std::shared_ptr<UCharVector> buffer;
-  bool completed;
-  TransferType type;
+  libusb_transfer * usb_transfer = nullptr;
+  std::shared_ptr<UCharVector> buffer = nullptr;
+  bool completed = false;
+  TransferType type = USB_IN;
+
   transfer_t()
+  : usb_transfer(libusb_alloc_transfer(0)),
+    buffer(std::make_shared<UCharVector>())
+  {}
+  ~transfer_t()
   {
-    buffer = std::make_shared<UCharVector>();
+    if (usb_transfer) {libusb_free_transfer(usb_transfer);}
   }
 };
 
@@ -74,6 +89,7 @@ public:
 typedef std::function<void (struct libusb_transfer * transfer)> connection_out_cb_fn;
 typedef std::function<void (struct libusb_transfer * transfer)> connection_in_cb_fn;
 typedef std::function<void (UsbException e, void * user_data)> connection_exception_cb_fn;
+typedef std::function<void (std::string msg)> connection_debug_cb_fn;
 typedef std::function<void ()> hotplug_attach_cb_fn;
 typedef std::function<void ()> hotplug_detach_cb_fn;
 
@@ -83,6 +99,10 @@ private:
   libusb_context * ctx_;
   libusb_device_handle * devh_;
   libusb_device * dev_;
+
+// libusb transfer callbacks to here
+  libusb_transfer_cb_fn callback_in_fn_;
+  libusb_transfer_cb_fn callback_out_fn_;
 
 // hotplug
   hotplug_attach_cb_fn hp_attach_cb_fn_;
@@ -104,13 +124,17 @@ private:
   connection_out_cb_fn out_cb_fn_;
   connection_in_cb_fn in_cb_fn_;
   connection_exception_cb_fn exception_cb_fn_;
+  connection_debug_cb_fn debug_cb_fn_;
   struct timeval timeout_tv_;
   bool keep_running_;
   bool attached_;
 
+  USBDriverState driver_state_;
+
   size_t err_count_ = 0;
 
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
+  std::mutex transfer_queue_mutex_;
 
 private:
   libusb_device_handle * open_device_with_serial_string(
@@ -136,6 +160,7 @@ private:
     const std::string msg = "Error submit transfer: ",
     bool wait_for_completed = true);
   void cleanup_transfer_queue();
+  void cleanup_all_transfers();
   void close_devh();
 
 public:
@@ -157,6 +182,10 @@ public:
   void set_exception_callback(connection_exception_cb_fn exception_fb_fn)
   {
     exception_cb_fn_ = exception_fb_fn;
+  }
+  void set_debug_callback(connection_debug_cb_fn debug_fb_fn)
+  {
+    debug_cb_fn_ = debug_fb_fn;
   }
   void set_hotplug_attach_callback(hotplug_attach_cb_fn hp_attach_cb_fn)
   {
@@ -234,6 +263,11 @@ public:
   bool attached()
   {
     return attached_;
+  }
+
+  USBDriverState driver_state()
+  {
+    return driver_state_;
   }
 
 // number of existing transfer in in the queue that are not complete

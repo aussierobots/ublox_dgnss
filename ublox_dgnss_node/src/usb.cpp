@@ -37,10 +37,33 @@ Connection::Connection(int vendor_id, int product_id, std::string serial_str, in
   timeout_ms_ = 45;
   timeout_tv_ = {1, 0};       // default the timeout to 1 seconds
   keep_running_ = true;
+
+  driver_state_ = USBDriverState::DISCONNECTED;
+
+  // setup C style to C++ style callback
+  callback_out_t<void(struct libusb_transfer * transfer_out)>::func = std::bind(
+    &Connection::callback_out, this, std::placeholders::_1);
+  callback_in_t<void(struct libusb_transfer * transfer_in)>::func = std::bind(
+    &Connection::callback_in, this, std::placeholders::_1);
+
+  callback_out_fn_ =
+    static_cast<libusb_transfer_cb_fn>(callback_out_t<void(struct libusb_transfer * transfer_out)>::
+    callback);
+  callback_in_fn_ =
+    static_cast<libusb_transfer_cb_fn>(callback_in_t<void(struct libusb_transfer * transfer_in)>::
+    callback);
 }
 
 void Connection::init()
 {
+  // Check if already initialized
+  if (ctx_ != nullptr) {
+    if (debug_cb_fn_) {
+      (debug_cb_fn_)("init() already called - skipping");
+    }
+    return;
+  }
+
   int rc = libusb_init(&ctx_);
   if (rc < 0) {
     throw std::string("Error initialising libusb: ") + libusb_error_name(rc);
@@ -130,7 +153,6 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       throw std::string("Error opening device: ") + libusb_error_name(rc);
     }
 
-
     // Read the serial number string
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
@@ -160,9 +182,10 @@ libusb_device_handle * Connection::open_device_with_serial_string(
   return devHandle;
 }
 
-
 bool Connection::open_device()
 {
+  driver_state_ = USBDriverState::CONNECTING;
+
   char serial_num_string[256];
   devh_ = open_device_with_serial_string(
     ctx_, vendor_id_, product_id_, serial_str_,
@@ -176,6 +199,7 @@ bool Connection::open_device()
             serial_str_ + "\" however \"" + serial_num_string + "\" was found.";
       // std::cerr << "Error finding ublox USB device with specified serial string";
     }
+    driver_state_ = USBDriverState::ERROR;
     return false;
   }
 
@@ -298,6 +322,8 @@ int Connection::hotplug_attach_callback(
   // if device already attached, don't attempt to open further devices
   if (!attached_) {
     if (open_device()) {
+      driver_state_ = USBDriverState::CONNECTED;
+      (debug_cb_fn_)("device opened");
       attached_ = true;
       (hp_attach_cb_fn_)();
       return 0;
@@ -316,12 +342,13 @@ int Connection::hotplug_detach_callback(
   (void)user_data;
   if (attached_) {
     close_devh();
+    driver_state_ = USBDriverState::DISCONNECTED;
+    (debug_cb_fn_)("device closed");
     attached_ = false;
     (hp_detach_cb_fn_)();
   }
   return 0;
 }
-
 
 int Connection::read_chars(u_char * data, size_t size)
 {
@@ -400,6 +427,7 @@ void Connection::callback_out(struct libusb_transfer * transfer)
         break;
       case LIBUSB_TRANSFER_NO_DEVICE:
         msg = "Transfer device disconnected";
+        return;
         break;
       case LIBUSB_TRANSFER_OVERFLOW:
         msg = "Transfer overflow. Device sent more data than requested";
@@ -412,20 +440,27 @@ void Connection::callback_out(struct libusb_transfer * transfer)
     }
     (exception_cb_fn_)(UsbException(msg), transfer->user_data);
   }
-  libusb_free_transfer(transfer);
-  // usb_event_completed_ = 1;
-  if (transfer->user_data != nullptr) {
-    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
-    *completed = true;
-  } else {
-    std::string msg = "completed flag nullptr - this shouldn't happen in callback_out";
-    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
-  }
 
-  // only queue another transfer in if none outstanding
-  if (queued_transfer_in_num() == 0) {
-    auto transfer_in = make_transfer_in();
-    submit_transfer(transfer_in, "async submit transfer out - in: ");
+  (debug_cb_fn_)("callback_out: status=" + std::to_string(transfer->status) +
+  " length=" + std::to_string(transfer->actual_length));
+
+  // completed flag from transfer_t stored in queue
+  // bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+
+  auto sp = static_cast<std::shared_ptr<transfer_t> *>(transfer->user_data);
+  (*sp)->completed = true;
+  delete sp;  // cleanup
+
+  // Always queue another transfer in if none outstanding and attached
+  // (debug_cb_fn_)("callback_out: queue_count=" + std::to_string(queued_transfer_in_num()));
+  if (attached_ && queued_transfer_in_num() == 0) {
+    try {
+      (debug_cb_fn_)("callback_out: queueing new IN transfer");
+      auto transfer_in = make_transfer_in();
+      submit_transfer(transfer_in, "callback_out submit transfer: ");
+    } catch (const UsbException & e) {
+      (exception_cb_fn_)(e, nullptr);
+    }
   }
 }
 
@@ -450,9 +485,9 @@ void Connection::callback_in(struct libusb_transfer * transfer)
         msg = "Transfer stalled";
         break;
       case LIBUSB_TRANSFER_NO_DEVICE: {
-          attached_ = false;
           msg = "Transfer device disconnected";
         }
+        return;
         break;
       case LIBUSB_TRANSFER_OVERFLOW:
         msg = "Transfer overflow. Device sent more data than requested";
@@ -468,19 +503,21 @@ void Connection::callback_in(struct libusb_transfer * transfer)
     }
   }
 
-  libusb_free_transfer(transfer);
+  (debug_cb_fn_)("callback_in: status=" + std::to_string(transfer->status) +
+  " length=" + std::to_string(transfer->actual_length));
 
-  if (transfer->user_data != nullptr) {
-    bool * completed = reinterpret_cast<bool *>(transfer->user_data);
-    *completed = true;
-  } else {
-    std::string msg = "completed flag nullptr - this shouldn't happen in callback_in";
-    (exception_cb_fn_)(UsbException(msg), transfer->user_data);
-  }
+  // completed flag from transfer_t stored in queue
+  // bool * completed = reinterpret_cast<bool *>(transfer->user_data);
+
+  auto sp = static_cast<std::shared_ptr<transfer_t> *>(transfer->user_data);
+  (*sp)->completed = true;
+  delete sp;  // cleanup
 
   // only queue another transfer in if none outstanding and attached
+  // (debug_cb_fn_)("callback_in: queue_count=" + std::to_string(queued_transfer_in_num()));
   if (attached_ && queued_transfer_in_num() == 0) {
     try {
+      (debug_cb_fn_)("callback_in: queueing new IN transfer");
       auto transfer_in = make_transfer_in();
       submit_transfer(transfer_in, "callback_in submit transfer: ");
     } catch (const UsbException & e) {
@@ -505,30 +542,21 @@ void Connection::write_buffer_async(u_char * buf, size_t size, void * user_data)
 
 std::shared_ptr<transfer_t> Connection::make_transer_out(u_char * buf, size_t size)
 {
-  auto transfer_out = libusb_alloc_transfer(0);
-
   auto transfer = std::make_shared<transfer_t>();
-  transfer->transfer = transfer_out;
   transfer->type = USB_OUT;
   transfer->buffer->resize(size);
   std::memcpy(transfer->buffer->data(), buf, size);
   transfer->completed = false;
 
-  void * user_data = &transfer->completed;
+  // void * user_data = &transfer->completed;
+  transfer->usb_transfer->user_data = new std::shared_ptr<transfer_t>(transfer);
+  transfer->usb_transfer->flags = LIBUSB_TRANSFER_SHORT_NOT_OK;
 
-  // setup C style to C++ style callback
-  callback_out_t<void(struct libusb_transfer * transfer_out)>::func = std::bind(
-    &Connection::callback_out, this, std::placeholders::_1);
-  libusb_transfer_cb_fn callback_out_fn =
-    static_cast<libusb_transfer_cb_fn>(callback_out_t<void(struct libusb_transfer * transfer_out)>::
-    callback);
-
-  transfer_out->flags = LIBUSB_TRANSFER_SHORT_NOT_OK;
   libusb_fill_bulk_transfer(
-    transfer_out, devh_, ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
+    transfer->usb_transfer, devh_, ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
     // buf, size,
     transfer->buffer->data(), transfer->buffer->size(),
-    callback_out_fn, user_data, 0
+    callback_out_fn_, transfer->usb_transfer->user_data, 0
   );
 
   return transfer;
@@ -536,29 +564,20 @@ std::shared_ptr<transfer_t> Connection::make_transer_out(u_char * buf, size_t si
 
 std::shared_ptr<transfer_t> Connection::make_transfer_in()
 {
-  auto transfer_in = libusb_alloc_transfer(0);
-
   auto transfer = std::make_shared<transfer_t>();
-  transfer->transfer = transfer_in;
   transfer->type = USB_IN;
   transfer->buffer->resize(IN_BUFFER_SIZE);
   transfer->completed = false;
 
-  void * user_data = &transfer->completed;
-
-  // setup C style to C++ style callback
-  callback_in_t<void(struct libusb_transfer * transfer_in)>::func = std::bind(
-    &Connection::callback_in, this, std::placeholders::_1);
-  libusb_transfer_cb_fn callback_in_fn =
-    static_cast<libusb_transfer_cb_fn>(callback_in_t<void(struct libusb_transfer * transfer_in)>::
-    callback);
+  // void * user_data = &transfer->completed;
+  transfer->usb_transfer->user_data = new std::shared_ptr<transfer_t>(transfer);
 
   // setup asynchronous transfer in to host from usb
   libusb_fill_bulk_transfer(
-    transfer_in, devh_, ep_data_in_addr_ | LIBUSB_ENDPOINT_IN,
+    transfer->usb_transfer, devh_, ep_data_in_addr_ | LIBUSB_ENDPOINT_IN,
     // in_buffer_, IN_BUFFER_SIZE,
     transfer->buffer->data(), transfer->buffer->size(),
-    callback_in_fn, user_data, 0);             // no timeout
+    callback_in_fn_, transfer->usb_transfer->user_data, 0);
 
   return transfer;
 }
@@ -570,18 +589,23 @@ void Connection::submit_transfer(
   (void)wait_for_completed;
 
   if (keep_running_ && attached_) {
-    if (transfer->transfer == nullptr) {
-      throw UsbException("transfer->transfer is null");
+    if (!transfer->usb_transfer) {
+      throw UsbException("transfer->usb_transfer is null");
     }
-    int rc = libusb_submit_transfer(transfer->transfer);
+    int rc = libusb_submit_transfer(transfer->usb_transfer);
     if (rc < 0) {
       std::string exception_msg = msg;
       exception_msg.append(libusb_error_name(rc));
       throw UsbException(exception_msg);
     }
 
+    // (debug_cb_fn_)("submit_transfer: " + msg + " rc=" + std::to_string(rc));
+
     // only adding those that were succesfully submitted to the queue
-    transfer_queue_.push_back(transfer);
+    {
+      const std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+      transfer_queue_.push_back(transfer);
+    }
 
     // remove completed from the queue
     cleanup_transfer_queue();
@@ -592,10 +616,51 @@ void Connection::cleanup_transfer_queue()
 {
   if (transfer_queue_.size() == 0) {return;}
 
+  if (debug_cb_fn_ == nullptr) {
+    throw UsbException("cleanup_transfer_queue - debug_cb_fn_ not set");
+  }
+
+  const std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+
   // remove all completed transfer entries
   auto it = transfer_queue_.begin();
   while (it != transfer_queue_.end()) {
     if ((*it)->completed) {
+      // build up debug message
+      std::string msg = "cleanup_transfer_queue: ";
+      auto type = (*it)->type;
+      if (type == USB_IN) {
+        msg.append(" USB_IN completed. transfer - ");
+      } else {
+        msg.append(" USB_OUT completed. transfer - ");
+      }
+      switch ((*it)->usb_transfer->status) {
+        case LIBUSB_TRANSFER_COMPLETED:
+          msg.append("LIBUSB_TRANSFER_COMPLETED");
+          break;
+        case LIBUSB_TRANSFER_ERROR:
+          msg.append("LIBUSB_TRANSFER_ERROR");
+          break;
+        case LIBUSB_TRANSFER_TIMED_OUT:
+          msg.append("LIBUSB_TRANSFER_TIMED_OUT");
+          break;
+        case LIBUSB_TRANSFER_CANCELLED:
+          msg.append("LIBUSB_TRANSFER_CANCELLED");
+          break;
+        case LIBUSB_TRANSFER_STALL:
+          msg.append("LIBUSB_TRANSFER_STALL");
+          break;
+        case LIBUSB_TRANSFER_NO_DEVICE:
+          msg.append("LIBUSB_TRANSFER_STALL");
+          break;
+        case LIBUSB_TRANSFER_OVERFLOW:
+          msg.append("LIBUSB_TRANSFER_STALL");
+          break;
+        default:
+          msg.append(" UNKNOWN LIBUSB TRANSFER STATUS");
+      }
+      (debug_cb_fn_)(msg);
+
       transfer_queue_.erase(it++);
     } else {
       ++it;
@@ -603,9 +668,45 @@ void Connection::cleanup_transfer_queue()
   }
 }
 
+void Connection::cleanup_all_transfers()
+{
+  if (transfer_queue_.size() == 0) {
+    return;
+  }
+
+  if (debug_cb_fn_ == nullptr) {
+    throw UsbException("cleanup_all_transfers - debug_cb_fn_ not set");
+  }
+
+  (debug_cb_fn_)("cleanup_all_transfers: canceling " + std::to_string(transfer_queue_.size()) +
+  " transfers");
+
+  {
+    const std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
+
+    // Cancel all active transfers
+    for (auto & transfer : transfer_queue_) {
+      if (!transfer->completed && transfer->usb_transfer) {
+        int rc = libusb_cancel_transfer(transfer->usb_transfer);
+        if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND) {
+          (debug_cb_fn_)("cleanup_all_transfers: failed to cancel transfer: " +
+          std::string(libusb_error_name(rc)));
+        }
+      }
+    }
+
+    // Clear the entire queue
+    transfer_queue_.clear();
+  }
+
+  (debug_cb_fn_)("cleanup_all_transfers: transfer queue cleared");
+}
+
 size_t Connection::queued_transfer_in_num()
 {
   if (transfer_queue_.size() == 0) {return 0;}
+
+  const std::lock_guard<std::mutex> lock(transfer_queue_mutex_);
 
   size_t num = 0;
   // remove all completed transfer entries
@@ -635,6 +736,11 @@ void Connection::init_async()
   if (exception_cb_fn_ == nullptr) {
     throw UsbException("No exception callback function set");
   }
+  if (debug_cb_fn_ == nullptr) {
+    throw UsbException("No debug callback function set");
+  }
+
+  (debug_cb_fn_)("init_async: submitting initial IN transfer");
 
   // submit initial transfer in request
   // - at first get a few zero length records
@@ -667,6 +773,9 @@ void Connection::handle_usb_events()
 
 void Connection::close_devh()
 {
+  // Clean up all pending transfers before closing device
+  cleanup_transfer_queue();  // completed
+  cleanup_all_transfers();  // any remaining
   if (devh_) {
     for (int if_num = 0; if_num < 2; if_num++) {
       int rc = libusb_release_interface(devh_, if_num);

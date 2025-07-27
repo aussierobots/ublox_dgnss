@@ -37,10 +37,15 @@ include_directories(include SYSTEM)
 add_library(ublox_dgnss_components SHARED
   src/usb.cpp
   src/ublox_dgnss_node.cpp
+  src/parameters.cpp
 )
 
 target_compile_definitions(ublox_dgnss_components
   PRIVATE "UBLOX_DGNSS_NODE_BUILDING_DLL"
+)
+
+target_link_options(ublox_dgnss_components PRIVATE
+  "LINKER:--allow-multiple-definition"
 )
 
 target_link_libraries(ublox_dgnss_components PUBLIC

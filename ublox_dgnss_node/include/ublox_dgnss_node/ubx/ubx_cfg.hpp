@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include "ublox_dgnss_node/ubx/ubx_cfg_item.hpp"
+#include "ublox_dgnss_node/ubx/ubx_cfg_item_map.hpp"
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 
 namespace ubx::cfg

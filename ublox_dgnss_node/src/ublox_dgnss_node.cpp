@@ -19,6 +19,7 @@
 #include <chrono>
 #include <ctime>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <map>
 #include "rclcpp/rclcpp.hpp"
@@ -26,6 +27,7 @@
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "ublox_dgnss_node/visibility_control.h"
 #include "ublox_dgnss_node/usb.hpp"
+#include "ublox_dgnss_node/parameters.hpp"
 #include "ublox_dgnss_node/ubx/ubx_cfg.hpp"
 #include "ublox_dgnss_node/ubx/ubx_mon.hpp"
 #include "ublox_dgnss_node/ubx/ubx_inf.hpp"
@@ -98,23 +100,6 @@ struct rtcm_queue_frame_t
   FrameType frame_type;
 };
 
-enum ParamStatus
-{
-  PARAM_INITIAL,       // default value parameter used
-                       // ie not set by user (and sent to GPS) or retrieved from gps
-  PARAM_USER,       // value set by user either overidden at startup or param set
-  PARAM_LOADED,       // loaded from gps device - not all items have a value set
-                      // or default value on the gps
-  PARAM_VALSET,       // value sent to gps device - might get rejected there
-  PARAM_VALGET,       // attempt to retrieve value from gps device
-  PARAM_ACKNAK       // todo in a future version - poll for value or valset might not work
-};
-struct param_state_t
-{
-  rclcpp::ParameterValue value;
-  ParamStatus status;
-};
-
 class UbloxDGNSSNode : public rclcpp::Node
 {
 public:
@@ -125,14 +110,33 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
+    // used to indicate if threads and timers should shut down
+    keep_running_ = true;
+
+    this->get_node_base_interface()->get_context()->on_shutdown(
+      [this]() {
+        RCLCPP_INFO(this->get_logger(), "Initiating shutdown ...");
+        this->keep_running_ = false;
+        if (usbc_ != nullptr) {
+          usbc_->shutdown();
+        }
+      });
+
     callback_group_rtcm_timer_ =
       create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_ubx_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_usb_events_timer_ = create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    // this flag is used to control if certain parameters can be updated
+    callback_group_param_processing_timer_ = create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
+
+
+    // these flags are used to control if certain parameters can be updated or communicated
     is_initialising_ = true;
+    device_readiness_state_ = DeviceReadinessState::UNREADY;
+    has_been_connected_before_ = false;
+    device_attached_ = false;
 
     auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(this);
     while (!parameters_client->wait_for_service(1s)) {
@@ -143,6 +147,18 @@ public:
       }
       RCLCPP_WARN(get_logger(), "parameter client service not available, waiting again...");
     }
+
+    // Initialize ParameterManager EARLY for parameter validation
+    parameter_manager_ = std::make_shared<ParameterManager>(get_logger());
+
+    // Initialize UBX config from global map
+    parameter_manager_->initialize_ubx_config(ubx::cfg::ubxKeyCfgItemMap);
+
+    parameter_manager_->set_device_batch_callback(
+      std::bind(&UbloxDGNSSNode::send_parameters_to_device_batch, this, std::placeholders::_1)
+    );
+    // parameter_manager_->set_device_send_callback(
+    //   std::bind(&UbloxDGNSSNode::send_parameter_to_device, this, std::placeholders::_1));
 
     // check for device serial string parameter
     check_for_device_serial_param(parameters_client);
@@ -166,22 +182,31 @@ public:
         continue;
       }
       RCLCPP_INFO(get_logger(), "parameter supplied: %s", name.c_str());
-      bool valid = false;
-      for (const auto & kv : ubx::cfg::ubxKeyCfgItemMap) {
-        auto ubx_cfg_item = kv.second;
-        if (strcmp(ubx_cfg_item.ubx_config_item, name.c_str()) == 0) {
-          valid = true;
-          break;
-        }
-      }
+      bool valid = parameter_manager_->is_valid_parameter(name);
       if (!valid) {
         RCLCPP_WARN(
           get_logger(), "parameter supplied: %s is not recognised. Ignoring!",
           name.c_str());
+      } else {
+        auto p_value = std::make_optional(get_parameter(name).get_parameter_value());
+        RCLCPP_DEBUG(
+          get_logger(), "set initial user param name: %s value: %s",
+          name.c_str(),
+          p_value ? rclcpp::Parameter(name, *p_value).value_to_string().c_str() : "<unset>");
+        parameter_manager_->set_parameter_cache(
+          name, p_value,
+          ParamStatus::PARAM_USER, ParamValueSource::START_ARG
+        );
       }
     }
 
-    auto qos = rclcpp::SensorDataQoS();
+    parameter_manager_->log_parameter_cache_state();
+
+    // auto qos = rclcpp::SensorDataQoS();
+    // Changed default QoS further discussion here
+    // https://discourse.openrobotics.org/t/new-rep-2003-sensor-data-and-map-qos-settings/35758/9
+    // can now override if this does not suite needs
+    auto qos = rclcpp::SystemDefaultsQoS();
     rclcpp::PublisherOptions pub_options;
     pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
@@ -255,6 +280,17 @@ public:
         &UbloxDGNSSNode::on_set_parameters_callback,
         this, _1));
 
+    std::string node_name(this->get_name());
+    hot_start_service_ = this->create_service<ublox_ubx_interfaces::srv::HotStart>(
+      node_name + "/hot_start", std::bind(&UbloxDGNSSNode::hot_start_callback, this, _1, _2));
+    cold_start_service_ = this->create_service<ublox_ubx_interfaces::srv::ColdStart>(
+      node_name + "/cold_start", std::bind(&UbloxDGNSSNode::cold_start_callback, this, _1, _2));
+    warm_start_service_ = this->create_service<ublox_ubx_interfaces::srv::WarmStart>(
+      node_name + "/warm_start", std::bind(&UbloxDGNSSNode::warm_start_callback, this, _1, _2));
+    reset_odo_service_ = this->create_service<ublox_ubx_interfaces::srv::ResetODO>(
+      node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
+
+
     usb::connection_in_cb_fn connection_in_callback = std::bind(
       &UbloxDGNSSNode::ublox_in_callback,
       this, _1);
@@ -266,40 +302,135 @@ public:
       &UbloxDGNSSNode::hotplug_attach_callback, this);
     usb::hotplug_detach_cb_fn usb_hotplug_detach_callback = std::bind(
       &UbloxDGNSSNode::hotplug_detach_callback, this);
+    usb::connection_debug_cb_fn connection_debug_callback = std::bind(
+      &UbloxDGNSSNode::usb_debug_callback, this, _1);
 
-    std::string node_name(this->get_name());
-    hot_start_service_ = this->create_service<ublox_ubx_interfaces::srv::HotStart>(
-      node_name + "/hot_start", std::bind(&UbloxDGNSSNode::hot_start_callback, this, _1, _2));
-    cold_start_service_ = this->create_service<ublox_ubx_interfaces::srv::ColdStart>(
-      node_name + "/cold_start", std::bind(&UbloxDGNSSNode::cold_start_callback, this, _1, _2));
-    warm_start_service_ = this->create_service<ublox_ubx_interfaces::srv::WarmStart>(
-      node_name + "/warm_start", std::bind(&UbloxDGNSSNode::warm_start_callback, this, _1, _2));
-    reset_odo_service_ = this->create_service<ublox_ubx_interfaces::srv::ResetODO>(
-      node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
+    RCLCPP_DEBUG(get_logger(), "Make USB Connection - serial string: '%s'", serial_str_.c_str());
+    usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
+
+    RCLCPP_DEBUG(get_logger(), "setting up usb callbacks ...");
+    usbc_->set_in_callback(connection_in_callback);
+    usbc_->set_out_callback(connection_out_callback);
+    usbc_->set_exception_callback(connection_exception_callback);
+    usbc_->set_hotplug_attach_callback(usb_hotplug_attach_callback);
+    usbc_->set_hotplug_detach_callback(usb_hotplug_detach_callback);
+    usbc_->set_debug_callback(connection_debug_callback);
+
+    // initialise usb timer - once intialised the timer will be cancelled
+    RCLCPP_DEBUG(get_logger(), "creating usb_init_timer_ ...");
+    usb_init_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::handle_usb_init_callback, this));
+
+    RCLCPP_DEBUG(get_logger(), "creating ubx_timer_ ...");
+    ubx_queue_.clear();
+    ubx_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
+      callback_group_ubx_timer_);
+
+    RCLCPP_DEBUG(get_logger(), "creating rtcm_timer_ ...");
+    rtcm_queue_.clear();
+    rtcm_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::rtcm_timer_callback, this),
+      callback_group_rtcm_timer_);
+
+    ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
+    ubx_cfg_->cfg_val_set_cfgdata_clear();
+    ubx_cfg_->cfg_val_set_layer_ram(true);
+
+    ubx_mon_ = std::make_shared<ubx::mon::UbxMon>(usbc_);
+    ubx_inf_ = std::make_shared<ubx::inf::UbxInf>(usbc_);
+    ubx_nav_ = std::make_shared<ubx::nav::UbxNav>(usbc_);
+    ubx_rxm_ = std::make_shared<ubx::rxm::UbxRxm>(usbc_);
+    ubx_esf_ = std::make_shared<ubx::esf::UbxEsf>(usbc_);
+    ubx_sec_ = std::make_shared<ubx::sec::UbxSec>(usbc_);
+
+    RCLCPP_DEBUG(get_logger(), "creating handle_usb_events_timer_ ...");
+    handle_usb_events_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::handle_usb_events_callback, this),
+      callback_group_usb_events_timer_);
+
+    RCLCPP_DEBUG(get_logger(), "creating param_processing_timer_ ...");
+    param_processing_timer_ = create_wall_timer(
+      1s, std::bind(&UbloxDGNSSNode::handle_param_processing_callback, this),
+      callback_group_param_processing_timer_);
+
+    rclcpp::SubscriptionOptions sub_options;
+    sub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
+
+    RCLCPP_DEBUG(get_logger(), "creating UBXEsfMeas subscription ...");
+    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
+      "/ubx_esf_meas_to_device", 10,
+      std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
+      sub_options);
+
+    RCLCPP_DEBUG(get_logger(), "creating RTCM subscription ...");
+    rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
+      "/ntrip_client/rtcm", 10,
+      std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
+      sub_options);
+
+    RCLCPP_DEBUG(get_logger(), "initialising all ublox configuration parameters...");
+    ublox_init_all_cfg_params();
+
+    is_initialising_ = false;
+    RCLCPP_DEBUG(get_logger(), "initialisation finished");
+  }
+
+
+  UBLOX_DGNSS_NODE_LOCAL
+  ~UbloxDGNSSNode()
+  {
+    keep_running_ = false;
+    if (usbc_) {
+      usbc_->shutdown();
+      usbc_.reset();
+    }
+    RCLCPP_INFO(this->get_logger(), "finished");
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void perform_usb_initialization(bool from_timer = false)
+  {
+    // // Guard against double initialization
+    // if (usbc_->driver_state() == usb::USBDriverState::CONNECTING ||
+    //   usbc_->driver_state() == usb::USBDriverState::CONNECTED)
+    // {
+    //   RCLCPP_WARN(get_logger(), "USB initialization already in progress or completed");
+    //   return;
+    // }
+
+    if (from_timer) {
+      RCLCPP_INFO(get_logger(), "Starting USB initialization");
+    } else {
+      RCLCPP_INFO(get_logger(), "Starting USB initialization (from hotplug)");
+    }
 
     try {
-      RCLCPP_DEBUG(get_logger(), "Make USB Connection - serial string: '%s'", serial_str_.c_str());
-      usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
-      RCLCPP_DEBUG(get_logger(), "setting up usb callbacks ...");
-      usbc_->set_in_callback(connection_in_callback);
-      usbc_->set_out_callback(connection_out_callback);
-      usbc_->set_exception_callback(connection_exception_callback);
-      usbc_->set_hotplug_attach_callback(usb_hotplug_attach_callback);
-      usbc_->set_hotplug_detach_callback(usb_hotplug_detach_callback);
-
       RCLCPP_DEBUG(get_logger(), "usbc->init() ...");
       usbc_->init();
 
+      // Check device readiness
       if (!usbc_->devh_valid()) {
-        RCLCPP_ERROR(
-          get_logger(),
-          "USB Device handle not valid. USB device not connected? .. shutting down");
-        rclcpp::shutdown();
+        RCLCPP_DEBUG(get_logger(), "Device not ready for init_async");
         return;
       }
 
+      // USB async init
       RCLCPP_DEBUG(get_logger(), "usbc->init_async() ...");
       usbc_->init_async();
+
+      log_usbc();
+
+      // Final async initialization
+      ublox_dgnss_init_async();
+
+      RCLCPP_INFO(get_logger(), "USB initialization completed successfully");
+
+      // Disable timer once connected and initialized
+      if (usb_init_timer_) {
+        usb_init_timer_->cancel();
+        RCLCPP_DEBUG(get_logger(), "USB initialization complete - timer disabled");
+      }
     } catch (std::string const & msg) {
       RCLCPP_ERROR(this->get_logger(), "usb init error: %s", msg.c_str());
       if (usbc_ != nullptr) {
@@ -329,105 +460,34 @@ public:
       }
       rclcpp::shutdown();
     }
-
-
-    log_usbc();
-
-    RCLCPP_DEBUG(get_logger(), "creating ubx_timer_ ...");
-    ubx_queue_.clear();
-    ubx_timer_ = create_wall_timer(
-      10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
-      callback_group_ubx_timer_);
-    RCLCPP_DEBUG(get_logger(), "creating rtcm_timer_ ...");
-    rtcm_queue_.clear();
-    rtcm_timer_ = create_wall_timer(
-      10ms, std::bind(&UbloxDGNSSNode::rtcm_timer_callback, this),
-      callback_group_rtcm_timer_);
-
-    ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
-    ubx_cfg_->cfg_val_set_cfgdata_clear();
-    ubx_cfg_->cfg_val_set_layer_ram(true);
-
-    ubx_mon_ = std::make_shared<ubx::mon::UbxMon>(usbc_);
-    ubx_inf_ = std::make_shared<ubx::inf::UbxInf>(usbc_);
-    ubx_nav_ = std::make_shared<ubx::nav::UbxNav>(usbc_);
-    ubx_rxm_ = std::make_shared<ubx::rxm::UbxRxm>(usbc_);
-    ubx_esf_ = std::make_shared<ubx::esf::UbxEsf>(usbc_);
-    ubx_sec_ = std::make_shared<ubx::sec::UbxSec>(usbc_);
-
-    async_initialised_ = false;
-
-    auto handle_usb_events_callback = [this]() -> void
-      {
-        RCLCPP_DEBUG_ONCE(get_logger(), "initial handle_usb_events_callback ...");
-        if (usbc_ == nullptr) {
-          return;
-        }
-
-        RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
-        try {
-          usbc_->handle_usb_events();
-        } catch (usb::UsbException & e) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
-        } catch (std::exception & e) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
-        } catch (const char * msg) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
-        } catch (const std::string & msg) {
-          RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
-        }
-        ;
-
-        RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
-      };
-
-    RCLCPP_DEBUG(get_logger(), "creating handle_usb_events_timer_ ...");
-    handle_usb_events_timer_ = create_wall_timer(
-      10ms, handle_usb_events_callback,
-      callback_group_usb_events_timer_);
-
-    if (!async_initialised_) {
-      RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async start");
-      ublox_dgnss_init_async();
-      RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async finished");
-      async_initialised_ = true;
-    }
-
-
-    rclcpp::SubscriptionOptions sub_options;
-    sub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
-
-    RCLCPP_DEBUG(get_logger(), "creating UBXEsfMeas subscription ...");
-    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "/ubx_esf_meas_to_device", 10,
-      std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
-      sub_options);
-
-    RCLCPP_DEBUG(get_logger(), "creating RTCM subscription ...");
-    rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
-      "/ntrip_client/rtcm", 10,
-      std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
-      sub_options);
-
-    is_initialising_ = false;
-    RCLCPP_DEBUG(get_logger(), "initialisation finished");
   }
 
-
   UBLOX_DGNSS_NODE_LOCAL
-  ~UbloxDGNSSNode()
+  void handle_usb_init_callback()
   {
-    usbc_->shutdown();
-    usbc_.reset();
-    RCLCPP_INFO(this->get_logger(), "finished");
+    if (usbc_) {
+      perform_usb_initialization(true);  // Let it handle device detection internally
+    } else {
+      RCLCPP_ERROR_ONCE(get_logger(), "usbc_ wasnt created when attempting to initialise USB!");
+    }
   }
 
 private:
+  bool keep_running_ = true;
+  bool device_attached_ = false;
   bool is_initialising_;
+  enum class DeviceReadinessState
+  {
+    UNREADY,    // Device not operational
+    READY       // Device operational
+  };
+  DeviceReadinessState device_readiness_state_ = DeviceReadinessState::UNREADY;
+  bool has_been_connected_before_ = false;  // Track if this is reconnection
 
   rclcpp::CallbackGroup::SharedPtr callback_group_usb_events_timer_;
   rclcpp::CallbackGroup::SharedPtr callback_group_ubx_timer_;
   rclcpp::CallbackGroup::SharedPtr callback_group_rtcm_timer_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_param_processing_timer_;
 
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<ubx::cfg::UbxCfg> ubx_cfg_;
@@ -449,12 +509,17 @@ private:
   std::deque<rtcm_queue_frame_t> rtcm_queue_;
   std::mutex rtcm_queue_mutex_;
 
+  std::mutex cfg_batch_mutex_;
+
   rclcpp::TimerBase::SharedPtr ubx_timer_;
   rclcpp::TimerBase::SharedPtr rtcm_timer_;
 
-  bool async_initialised_;
+// once the usb is initialised this timer is disabled
+  rclcpp::TimerBase::SharedPtr usb_init_timer_;
 
-  std::map<std::string, param_state_t> cfg_param_cache_map_;
+  std::shared_ptr<ParameterManager> parameter_manager_;
+
+  rclcpp::TimerBase::SharedPtr param_processing_timer_;
 
   std::string frame_id_;
   const std::string FRAME_ID_PARAM_NAME = "FRAME_ID";
@@ -566,246 +631,270 @@ private:
       usbc_->ep_comms_in_addr());
   }
 
-public:
-// declare ubx ros parameter
-  UBLOX_DGNSS_NODE_LOCAL
-  void set_or_declare_ubx_cfg_param(
-    const ubx::cfg::ubx_cfg_item_t & ubx_ci,
-    const ubx::value_t & ubx_value, bool is_initial = false)
+  inline rclcpp::ParameterValue make_ros_param_value(
+    const ubx::ubx_type_t type,
+    const ubx::value_t & value)
   {
-    rclcpp::ParameterValue p_value;
-
-    // auto overrides is on, so if supplied as args/yaml already set
-    bool p_set = has_parameter(ubx_ci.ubx_config_item);
-
-    switch (ubx_ci.ubx_type) {
+    switch (type) {
       case ubx::L:
-        p_value = rclcpp::ParameterValue(static_cast<bool>(ubx_value.l));
-        break;
+        return rclcpp::ParameterValue(static_cast<bool>(value.l));
       case ubx::E1:
       case ubx::U1:
-        p_value = rclcpp::ParameterValue(ubx_value.u1);
-        break;
+        return rclcpp::ParameterValue(value.u1);
       case ubx::X1:
-        p_value = rclcpp::ParameterValue(ubx_value.x1);
-        break;
+        return rclcpp::ParameterValue(value.x1);
       case ubx::I1:
-        p_value = rclcpp::ParameterValue(ubx_value.i1);
-        break;
+        return rclcpp::ParameterValue(value.i1);
       case ubx::E2:
       case ubx::U2:
-        p_value = rclcpp::ParameterValue(ubx_value.u2);
-        break;
+        return rclcpp::ParameterValue(value.u2);
       case ubx::X2:
-        p_value = rclcpp::ParameterValue(ubx_value.x2);
-        break;
+        return rclcpp::ParameterValue(value.x2);
       case ubx::I2:
-        p_value = rclcpp::ParameterValue(ubx_value.i2);
-        break;
+        return rclcpp::ParameterValue(value.i2);
       case ubx::E4:
-      case ubx::U4: {
-          int64_t value_u4 = (int64_t)ubx_value.u4;
-          p_value = rclcpp::ParameterValue(value_u4);
-        }
-        break;
-      case ubx::X4: {
-          int64_t value_x4 = (int64_t)ubx_value.x4;
-          p_value = rclcpp::ParameterValue(value_x4);
-        }
-        break;
+      case ubx::U4:
+        return rclcpp::ParameterValue(static_cast<int64_t>(value.u4));
+      case ubx::X4:
+        return rclcpp::ParameterValue(static_cast<int64_t>(value.x4));
       case ubx::I4:
-        p_value = rclcpp::ParameterValue(ubx_value.i4);
-        break;
+        return rclcpp::ParameterValue(value.i4);
       case ubx::R4:
-        p_value = rclcpp::ParameterValue(ubx_value.r4);
-        break;
-      case ubx::U8: {
-          int64_t value_u8 = (int64_t)ubx_value.u8;
-          p_value = rclcpp::ParameterValue(value_u8);
-        }
-        break;
-      case ubx::X8: {
-          int64_t value_x8 = (int64_t)ubx_value.x8;
-          p_value = rclcpp::ParameterValue(value_x8);
-        }
-        break;
+        return rclcpp::ParameterValue(value.r4);
+      case ubx::U8:
+        return rclcpp::ParameterValue(static_cast<int64_t>(value.u8));
+      case ubx::X8:
+        return rclcpp::ParameterValue(static_cast<int64_t>(value.x8));
       case ubx::I8:
-        p_value = rclcpp::ParameterValue(ubx_value.i8);
-        break;
+        return rclcpp::ParameterValue(value.i8);
       case ubx::R8:
-        p_value = rclcpp::ParameterValue(ubx_value.r8);
-        break;
+        return rclcpp::ParameterValue(value.r8);
       default:
-        RCLCPP_WARN(get_logger(), "cfg_item: %s type not defined", ubx_ci.ubx_config_item);
-    }
-
-    rclcpp::Parameter p;
-    p = rclcpp::Parameter(ubx_ci.ubx_config_item, p_value);
-    if (is_initial && p_set) {
-      // parameter set via argument override at startup
-      p = get_parameter(ubx_ci.ubx_config_item);
-    }
-
-    // this following cache map contains values retrieved from the GPS device and needs to be set
-    // before either declaring or setting the ROS2 parameter. The on set parameter callback
-    // functions use this cache map to determine if the values have changed. If they have then
-    // it sets the value on the gps device
-
-    auto p_status = PARAM_LOADED;
-    if (is_initial) {
-      if (p_set) {
-        p_status = PARAM_USER;
-      } else {
-        p_status = PARAM_INITIAL;
-      }
-    }
-
-    cfg_param_cache_map_[p.get_name()] = {p_value, p_status};
-    if (p_set) {
-      RCLCPP_DEBUG(get_logger(), "cfg set_parameter name: %s", p.get_name().c_str());
-      set_parameter(p);
-    } else {
-      auto d_value = declare_parameter(p.get_name(), p_value);
-      if (d_value != p_value) {
-        cfg_param_cache_map_[p.get_name()] = {d_value, PARAM_USER};
-        RCLCPP_INFO(
-          get_logger(), "cfg declare_parameter name: %s with arguments supplied value ",
-          p.get_name().c_str());
-      } else {
-        RCLCPP_INFO(get_logger(), "cfg declare_parameter name: %s", p.get_name().c_str());
-      }
+        RCLCPP_WARN(get_logger(), "Unknown ubx::type_t value in make_ros_param_value");
+        return rclcpp::ParameterValue();  // Default empty
     }
   }
 
-// declare ubx paramters
+public:
+// TODO(soon) remove old code
+// // declare ubx ros parameter
+//   UBLOX_DGNSS_NODE_LOCAL
+//   void set_or_declare_ubx_cfg_param(
+//     const ubx::cfg::ubx_cfg_item_t & ubx_ci,
+//     const ubx::value_t & ubx_value, bool is_initial = false)
+//   {
+//     bool p_set = has_parameter(ubx_ci.ubx_config_item);
+
+//     rclcpp::ParameterValue p_value = make_ros_param_value(ubx_ci.ubx_type, ubx_value);
+
+//     rclcpp::Parameter p;
+//     if (p_set) {
+//       // parameter set via argument override at startup
+//       p = get_parameter(ubx_ci.ubx_config_item);
+//     } else {
+//       p = rclcpp::Parameter(ubx_ci.ubx_config_item, p_value);
+//     }
+
+//     // this following cache map contains values retrieved from the GPS device and needs to be set
+//     // before either declaring or setting the ROS2 parameter. The on set parameter callback
+//     // functions use this cache map to determine if the values have changed. If they have then
+//     // it sets the value on the gps device
+
+//     if (is_initial)
+//     {
+//       if (p_set) {
+//         parameter_manager_->set_parameter_cache(p.get_name(), p.get_parameter_value(),
+//           PARAM_USER, ParamValueSource::START_ARG);
+//       } else {
+//         // RCLCPP_DEBUG(
+//         //   get_logger(), "cfg initial ubx item parameter - name: %s",
+//         //   p.get_name().c_str()
+//         // );
+//         parameter_manager_->set_parameter_cache(p.get_name(), {},
+//           PARAM_INITIAL, ParamValueSource::UNKNOWN);
+//       }
+//     }
+//     else
+//     // this is a subsequent update
+//     {
+//       if (p_set) {
+//         RCLCPP_DEBUG(
+//           get_logger(), "cfg update parameter - name: %s",
+//           p.get_name().c_str()
+//         );
+//         set_parameter(p);
+//       } else {
+//         RCLCPP_INFO(
+//           get_logger(), "cfg update declare_parameter name: %s",
+//           p.get_name().c_str()
+//         );
+//         auto d_value = declare_parameter(p.get_name(), p_value);
+//       }
+//     }
+//   }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void update_param_from_device(
+    const ubx::cfg::ubx_cfg_item_t & ubx_ci,
+    const ubx::value_t & device_value)
+  {
+    // Update cache FIRST with device data
+    rclcpp::ParameterValue p_value = make_ros_param_value(ubx_ci.ubx_type, device_value);
+    parameter_manager_->update_parameter_cache(
+      ubx_ci.ubx_config_item,
+      p_value,
+      PARAM_VALGET,
+      ParamValueSource::DEVICE_ACTUAL);
+
+    // Then update ROS parameter - callback will see DEVICE_ACTUAL in cache
+    rclcpp::Parameter p(ubx_ci.ubx_config_item, p_value);
+    set_parameter(p);
+  }
+
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_cfg_payload_parameters(std::shared_ptr<ubx::cfg::CfgValGetPayload> cfg_val_get_payload)
   {
     for (const auto kv : cfg_val_get_payload->cfg_data) {
-      auto ubx_ci = ubx::cfg::ubxKeyCfgItemMap[kv.ubx_key_id];
-      set_or_declare_ubx_cfg_param(ubx_ci, kv.ubx_value);
+      const auto * ubx_ci_ptr = parameter_manager_->find_config_item_by_key(kv.ubx_key_id);
+      if (ubx_ci_ptr != nullptr) {
+        auto ubx_ci = *ubx_ci_ptr;
+        update_param_from_device(ubx_ci, kv.ubx_value);
+      }
     }
   }
 
   rcl_interfaces::msg::SetParametersResult cfg_val_set_from_ubx_ci_p_state(
-    ubx::cfg::ubx_cfg_item_t ubx_ci, param_state_t param_state)
+    ubx::cfg::ubx_cfg_item_t ubx_ci, ParamState param_state)
   {
-    auto parameter = rclcpp::Parameter(ubx_ci.ubx_config_item, param_state.value);
+    if (!param_state.param_value.has_value()) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = false;
+      result.reason = "Parameter value is not set (std::nullopt)";
+      return result;
+    }
+
+    auto parameter = rclcpp::Parameter(ubx_ci.ubx_config_item, param_state.param_value.value());
     return cfg_val_set_from_parameter(parameter);
   }
 
   rcl_interfaces::msg::SetParametersResult cfg_val_set_from_parameter(rclcpp::Parameter parameter)
   {
+    // RCLCPP_DEBUG(
+    //   get_logger(), "starting cfg_val_set_from_parameter - name: %s",
+    //   parameter.get_name().c_str());
+
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
 
     // find the ubx cfg item
-    bool valid = false;
-    for (const auto & kv : ubx::cfg::ubxKeyCfgItemMap) {
-      auto ubx_key_id = kv.first;
-      auto ubx_cfg_item = kv.second;
-      if (strcmp(ubx_cfg_item.ubx_config_item, parameter.get_name().c_str()) == 0) {
-        valid = true;
-        ubx::value_t value {0x0000000000000000};
+    const auto * ubx_cfg_item_ptr = parameter_manager_->find_config_item(parameter.get_name());
+    bool valid = (ubx_cfg_item_ptr != nullptr);
 
-        try {
-          switch (ubx_cfg_item.ubx_type) {
-            case ubx::L:
-              value.l = parameter.as_bool();
-              break;
-            case ubx::E1:
-            case ubx::U1:
-              value.u1 = (ubx::u1_t)parameter.as_int();
-              break;
-            case ubx::X1:
-              value.x1 = (ubx::x1_t)parameter.as_int();
-              break;
-            case ubx::I1:
-              value.i1 = (ubx::i1_t)parameter.as_int();
-              break;
-            case ubx::E2:
-            case ubx::U2:
-              value.u2 = (ubx::u2_t)parameter.as_int();
-              break;
-            case ubx::X2:
-              value.x2 = (ubx::x2_t)parameter.as_int();
-              break;
-            case ubx::I2:
-              value.i2 = (ubx::i2_t)parameter.as_int();
-              break;
-            case ubx::E4:
-            case ubx::U4:
-              value.u4 = (ubx::u4_t)parameter.as_int();
-              break;
-            case ubx::X4:
-              value.x4 = (ubx::x4_t)parameter.as_int();
-              break;
-            case ubx::I4:
-              value.i4 = (ubx::i4_t)parameter.as_int();
-              break;
-            case ubx::R4:
-              value.r4 = (ubx::r4_t)parameter.as_double();
-              break;
-            case ubx::U8:
-              value.u8 = (ubx::u8_t)parameter.as_int();
-              break;
-            case ubx::X8:
-              value.x8 = (ubx::x8_t)parameter.as_int();
-              break;
-            case ubx::I8:
-              value.i8 = (ubx::i8_t)parameter.as_int();
-              break;
-            case ubx::R8:
-              value.r8 = (ubx::r8_t)parameter.as_double();
-              break;
-            default:
-              RCLCPP_WARN(
-                get_logger(), "on_set_parameters_callback cfg_item: %s type not defined",
-                ubx_cfg_item.ubx_config_item);
-          }
+    if (valid) {
+      auto ubx_cfg_item = *ubx_cfg_item_ptr;
+      auto ubx_key_id = ubx_cfg_item.ubx_key_id;
+      ubx::value_t value {0x0000000000000000};
 
-          // using this parameter so update cache map and schedule to send to the gps device
-          std::ostringstream voss;
-          voss << "0x" << std::setfill('0') << std::setw(2) << std::right << std::hex;
-          for (size_t i = 0; i < ubx_key_id.storage_size(); i++) {
-            voss << +value.bytes[i];
-          }
-          RCLCPP_DEBUG(
-            get_logger(), "cfg_item: %s appending to queue cfg_val_set_key: %s value: %s " \
-            "storage_size: %lu",
-            ubx_cfg_item.ubx_config_item,
-            ubx_key_id.to_hex().c_str(), voss.str().c_str(), ubx_key_id.storage_size());
-
-          ubx_cfg_->cfg_val_set_key_append(ubx_key_id, value);
-
-          cfg_param_cache_map_[parameter.get_name()] =
-          {parameter.get_parameter_value(), PARAM_VALSET};
-        } catch (const rclcpp::ParameterTypeException & e) {
-          valid = false;
-          RCLCPP_DEBUG(
-            get_logger(), "cfg_val_set_from_parameter ParamterTypeException: %s",
-            e.what());
-          result.reason = e.what();
-          result.reason += " ";
-          break;
-        } catch (const std::exception & e) {
-          valid = false;
-          RCLCPP_DEBUG(get_logger(), "cfg_val_set_from_parameter exception: %s", e.what());
-          result.reason = e.what();
-          result.reason += " ";
-          break;
+      try {
+        switch (ubx_cfg_item.ubx_type) {
+          case ubx::L:
+            value.l = parameter.as_bool();
+            break;
+          case ubx::E1:
+          case ubx::U1:
+            value.u1 = (ubx::u1_t)parameter.as_int();
+            break;
+          case ubx::X1:
+            value.x1 = (ubx::x1_t)parameter.as_int();
+            break;
+          case ubx::I1:
+            value.i1 = (ubx::i1_t)parameter.as_int();
+            break;
+          case ubx::E2:
+          case ubx::U2:
+            value.u2 = (ubx::u2_t)parameter.as_int();
+            break;
+          case ubx::X2:
+            value.x2 = (ubx::x2_t)parameter.as_int();
+            break;
+          case ubx::I2:
+            value.i2 = (ubx::i2_t)parameter.as_int();
+            break;
+          case ubx::E4:
+          case ubx::U4:
+            value.u4 = (ubx::u4_t)parameter.as_int();
+            break;
+          case ubx::X4:
+            value.x4 = (ubx::x4_t)parameter.as_int();
+            break;
+          case ubx::I4:
+            value.i4 = (ubx::i4_t)parameter.as_int();
+            break;
+          case ubx::R4:
+            value.r4 = (ubx::r4_t)parameter.as_double();
+            break;
+          case ubx::U8:
+            value.u8 = (ubx::u8_t)parameter.as_int();
+            break;
+          case ubx::X8:
+            value.x8 = (ubx::x8_t)parameter.as_int();
+            break;
+          case ubx::I8:
+            value.i8 = (ubx::i8_t)parameter.as_int();
+            break;
+          case ubx::R8:
+            value.r8 = (ubx::r8_t)parameter.as_double();
+            break;
+          default:
+            RCLCPP_WARN(
+              get_logger(), "cfg_val_set_from_parameter cfg_item: %s type not defined",
+              ubx_cfg_item.ubx_config_item);
         }
+
+        // using this parameter so update cache map and schedule to send to the gps device
+        std::ostringstream voss;
+        voss << "0x" << std::setfill('0') << std::setw(2) << std::right << std::hex;
+        for (size_t i = 0; i < ubx_key_id.storage_size(); i++) {
+          voss << +value.bytes[i];
+        }
+        RCLCPP_DEBUG(
+          get_logger(), "cfg_item: %s appending to queue cfg_val_set_key: %s value: %s " \
+          "storage_size: %lu",
+          ubx_cfg_item.ubx_config_item,
+          ubx_key_id.to_hex().c_str(), voss.str().c_str(), ubx_key_id.storage_size());
+
+        ubx_cfg_->cfg_val_set_key_append(ubx_key_id, value);
+      } catch (const rclcpp::ParameterTypeException & e) {
+        valid = false;
+        RCLCPP_ERROR(
+          get_logger(), "cfg_val_set_from_parameter ParamterTypeException: %s",
+          e.what());
+        result.reason = e.what();
+        result.reason += " ";
+      } catch (const std::exception & e) {
+        valid = false;
+        RCLCPP_ERROR(get_logger(), "cfg_val_set_from_parameter exception: %s", e.what());
+        result.reason = e.what();
+        result.reason += " ";
       }
-      if (valid) {
-        break;
-      }
-    }     // end for loop over ubxCfgItemMap
+    }
 
     if (!valid) {
       result.reason += parameter.get_name() + " is not valid!";
       result.successful = false;
     }
 
+    if (result.successful) {
+      // RCLCPP_DEBUG(
+      //   get_logger(), "finished cfg_val_set_from_parameter - name: %s",
+      //   parameter.get_name().c_str());
+    } else {
+      RCLCPP_ERROR(
+        get_logger(), "finished cfg_val_set_from_parameter - name: %s , failed reason: %s",
+        parameter.get_name().c_str(),
+        result.reason.c_str()
+      );
+    }
     return result;
   }
 
@@ -814,6 +903,10 @@ public:
   rcl_interfaces::msg::SetParametersResult on_set_parameters_callback(
     const std::vector<rclcpp::Parameter> & parameters)
   {
+    RCLCPP_DEBUG(
+      get_logger(), "starting on_set_parameters_callback with %ld parameters",
+      parameters.size());
+
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
 
@@ -821,6 +914,11 @@ public:
     std::set<std::string> excluded_params =
     {"hw_version", "sw_version", "version_extension", "unique_id"};
 
+    if (parameter_manager_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: parameter_manager_ not set. shutting down!");
+      rclcpp::shutdown();
+      return result;
+    }
 
     try {
       for (const rclcpp::Parameter & parameter : parameters) {
@@ -830,60 +928,213 @@ public:
           continue;  // Skip this parameter
         }
 
-        auto cache_state = cfg_param_cache_map_[parameter.get_name()];
-        rclcpp::ParameterValue cache_value = cache_state.value;
-        if ((cache_state.status == PARAM_LOADED || cache_state.status == PARAM_VALSET) &&
-          cache_value == parameter.get_parameter_value())
-        {
-          RCLCPP_DEBUG(
-            get_logger(), "on_set_parameters_callback parameter: %s same in cache. Not updating.",
-            parameter.get_name().c_str());
-        } else if (is_initialising_ && cache_state.status == PARAM_INITIAL) {
-          RCLCPP_DEBUG(
-            get_logger(), "on_set_parameters_callback parameter: %s initial.",
-            parameter.get_name().c_str());
-        } else {
-          if (cache_state.status == PARAM_USER) {
-            RCLCPP_DEBUG(
-              get_logger(), "on_set_parameters_callback parameter: %s args/yaml supplied.",
-              parameter.get_name().c_str());
-          }
-          result = cfg_val_set_from_parameter(parameter);
-        }
+        auto name = parameter.get_name();
+        if (parameter_manager_->is_valid_parameter(name)) {
+          // if its initialising just put out a debug message
+          if (is_initialising_) {
+            auto maybe_state = parameter_manager_->get_parameter_state(name);
+            if (maybe_state) {
+              ParamStatus status = maybe_state->param_status;
+              std::string status_text = to_string(status);
+              ParamValueSource source = maybe_state->param_source;
+              std::string source_text = to_string(source);
 
-        if (!result.successful) {
-          RCLCPP_WARN(
-            get_logger(), "parameter %s not set - %s",
-            parameter.get_name().c_str(), result.reason.c_str());
-          break;
-        } else {
+              RCLCPP_DEBUG(
+                get_logger(),
+                "parameter set name: %s source: %s - initialising doing nothing status: %s",
+                name.c_str(),
+                source_text.c_str(),
+                status_text.c_str()
+              );
+            }
+          } else {
+            // check if loaded in the constructor as a node parameter
+            auto maybe_state = parameter_manager_->get_parameter_state(name);
+            if (maybe_state) {
+              ParamState state = maybe_state.value();
+              ParamStatus status = state.param_status;
+              std::string status_text = to_string(status);
+              ParamValueSource source = state.param_source;
+              std::string source_text = to_string(source);
+
+              if (state.param_value) {
+                // Check if this is a device update (already in cache with DEVICE_ACTUAL)
+                if (source == ParamValueSource::DEVICE_ACTUAL) {
+                  RCLCPP_DEBUG(
+                    get_logger(),
+                    "parameter set %s: %s - source: %s status from: %s to: PARAM_LOADED",
+                    name.c_str(), parameter.value_to_string().c_str(),
+                    source_text.c_str(),
+                    status_text.c_str()
+                  );
+                  // Don't change to PARAM_USER - this is device data, keep as PARAM_LOADED
+                  parameter_manager_->update_parameter_cache(
+                    name, parameter.get_parameter_value(),
+                    PARAM_LOADED,
+                    ParamValueSource::DEVICE_ACTUAL);
+                } else {
+                  // This is a real user change
+                  RCLCPP_DEBUG(
+                    get_logger(),
+                    "parameter set %s: %s - source: %s old status from: %s to: PARAM_USER",
+                    name.c_str(), parameter.value_to_string().c_str(),
+                    source_text.c_str(),
+                    status_text.c_str()
+                  );
+                  parameter_manager_->update_parameter_cache(
+                    name, parameter.get_parameter_value(),
+                    PARAM_USER,
+                    ParamValueSource::RUNTIME_USER);  // Always RUNTIME_USER for user changes
+                }
+              } else {
+                // if no initial parameter loaded it wasnt supplied at node start
+                RCLCPP_DEBUG(
+                  get_logger(),
+                  "parameter set %s: %s - source: %s status from: %s to: PARAM_LOADED",
+                  name.c_str(), parameter.value_to_string().c_str(),
+                  source_text.c_str(),
+                  status_text.c_str()
+                );
+                parameter_manager_->update_parameter_cache(
+                  name, parameter.get_parameter_value(),
+                  PARAM_LOADED,
+                  source);
+              }
+            } else {
+              RCLCPP_ERROR(
+                get_logger(),
+                "parameter set name: %s should already exist in the parameter manager!",
+                name.c_str()
+              );
+            }
+          }
+
           RCLCPP_INFO(
             get_logger(), "parameter set %s: %s",
-            parameter.get_name().c_str(), parameter.value_to_string().c_str());
+            name.c_str(), parameter.value_to_string().c_str());
+        } else {
+          RCLCPP_DEBUG(
+            get_logger(), "Skipping unknown parameter: %s",
+            parameter.get_name().c_str());
         }
       }
-
-      if (!is_initialising_ && result.successful && ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
-        RCLCPP_DEBUG(
-          get_logger(),
-          "on_set_parameters_callback sending async cfg_val_set_poll for parameter changes... ");
-        ubx_cfg_->cfg_val_set_transaction(0);
-        ubx_cfg_->cfg_val_set_poll_async();
-        ubx_cfg_->cfg_val_set_cfgdata_clear();
-      }
-    } catch (const ubx::UbxValueException & e) {
-      RCLCPP_ERROR(get_logger(), "UbxValueException: %s", e.what());
-      result.successful = false;
-      result.reason = e.what();
     } catch (const std::exception & e) {
       RCLCPP_ERROR(
-        get_logger(), "Exception: %s",
+        get_logger(), "Exception in on_set_parameters_callback: %s",
         e.what());
       result.successful = false;
       result.reason = e.what();
     }
 
+    if (result.successful) {
+      RCLCPP_DEBUG(get_logger(), "finished on_set_parameters_callback - result successful");
+    } else {
+      RCLCPP_WARN(
+        get_logger(), "finished on_set_parameters_callback - result successful: %d reason: %s",
+        result.successful, result.reason.c_str());
+    }
+
     return result;
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void handle_usb_events_callback()
+  {
+    if (!keep_running_) {
+      RCLCPP_WARN(get_logger(), "shutting down handling of usb events ...");
+      handle_usb_events_timer_->cancel();
+      return;
+    }
+
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial handle_usb_events_callback ...");
+    if (usbc_ == nullptr) {
+      return;
+    }
+
+    // Only attempt to process events if connected and not in error
+    if (usbc_->driver_state() == usb::USBDriverState::DISCONNECTED) {
+      RCLCPP_WARN(get_logger(), "handle_usb_events_callback - usb disconnected!");
+    }
+
+    if (usbc_->driver_state() == usb::USBDriverState::ERROR) {
+      RCLCPP_DEBUG(get_logger(), "handle_usb_events_callback - usb connection in error state!");
+      return;
+    }
+
+    RCLCPP_DEBUG(get_logger(), "start handle_usb_events");
+    try {
+      usbc_->handle_usb_events();
+    } catch (usb::UsbException & e) {
+      RCLCPP_ERROR(this->get_logger(), "handle usb events UsbException: %s", e.what());
+    } catch (std::exception & e) {
+      RCLCPP_ERROR(this->get_logger(), "handle usb events exception: %s", e.what());
+    } catch (const char * msg) {
+      RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg);
+    } catch (const std::string & msg) {
+      RCLCPP_ERROR(this->get_logger(), "handle usb events - %s", msg.c_str());
+    }
+    ;
+
+    RCLCPP_DEBUG(get_logger(), "finish handle_usb_events");
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void handle_param_processing_callback()
+  {
+    if (!keep_running_) {
+      RCLCPP_WARN(get_logger(), "shutting down parameter processing ...");
+      param_processing_timer_->cancel();
+      return;
+    }
+
+    if (!usbc_) {
+      RCLCPP_DEBUG_ONCE(get_logger(), "no usbc_ in handle parameter processing callback");
+      return;
+    }
+
+    RCLCPP_DEBUG_ONCE(get_logger(), "initial handle parameter processing callback triggered");
+
+    if (usbc_->driver_state() != usb::USBDriverState::CONNECTED) {
+      RCLCPP_WARN(get_logger(), "USB not connection cant handle parameter processing!!");
+    }
+
+    if (parameter_manager_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "ParameterManager is null!");
+      return;
+    }
+
+    parameter_manager_->parameter_processing_callback();
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  bool send_parameter_to_device(const std::string & param_name, const ParamState & p_state)
+  {
+    if (usbc_->driver_state() == usb::USBDriverState::DISCONNECTED) {
+      std::string error_msg = "USB device not operational - cannot send parameter: " + param_name;
+      RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
+      throw std::runtime_error(error_msg);
+    }
+
+    // Find the parameter in the ubx config item map
+    const auto * ubx_ci_ptr = parameter_manager_->find_config_item(param_name);
+
+    if (ubx_ci_ptr != nullptr) {
+      auto ubx_ci = *ubx_ci_ptr;
+      // Use existing cfg_val_set_from_ubx_ci_p_state function
+      auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
+      if (result.successful) {
+        RCLCPP_DEBUG(get_logger(), "Successfully sent parameter to device: %s", param_name.c_str());
+        return true;
+      } else {
+        RCLCPP_WARN(
+          get_logger(), "Failed to send parameter to device: %s - %s",
+          param_name.c_str(), result.reason.c_str());
+        return false;
+      }
+    }
+
+    RCLCPP_DEBUG(get_logger(), "Parameter not found in config map: %s", param_name.c_str());
+    return false;
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -1109,26 +1360,228 @@ public:
   }
 
   UBLOX_DGNSS_NODE_PUBLIC
+  void usb_debug_callback(std::string msg)
+  {
+    RCLCPP_DEBUG(this->get_logger(), "usb connection: %s", msg.c_str());
+  }
+
+  UBLOX_DGNSS_NODE_PUBLIC
   void hotplug_attach_callback()
   {
-    if (is_initialising_) {
-      RCLCPP_WARN(get_logger(), "usb hotplug attach - initial");
-    } else {
-      RCLCPP_WARN(get_logger(), "usb hotplug attach");
-      usbc_->init_async();
-      RCLCPP_DEBUG(get_logger(), "ubx_mon_ver poll_async ...");
-      ubx_mon_->ver()->poll_async();
+    device_attached_ = true;
 
-      RCLCPP_DEBUG(get_logger(), "ublox_val_set_all_cfg_items_async() ...");
-      ublox_val_set_all_cfg_items_async();
-      // ublox_val_get_all_cfg_items_async();
+    bool is_reconnection = has_been_connected_before_;
+
+    if (is_reconnection) {
+      // Reconnection: Just restore user parameters
+      RCLCPP_INFO(
+        get_logger(),
+        "Device reconnected - restoring user parameters and refreshing device state");
+      // USB async init
+
+      perform_usb_initialization();  // Existing full init
+
+      device_readiness_state_ = DeviceReadinessState::READY;
+      RCLCPP_INFO(get_logger(), "Hotplug device re-connection completed");
+    } else {
+      // Initial connection: Full initialization
+      device_readiness_state_ = DeviceReadinessState::READY;
+      has_been_connected_before_ = true;
+      RCLCPP_INFO(get_logger(), "Initial device connection completed");
     }
   }
 
   UBLOX_DGNSS_NODE_PUBLIC
   void hotplug_detach_callback()
   {
-    RCLCPP_WARN(this->get_logger(), "usb hotplug detach");
+    RCLCPP_WARN(get_logger(), "USB device disconnected");
+    device_attached_ = false;
+    device_readiness_state_ = DeviceReadinessState::UNREADY;
+
+    // Invalidate stale device parameters
+    if (parameter_manager_) {
+      parameter_manager_->reset_device_parameters();
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  bool send_parameters_to_device_batch(const std::vector<std::string> & param_names)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "send_parameters_to_device_batch called with %zu parameters",
+      param_names.size());
+
+    if (usbc_->driver_state() != usb::USBDriverState::CONNECTED) {
+      std::string error_msg = "USB device not connected - cannot send parameters to device!";
+      RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
+      throw std::runtime_error(error_msg);
+    }
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "ubx_cfg_ is null - cannot send parameters to device");
+      throw std::runtime_error("ubx_cfg_ is null - cannot send parameters to device");
+    }
+
+    if (!parameter_manager_) {
+      RCLCPP_ERROR(get_logger(), "parameter_manager_ is null - cannot send parameters to device");
+      throw std::runtime_error("parameter_manager_ is null - cannot send parameters to device");
+    }
+
+    try {
+      std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
+      // Clear any existing CFG data
+      ubx_cfg_->cfg_val_set_cfgdata_clear();
+
+      // Set layer to RAM for immediate effect
+      ubx_cfg_->cfg_val_set_layer_ram(true);
+
+      // Add all parameters to the CFG batch
+      bool any_params_added = false;
+      std::string item_list;
+      size_t i = 0;
+      size_t n = 10;  // every n output a request
+      for (const std::string & param_name : param_names) {
+        const ubx::cfg::ubx_cfg_item_t * cfg_item =
+          parameter_manager_->find_config_item(param_name);
+
+        if (!cfg_item) {
+          RCLCPP_WARN(get_logger(), "Parameter %s not found in config items", param_name.c_str());
+          continue;
+        }
+
+        auto param_state_maybe = parameter_manager_->get_parameter_state(param_name);
+        if (!param_state_maybe) {
+          RCLCPP_WARN(get_logger(), "Parameter %s is no in ParameterManager", param_name.c_str());
+          continue;
+        }
+        auto param_state = param_state_maybe.value();
+
+
+        if (!param_state.param_value) {
+          RCLCPP_WARN(
+            get_logger(), "Parameter %s has no value in ParameterManager",
+            param_name.c_str());
+          continue;
+        }
+
+        // Create ROS2 parameter from ParameterManager value for conversion
+        rclcpp::Parameter param(param_name, param_state.param_value.value());
+
+        // Convert parameter to UBX value and add to batch
+        ubx::value_t value;
+        bool conversion_success = convert_ros_param_to_ubx_value(param, *cfg_item, value);
+        if (!conversion_success) {
+          RCLCPP_WARN(
+            get_logger(), "Failed to convert parameter %s to UBX value",
+            param_name.c_str());
+          continue;
+        }
+
+
+        ubx_cfg_->cfg_val_set_key_append(cfg_item->ubx_key_id, value);
+        any_params_added = true;
+        item_list += param_name;
+        item_list += " ";
+
+        if (++i % n == 0) {
+          RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+          item_list = "";
+          ubx_cfg_->cfg_val_set_transaction(0);  // Transactionless
+          ubx_cfg_->cfg_val_set_poll_async();
+          ubx_cfg_->cfg_val_set_cfgdata_clear();
+        }
+
+        RCLCPP_DEBUG(get_logger(), "Added parameter %s to CFG batch", param_name.c_str());
+      }
+
+      if (!any_params_added) {
+        RCLCPP_WARN(get_logger(), "No parameters were successfully added to CFG batch");
+        return false;
+      }
+
+      // Send the batch via CFG-VALSET
+      if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
+        RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+        ubx_cfg_->cfg_val_set_transaction(0);  // Transactionless
+        ubx_cfg_->cfg_val_set_poll_async();
+      }
+
+      RCLCPP_INFO(
+        get_logger(), "Successfully sent %lu parameters to device via CFG-VALSET batch",
+        i);
+
+      // Clear after sending
+      ubx_cfg_->cfg_val_set_cfgdata_clear();
+
+      return true;
+    } catch (const ubx::UbxValueException & e) {
+      RCLCPP_ERROR(get_logger(), "UbxValueException in batch send: %s", e.what());
+      ubx_cfg_->cfg_val_set_cfgdata_clear();
+      return false;
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR(get_logger(), "Exception in batch send: %s", e.what());
+      ubx_cfg_->cfg_val_set_cfgdata_clear();
+      return false;
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  bool convert_ros_param_to_ubx_value(
+    const rclcpp::Parameter & param,
+    const ubx::cfg::ubx_cfg_item_t & cfg_item, ubx::value_t & value)
+  {
+    try {
+      switch (cfg_item.ubx_type) {
+        case ubx::L:
+          value.l = param.as_bool();
+          break;
+        case ubx::U1:
+          value.u1 = static_cast<ubx::u1_t>(param.as_int());
+          break;
+        case ubx::I1:
+          value.i1 = static_cast<ubx::i1_t>(param.as_int());
+          break;
+        case ubx::X1:
+          value.x1 = static_cast<ubx::x1_t>(param.as_int());
+          break;
+        case ubx::U2:
+          value.u2 = static_cast<ubx::u2_t>(param.as_int());
+          break;
+        case ubx::I2:
+          value.i2 = static_cast<ubx::i2_t>(param.as_int());
+          break;
+        case ubx::X2:
+          value.x2 = static_cast<ubx::x2_t>(param.as_int());
+          break;
+        case ubx::U4:
+          value.u4 = static_cast<ubx::u4_t>(param.as_int());
+          break;
+        case ubx::I4:
+          value.i4 = static_cast<ubx::i4_t>(param.as_int());
+          break;
+        case ubx::X4:
+          value.x4 = static_cast<ubx::x4_t>(param.as_int());
+          break;
+        case ubx::R4:
+          value.r4 = static_cast<ubx::r4_t>(param.as_double());
+          break;
+        case ubx::R8:
+          value.r8 = static_cast<ubx::r8_t>(param.as_double());
+          break;
+        default:
+          RCLCPP_ERROR(
+            get_logger(), "Unsupported UBX type %d for parameter %s",
+            cfg_item.ubx_type, param.get_name().c_str());
+          return false;
+      }
+      return true;
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to convert parameter %s: %s", param.get_name().c_str(),
+        e.what());
+      return false;
+    }
   }
 
 // UBLOX_DGNSS_NODE_PUBLIC
@@ -1166,6 +1619,12 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_timer_callback()
   {
+    if (!keep_running_) {
+      RCLCPP_WARN(get_logger(), "shutting down handling of ubx events ...");
+      ubx_timer_->cancel();
+      return;
+    }
+
     RCLCPP_DEBUG_ONCE(get_logger(), "initial ubx_timer_callback ..");
 
     // if we dont have anything to do just return
@@ -1203,7 +1662,18 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_timer_callback()
   {
+    if (!keep_running_) {
+      RCLCPP_WARN(get_logger(), "shutting down handling of rtcm events ...");
+      rtcm_timer_->cancel();
+      return;
+    }
     RCLCPP_DEBUG_ONCE(get_logger(), "initial rtcm_timer_callback ..");
+
+    // Only process RTCM messages if USB is connected
+    if (usbc_->driver_state() != usb::USBDriverState::CONNECTED) {
+      RCLCPP_DEBUG(get_logger(), "rtcm_timer_callback - usb not connected!");
+      return;
+    }
 
     // if we dont have anything to do just return
     if (rtcm_queue_.size() == 0) {
@@ -1673,6 +2143,7 @@ private:
     }
   }
 
+
   UBLOX_DGNSS_NODE_LOCAL
   void ubx_cfg_in_frame(ubx_queue_frame_t * f)
   {
@@ -1707,8 +2178,19 @@ private:
       std::string(reinterpret_cast<char *>(payload->sw_version));
     auto hw_version =
       std::string(reinterpret_cast<char *>(payload->hw_version));
-    this->declare_parameter("sw_version", sw_version);
-    this->declare_parameter("hw_version", hw_version);
+
+    if (has_parameter("sw_version")) {
+      auto p = rclcpp::Parameter("sw_version", sw_version);
+      set_parameter(p);
+    } else {
+      declare_parameter("sw_version", sw_version);
+    }
+    if (has_parameter("hw_version")) {
+      auto p = rclcpp::Parameter("hw_version", hw_version);
+      set_parameter(p);
+    } else {
+      declare_parameter("hw_version", hw_version);
+    }
 
     std::string version_extensions;
     for (const auto & e : payload->extension) {
@@ -1718,8 +2200,13 @@ private:
       version_extensions += e;       // Append the current element
     }
 
-    // Declare the parameter with the aggregated string
-    this->declare_parameter("version_extension", version_extensions);
+    if (has_parameter("version_extension")) {
+      auto p = rclcpp::Parameter("version_extension", version_extensions);
+      set_parameter(p);
+    } else {
+      // Declare the parameter with the aggregated string
+      declare_parameter("version_extension", version_extensions);
+    }
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -1983,7 +2470,12 @@ private:
               << std::setw(2) << static_cast<int>(unique_id[3])
               << std::setw(2) << static_cast<int>(unique_id[4]);
           unique_id_ = oss.str();
-          this->declare_parameter("unique_id", unique_id_);
+          if (has_parameter("unique_id")) {
+            auto p = rclcpp::Parameter("unique_id", unique_id_);
+            set_parameter(p);
+          } else {
+            declare_parameter("unique_id", unique_id_);
+          }
           RCLCPP_INFO(
             get_logger(), "ubx sec unique_id: 0x%s",
             unique_id_.c_str());
@@ -3007,81 +3499,339 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_init_all_cfg_items_async()
   {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_init_all_cfg_items_async");
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: ubx_cfg_ not set. shutting down!");
+      rclcpp::shutdown();
+      return;
+    }
+
+    // Send ALL user parameters to device FIRST (highest priority)
+    RCLCPP_INFO(get_logger(), "Sending user parameters to device");
+    ublox_send_user_params_async();
+
+    // Fetch all PARAM_INITIAL values from device
+    RCLCPP_INFO(get_logger(), "Fetching configuration parameter values from device");
+    ublox_fetch_device_params_async();
+
+    RCLCPP_DEBUG(get_logger(), "finished ublox_init_all_cfg_items_async");
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ublox_send_user_params_async()
+  {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_send_user_params_async");
+    parameter_manager_->log_parameter_cache_state();
+
+    std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
     ubx_cfg_->cfg_val_set_cfgdata_clear();
     ubx_cfg_->cfg_val_set_layer_ram(true);
     ubx_cfg_->cfg_val_set_transaction(0);     // transactionless
 
     std::string item_list;
     size_t i = 0;
-    size_t n = 10;     // every n output a request
-    for (auto ci : ubx::cfg::ubxKeyCfgItemMap) {
-      auto ubx_ci = ci.second;
-      ubx::value_t value {0x0000000000000000};
-      RCLCPP_DEBUG(get_logger(), "init %lu cfg param: %s", i, ubx_ci.ubx_config_item);
-      set_or_declare_ubx_cfg_param(ubx_ci, value, true);
+    size_t n = 10;     // every n send a request
+    size_t user_params_sent = 0;
 
-      auto p_state = cfg_param_cache_map_[ubx_ci.ubx_config_item];
-      if (p_state.status == PARAM_USER) {
-        auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
-        if (!result.successful) {
-          RCLCPP_ERROR(get_logger(), "initial cfg val set exception: %s", result.reason.c_str());
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        auto p_state_maybe = parameter_manager_->get_parameter_state(ubx_ci.ubx_config_item);
+        if (!p_state_maybe) {
+          RCLCPP_ERROR(get_logger(), "No parameter state for: %s", ubx_ci.ubx_config_item);
+          return;
         }
-      }
+        const auto & p_state = p_state_maybe.value();
 
-      // every n send a poll request and reset the keys
-      if (++i % n == 0) {
-        if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
-          RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
-          item_list = "";
-          ubx_cfg_->cfg_val_set_poll_async();
-          ubx_cfg_->cfg_val_set_cfgdata_clear();
+        if (p_state.param_status == PARAM_USER) {
+          RCLCPP_DEBUG(
+            get_logger(), "Sending user param %lu: %s", user_params_sent,
+            ubx_ci.ubx_config_item);
+
+          auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
+          if (!result.successful) {
+            RCLCPP_ERROR(get_logger(), "user cfg val set exception: %s", result.reason.c_str());
+          } else {
+            item_list += ubx_ci.ubx_config_item;
+            item_list += " ";
+            user_params_sent++;
+          }
         }
-      }
-    }
+
+        // every n send a poll request and reset the keys
+        if (++i % n == 0) {
+          if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
+            RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+            item_list = "";
+            ubx_cfg_->cfg_val_set_poll_async();
+            ubx_cfg_->cfg_val_set_cfgdata_clear();
+          }
+        }
+      });
+
     // send the final sets
     if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
       RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
       ubx_cfg_->cfg_val_set_poll_async();
       ubx_cfg_->cfg_val_set_cfgdata_clear();
     }
+
+    RCLCPP_INFO(get_logger(), "Sent %zu user parameters to device", user_params_sent);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ublox_fetch_device_params_async()
+  {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_fetch_device_params_async");
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: ubx_cfg_ not set for CFG-VALGET. shutting down!");
+      rclcpp::shutdown();
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
+    ubx_cfg_->cfg_val_get_keys_clear();
+    ubx_cfg_->cfg_set_val_get_layer_ram();
+
+    std::string item_list;
+    size_t initial_params = 0;
+    size_t n = 20;     // every n keys send a request
+
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        auto p_state_maybe = parameter_manager_->get_parameter_state(ubx_ci.ubx_config_item);
+        if (!p_state_maybe) {
+          RCLCPP_ERROR(get_logger(), "No parameter state for: %s", ubx_ci.ubx_config_item);
+          return;
+        }
+
+        auto p_state = p_state_maybe.value();
+        if (p_state.param_status == PARAM_INITIAL) {
+          RCLCPP_DEBUG(
+            get_logger(), "cfg_val_get param %zu: %s", initial_params,
+            ubx_ci.ubx_config_item);
+
+          // Add key to CFG-VALGET request
+          ubx_cfg_->cfg_val_get_key_append(ubx_ci.ubx_key_id);
+
+          // Mark as PARAM_VALGET (request sent)
+          parameter_manager_->update_parameter_status(ubx_ci.ubx_config_item, PARAM_VALGET);
+
+          item_list += ubx_ci.ubx_config_item;
+          item_list += " ";
+          initial_params++;
+
+          // every n keys send a request
+          if (initial_params % n == 0) {
+            if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
+              RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+              item_list = "";
+              ubx_cfg_->cfg_val_get_poll_async_all_layers();
+              ubx_cfg_->cfg_val_get_keys_clear();
+            }
+          }
+        }
+      });
+
+    // send the final requests
+    if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
+      RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+      ubx_cfg_->cfg_val_get_poll_async();
+      ubx_cfg_->cfg_val_get_keys_clear();
+    }
+
+    RCLCPP_INFO(
+      get_logger(), "Requested %zu device parameter values via CFG-VALGET",
+      initial_params);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void declare_ubx_cfg_param_initial(
+    const ubx::cfg::ubx_cfg_item_t & ubx_ci,
+    const ubx::value_t & default_value)
+  {
+    bool p_set = has_parameter(ubx_ci.ubx_config_item);
+
+    if (p_set) {
+      // User override - call parameter cache directly, skip callback
+      auto p_value = get_parameter(ubx_ci.ubx_config_item).get_parameter_value();
+      parameter_manager_->set_parameter_cache(
+        ubx_ci.ubx_config_item, p_value, PARAM_USER, ParamValueSource::START_ARG);
+      // Don't call set_parameter() - avoid callback entirely
+    } else {
+      // Cache PARAM_INITIAL state first
+      parameter_manager_->set_parameter_cache(
+        ubx_ci.ubx_config_item, {}, PARAM_INITIAL, ParamValueSource::UNKNOWN);
+
+      // Then declare parameter - callback will see existing cache state
+      rclcpp::ParameterValue p_value = make_ros_param_value(ubx_ci.ubx_type, default_value);
+      declare_parameter(ubx_ci.ubx_config_item, p_value);
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ublox_init_all_cfg_params()
+  {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_init_all_cfg_params");
+
+    std::string item_list;
+    size_t i = 0;
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        if (!parameter_manager_->parameter_exists(ubx_ci.ubx_config_item)) {
+          ubx::value_t value {0x0000000000000000};
+          RCLCPP_DEBUG(get_logger(), "initialising %lu cfg param: %s", i, ubx_ci.ubx_config_item);
+          declare_ubx_cfg_param_initial(ubx_ci, value);
+
+          item_list += ubx_ci.ubx_config_item;
+          item_list += " ";
+          i++;
+        } else {
+          RCLCPP_DEBUG(get_logger(), "not initialising existing param: %s", ubx_ci.ubx_config_item);
+        }
+      });
+
+    parameter_manager_->log_parameter_cache_state();
+
+    RCLCPP_DEBUG(
+      get_logger(), "finished ublox_init_all_cfg_params - declared %lu parameters",
+      i);
+  }
+
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ublox_send_user_cfg_to_device()
+  {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_send_user_cfg_to_device");
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: ubx_cfg_ not set. shutting down!");
+      rclcpp::shutdown();
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
+    ubx_cfg_->cfg_val_set_cfgdata_clear();
+    ubx_cfg_->cfg_val_set_layer_ram(true);
+    ubx_cfg_->cfg_val_set_transaction(0);     // transactionless
+
+    std::string item_list;
+    size_t i = 0;
+    size_t user_params_sent = 0;
+    size_t n = 10;     // every n output a request
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        auto p_state_maybe = parameter_manager_->get_parameter_state(ubx_ci.ubx_config_item);
+        if (!p_state_maybe) {
+          RCLCPP_ERROR(get_logger(), "No parameter state for: %s", ubx_ci.ubx_config_item);
+          return;
+        }
+
+        auto p_state = p_state_maybe.value();
+        if (p_state.param_status == PARAM_USER) {
+          auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
+          if (!result.successful) {
+            RCLCPP_ERROR(get_logger(), "user cfg val set exception: %s", result.reason.c_str());
+          } else {
+            item_list += ubx_ci.ubx_config_item;
+            item_list += " ";
+            user_params_sent++;
+          }
+        }
+
+        // every n send a poll request and reset the keys
+        if (++i % n == 0) {
+          if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
+            RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+            item_list = "";
+            ubx_cfg_->cfg_val_set_poll_async();
+            ubx_cfg_->cfg_val_set_cfgdata_clear();
+          }
+        }
+      });
+    // send the final sets
+    if (ubx_cfg_->cfg_val_set_cfgdata_size() > 0) {
+      RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+      ubx_cfg_->cfg_val_set_poll_async();
+      ubx_cfg_->cfg_val_set_cfgdata_clear();
+    }
+
+    RCLCPP_DEBUG(
+      get_logger(), "finished ublox_send_user_cfg_to_device - sent %lu user parameters",
+      user_params_sent);
   }
 
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_val_get_all_cfg_items_async()
   {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_val_get_all_cfg_items_async");
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: ubx_cfg_ not set. shutting down!");
+      rclcpp::shutdown();
+      return;
+    }
+
+    if (parameter_manager_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "parameter_manager_ is null - cannot val get parameters!");
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
     ubx_cfg_->cfg_val_get_keys_clear();
     ubx_cfg_->cfg_set_val_get_layer_ram();
 
     std::string item_list;
     size_t i = 0;
     size_t n = 10;     // every n output a request
-    for (auto ci : ubx::cfg::ubxKeyCfgItemMap) {
-      auto ubx_key_id = ci.first;
-      auto ubx_ci = ci.second;
-      ubx_cfg_->cfg_val_get_key_append(ubx_key_id);
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        auto ubx_key_id = ubx_ci.ubx_key_id;
+        ubx_cfg_->cfg_val_get_key_append(ubx_key_id);
 
-      item_list += ubx_ci.ubx_config_item;
-      item_list += " ";
+        // Mark as PARAM_VALGET (request sent)
+        parameter_manager_->update_parameter_status(ubx_ci.ubx_config_item, PARAM_VALGET);
 
-      RCLCPP_DEBUG(get_logger(), "load %lu cfg param: %s", i, ubx_ci.ubx_config_item);
+        item_list += ubx_ci.ubx_config_item;
+        item_list += " ";
 
-      if (++i % n == 0) {
-        RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
-        item_list = "";
-        ubx_cfg_->cfg_val_get_poll_async();
-        ubx_cfg_->cfg_val_get_keys_clear();
-      }
-    }
+        RCLCPP_DEBUG(get_logger(), "load %lu cfg param: %s", i, ubx_ci.ubx_config_item);
+
+        if (++i % n == 0) {
+          RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+          item_list = "";
+          ubx_cfg_->cfg_val_get_poll_async();
+          ubx_cfg_->cfg_val_get_keys_clear();
+        }
+      });
+
     if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
       RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
       ubx_cfg_->cfg_val_get_poll_async_all_layers();
       ubx_cfg_->cfg_val_get_keys_clear();
     }
+
+    RCLCPP_DEBUG(get_logger(), "finished ublox_val_get_all_cfg_items_async");
   }
 
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_val_set_all_cfg_items_async()
   {
+    RCLCPP_DEBUG(get_logger(), "starting ublox_val_set_all_cfg_items_async");
+
+    if (ubx_cfg_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Fatal error: ubx_cfg_ not set. shutting down!");
+      rclcpp::shutdown();
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
+
     ubx_cfg_->cfg_val_set_cfgdata_clear();
     ubx_cfg_->cfg_val_set_layer_ram(true);
     ubx_cfg_->cfg_val_set_transaction(1);
@@ -3090,29 +3840,35 @@ private:
     size_t i = 0;
     bool trans_start = false;
     size_t n = 1;     // every n output a request
-    for (auto ci : ubx::cfg::ubxKeyCfgItemMap) {
-      trans_start = true;
-      auto ubx_ci = ci.second;
+    parameter_manager_->iterate_config_items(
+      [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
+        trans_start = true;
 
-      auto p_state = cfg_param_cache_map_[ubx_ci.ubx_config_item];
-      auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
-      if (!result.successful) {
-        RCLCPP_ERROR(get_logger(), "all cfg val set exception: %s", result.reason.c_str());
-      }
+        auto p_state_maybe = parameter_manager_->get_parameter_state(ubx_ci.ubx_config_item);
+        if (!p_state_maybe) {
+          RCLCPP_ERROR(get_logger(), "No parameter state for: %s", ubx_ci.ubx_config_item);
+          return;
+        }
 
-      item_list += ubx_ci.ubx_config_item;
-      item_list += " ";
+        auto p_state = p_state_maybe.value();
+        auto result = cfg_val_set_from_ubx_ci_p_state(ubx_ci, p_state);
+        if (!result.successful) {
+          RCLCPP_ERROR(get_logger(), "all cfg val set exception: %s", result.reason.c_str());
+        }
 
-      RCLCPP_DEBUG(get_logger(), "set %lu cfg param: %s", i, ubx_ci.ubx_config_item);
+        item_list += ubx_ci.ubx_config_item;
+        item_list += " ";
 
-      if (++i % n == 0) {
-        RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
-        item_list = "";
-        ubx_cfg_->cfg_val_set_poll_async();
-        ubx_cfg_->cfg_val_set_cfgdata_clear();
-        ubx_cfg_->cfg_val_set_transaction(2);
-      }
-    }
+        RCLCPP_DEBUG(get_logger(), "set %lu cfg param: %s", i, ubx_ci.ubx_config_item);
+
+        if (++i % n == 0) {
+          RCLCPP_DEBUG(get_logger(), "cfg_val_set_poll_async ... %s", item_list.c_str());
+          item_list = "";
+          ubx_cfg_->cfg_val_set_poll_async();
+          ubx_cfg_->cfg_val_set_cfgdata_clear();
+          ubx_cfg_->cfg_val_set_transaction(2);
+        }
+      });
 
     if (trans_start) {
       RCLCPP_DEBUG(
@@ -3123,11 +3879,14 @@ private:
       ubx_cfg_->cfg_val_set_cfgdata_clear();
     }
     ubx_cfg_->cfg_val_set_transaction(0);     // make sure its tranaction less
+
+    RCLCPP_DEBUG(get_logger(), "finished ublox_val_set_all_cfg_items_async");
   }
 
   UBLOX_DGNSS_NODE_LOCAL
   void ublox_dgnss_init_async()
   {
+    RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async start");
     RCLCPP_DEBUG(get_logger(), "ubx_mon_ver poll_async ...");
     ubx_mon_->ver()->poll_async();
     RCLCPP_DEBUG(get_logger(), "ubx_sec_uniqid poll_async ...");
@@ -3151,10 +3910,13 @@ private:
     // // ubx_cfg_->cfg_val_set_key_append(ubx::cfg::CFG_USBOUTPROT_NMEA, true);
     // ubx_cfg_->cfg_val_set_poll_async();
 
+    // Original ublox_init_all_cfg_items_async() filters for PARAM_USER only
     RCLCPP_DEBUG(get_logger(), "ublox_init_all_cfg_items_async() ...");
     ublox_init_all_cfg_items_async();
-    RCLCPP_DEBUG(get_logger(), "ublox_val_get_all_cfg_items_async() ...");
-    ublox_val_get_all_cfg_items_async();
+
+    // RCLCPP_DEBUG(get_logger(), "ublox_val_get_all_cfg_items_async() ...");
+    // ublox_val_get_all_cfg_items_async();
+
     // RCLCPP_INFO(get_logger(), "ubx_nav_clock poll_async ...");
     // ubx_nav_->clock()->poll_async();
     // RCLCPP_INFO(get_logger(), "ubx_nav_dop poll_async ...");
@@ -3181,6 +3943,8 @@ private:
     // ubx_nav_->velecef()->poll_async();
     // RCLCPP_INFO(get_logger(), "ubx_nav_velned poll_async ...");
     // ubx_nav_->velned()->poll_async();
+
+    RCLCPP_INFO(get_logger(), "ublox_dgnss_init_async finished");
   }
 };
 }  // namespace ublox_dgnss
