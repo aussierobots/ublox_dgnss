@@ -632,57 +632,7 @@ void load_config_items_from_toml(const std::string& toml_file) {
 - Reliable configuration persistence
 - Clear system state feedback
 
-## Critical Bug Fix: Parameter Initialization Timing Issue (RESOLVED)
-
-### Problem Description
-The original parameter system suffered from a critical timing issue where the constructor attempted to call `get_parameter()` on parameters that hadn't been declared yet through ROS2's parameter system. This caused most PARAM_USER parameters to have null values and fail silently during Phase 1 device transmission.
-
-### Root Cause
-```cpp
-// PROBLEMATIC (old implementation)
-// Constructor tried to get parameter values before they were available
-for (const std::string& name : param_names) {
-  if (parameter_manager_->is_valid_parameter(name)) {
-    // BUG: get_parameter() failed for undeclared parameters
-    auto p_value = get_parameter(name).get_parameter_value();  // Would fail
-    parameter_manager_->set_parameter_cache(name, {}, PARAM_USER);  // Stored null values
-  }
-}
-```
-
-### Solution Implemented
-```cpp
-// FIXED (current implementation)
-// Constructor now properly retrieves values for parameters that exist
-for (const std::string& name : param_names) {
-  if (parameter_manager_->is_valid_parameter(name)) {
-    // FIXED: get_parameter() only called on parameters provided via launch file/args
-    auto p_value = std::make_optional(get_parameter(name).get_parameter_value());
-    RCLCPP_DEBUG(get_logger(), "set initial user param name: %s value: %s",
-      name.c_str(),
-      p_value ? rclcpp::Parameter(name, *p_value).value_to_string().c_str() : "<unset>");
-    parameter_manager_->set_parameter_cache(name, p_value, ParamStatus::PARAM_USER);
-  }
-}
-```
-
-### Evidence of Fix
-- **Before Fix**: Only 1 out of 20 PARAM_USER parameters successfully sent to device
-- **After Fix**: All 20 PARAM_USER parameters successfully transmitted to device in Phase 1
-- **Proof**: `CFG_USBOUTPROT_NMEA=False` now properly disables NMEA output (was failing before)
-- **Log Evidence**: "Phase 1: Sending user parameters to device" now processes all user parameters correctly
-
-### Technical Details
-1. **Parameter Detection**: ROS2 automatically declares parameters provided via launch files/command arguments
-2. **Value Retrieval**: `get_parameter(name)` only succeeds for parameters that exist (were provided by user)
-3. **Null Protection**: `std::make_optional()` properly handles the parameter value wrapping
-4. **State Consistency**: All PARAM_USER parameters now have valid `param_value` fields
-5. **Device Communication**: `cfg_val_set_from_ubx_ci_p_state()` no longer fails due to null values
-
-### Impact
-This fix resolved the core parameter initialization issue, ensuring that user-provided parameters from launch files are properly transmitted to the GPS device during the critical Phase 1 initialization, maintaining the intended system behavior and device configuration.
-
-## Enhanced Parameter Source Tracking and Hotplug Support (NEW)
+## Enhanced Parameter Source Tracking and Hotplug Support
 
 ### ParamValueSource Integration
 
@@ -843,39 +793,6 @@ void ParameterManager::restore_user_parameters_to_device() {
 7. 110+ device parameters requested from device
    ↓
 8. Full parameter synchronization restored
-```
-
-### Critical Bug Fix: Parameter Map Update
-
-**Problem Identified**: In the original `reset_device_parameters()` implementation, parameter state changes were not being persisted to the map:
-
-```cpp
-// BUGGY (original implementation)  
-for (auto & [param_name, p_state] : param_cache_map_) {
-  if (p_state.param_status != PARAM_USER) {
-    p_state.param_value = std::nullopt;     // Modified local reference
-    p_state.param_source = ParamValueSource::UNKNOWN;
-    p_state.param_status = PARAM_INITIAL;
-    // BUG: Changes not written back to map!
-  }
-}
-```
-
-**Solution Implemented**:
-```cpp
-// FIXED (current implementation)
-for (auto & [param_name, p_state] : param_cache_map_) {
-  if (p_state.param_status != PARAM_USER) {
-    p_state.param_value = std::nullopt;
-    p_state.param_source = ParamValueSource::UNKNOWN;
-    p_state.param_status = PARAM_INITIAL;
-    p_state.needs_device_send = false;
-    
-    param_cache_map_[param_name] = p_state;  // CRITICAL: Write back to map
-    
-    params_invalidated++;
-  }
-}
 ```
 
 ### Enhanced CFG-VALGET Response Handling
