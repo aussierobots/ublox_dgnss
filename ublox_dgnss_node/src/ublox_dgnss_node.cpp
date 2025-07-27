@@ -1054,6 +1054,7 @@ public:
     // Only attempt to process events if connected and not in error
     if (usbc_->driver_state() == usb::USBDriverState::DISCONNECTED) {
       RCLCPP_WARN(get_logger(), "handle_usb_events_callback - usb disconnected!");
+      return;
     }
 
     if (usbc_->driver_state() == usb::USBDriverState::ERROR) {
