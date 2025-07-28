@@ -2,6 +2,38 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix for handle_usb_event starting before usb connection
+* Major refactor: Parameter state management and USB hotplug system
+  This is a comprehensive overhaul of the parameter management and USB hotplug systems:
+  **Parameter Management Architecture:**
+  - Added new ParameterManager class with complete parameter lifecycle management
+  - Implemented ParamValueSource tracking (UNKNOWN/DEVICE_ACTUAL/START_ARG/RUNTIME_USER)
+  - Added parameter state machine (PARAM_INITIAL/USER/LOADED/VALSET/VALGET/ACKNAK)
+  - Enhanced thread safety with mutex-protected parameter cache operations
+  - Fixed parameter initialization timing with proper 3-phase approach
+  - Added smart parameter callbacks to prevent CFG-VALGET responses becoming PARAM_USER
+  **USB Hotplug System:**
+  - Fixed USB transfer queue cleanup during device disconnect
+  - Added cleanup_all_transfers() to properly cancel and clear pending transfers
+  - Prevents "too many transfers" warnings and potential memory leaks from stale transfers
+  - Enhanced hotplug parameter handling: reset device params on disconnect, restore user params on reconnect
+  - Improved USB driver state management with proper state transitions
+  **Thread Safety & Memory Management:**
+  - Added comprehensive mutex protection for parameter cache and transfer queue operations
+  - Fixed potential memory leaks in USB transfer cleanup during hotplug events
+  - Enhanced callback group separation for USB events vs parameter processing
+  **New Files:**
+  - parameters.hpp/cpp: Complete parameter management system
+  - ubx_cfg_item_map.hpp: UBX configuration item mapping
+  - parameter_lifecycle.md/usb_device_state.md: Architecture documentation
+  **Statistics:** 7 files changed, 1436 insertions(+), 993 deletions(-), 4 new files
+  This resolves parameter synchronization issues during hotplug events and ensures proper parameter state transitions between device and user-initiated changes.
+* Added nullptr check on transfer->user_data
+* buildfarm crustify issue
+* Contributors: Nick Hortovanyi
+
 0.5.8 (2025-07-09)
 ------------------
 * formatting changes

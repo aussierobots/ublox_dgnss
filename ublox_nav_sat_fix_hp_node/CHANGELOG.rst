@@ -2,6 +2,9 @@
 Changelog for package ublox_nav_sat_fix_hp_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.5.8 (2025-07-09)
 ------------------
 

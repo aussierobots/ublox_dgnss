@@ -2,6 +2,9 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.5.8 (2025-07-09)
 ------------------
 
