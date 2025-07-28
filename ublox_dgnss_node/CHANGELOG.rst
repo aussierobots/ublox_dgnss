@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2025-07-28)
+------------------
 * Fix for handle_usb_event starting before usb connection
 * Major refactor: Parameter state management and USB hotplug system
   This is a comprehensive overhaul of the parameter management and USB hotplug systems:
