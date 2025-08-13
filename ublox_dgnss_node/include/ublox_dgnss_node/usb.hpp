@@ -29,13 +29,19 @@
 #include <vector>
 #include <memory>
 
-#define F9_VENDOR_ID      0x1546   // U-Blox AG
-#define F9_PRODUCT_ID     0x01a9   // u-blox GNSS receiver
+#include "ublox_dgnss_node/device_family.hpp"
+
+#define U_BLOX_AG_VENDOR_ID  0x1546   // U-Blox AG
+#define F9_PRODUCT_ID        0x01a9   // u-blox GNSS receiver (F9P/F9R)
+#define X20P_PRODUCT_ID      0x01ab   // u-blox GNSS receiver (X20P)
+#define X20P_UART1_PRODUCT_ID 0x050c   // X20P UART1
+#define X20P_UART2_PRODUCT_ID 0x050d   // X20P UART2
 
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
 
 #define IN_BUFFER_SIZE 64 * 200
+#define SERIAL_STRING_BUFFER_SIZE 256
 
 namespace usb
 {
@@ -107,12 +113,14 @@ private:
 // hotplug
   hotplug_attach_cb_fn hp_attach_cb_fn_;
   hotplug_detach_cb_fn hp_detach_cb_fn_;
-  libusb_hotplug_callback_handle hp_[2];
+  std::vector<libusb_hotplug_callback_handle> hp_attach_;
+  std::vector<libusb_hotplug_callback_handle> hp_detach_;
 
   int log_level_;
   int vendor_id_;
-  int product_id_;
+  std::vector<uint16_t> product_ids_;
   std::string serial_str_;
+  ublox_dgnss::DeviceFamily device_family_;
   int class_id_;
   int ep_data_out_addr_;
   int ep_data_in_addr_;
@@ -139,7 +147,7 @@ private:
 private:
   libusb_device_handle * open_device_with_serial_string(
     libusb_context * ctx, int vendor_id,
-    int product_id, std::string serial_str, char * serial_num_string);
+    const std::vector<uint16_t> & product_ids, std::string serial_str, char * serial_num_string);
 // this is called after the out transfer to USB from HOST has been received by libusb
   void callback_out(struct libusb_transfer * transfer);
 // this is called when the stat for in is available - from USB in HOST
@@ -168,7 +176,8 @@ public:
   bool open_device();  // returns false on failure
   void init_async();  // throws exception on failure
   Connection(
-    int vendor_id, int product_id, std::string serial_str,
+    int vendor_id, const std::vector<uint16_t> & product_ids, std::string serial_str,
+    ublox_dgnss::DeviceFamily device_family = ublox_dgnss::DeviceFamily::F9P,
     int log_level = LIBUSB_OPTION_LOG_LEVEL);
   ~Connection();
   void set_in_callback(connection_in_cb_fn in_cb_fn)
@@ -201,7 +210,11 @@ public:
   }
   int product_id()
   {
-    return product_id_;
+    return product_ids_.empty() ? 0 : product_ids_[0];
+  }
+  const std::vector<uint16_t> & product_ids() const
+  {
+    return product_ids_;
   }
   std::string serial_str()
   {
