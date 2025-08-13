@@ -8,7 +8,7 @@ RTCM messages can be delivered externally. Alternately the ntrip_client_node can
 
 Work has started on SPARTN support - basic commands are available to enable it on the device and to confirm that the messages are being used (when delivered to the device).
 
-This driver will only work with later generation ublox devices. Testing and development was performed against a ZED-F9P and a ZED-F9R connected via USB, under Ubuntu 22.04/24.04. The driver uses libusb api 1.0.
+This driver supports multiple u-blox device families including ZED-F9P, ZED-F9R, and X20P connected via USB, under Ubuntu 22.04/24.04. The driver uses libusb api 1.0 and automatically adapts to different USB architectures (CDC-ACM for F9 family, Vendor-Specific for X20P).
 
 This release works with Rolling, Kilted, Jazzy and Humble.
 
@@ -16,8 +16,14 @@ You may need to create a udev rule as follows:
 
 /etc/udev/rules.d/99-ublox-gnss.rules
 ```
-  #UBLOX ZED-F9
+  # UBLOX ZED-F9P/F9R (CDC-ACM)
   ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
+  
+  # UBLOX X20P UART1 (Vendor-Specific)  
+  ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev"
+  
+  # UBLOX X20P UART2 (Vendor-Specific)
+  ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev"
 ```
 
 This driver follows the UBX standards used for the ZED-F9P/F9R as documented in the [F9P interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-F9-HPG-1.32_InterfaceDescription_UBX-22008968.pdf) and [F9R interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-F9-HPS-1.30_InterfaceDescription_UBX-22010984.pdf).
@@ -161,13 +167,41 @@ Values will be as described in the integration manual (without scaling applied).
 
 aka Use with Multiple Devices
 
-By default, the ublox_dgnss node will search for and connect to the first device which matches the ublox USB ID's (vendor ID of 0x1546 and product ID of 0x01a9).  If multiple devices are connected simultaneously, the remaining devices will be ignored.  In this situation you have no control over which device is used, since the order in which they are found may depend on the order in which they were physically attached to the host.
+By default, the ublox_dgnss node will search for and connect to the first device which matches the supported u-blox device families. The node automatically detects device families:
 
-If you have multiple ublox devices attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING".  The node will then search for and connect to the first device with this matching serial string.  The device serial string "CFG-USB-SERIAL_NO_STRx" itself should be programmed into the ublox device beforehand using u-center software.
+- **F9P/F9R**: Uses product ID 0x01a9 with CDC-ACM USB architecture
+- **X20P**: Uses product IDs 0x050c (UART1) or 0x050d (UART2) with Vendor-Specific USB architecture
+
+#### Device Family Selection
+
+You can specify the device family using the launch parameter "DEVICE_FAMILY":
+
+```bash
+# For F9P devices (default)
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=F9P
+
+# For F9R devices (sensor fusion capable)
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=F9R
+
+# For X20P devices (dual UART, UART1 will be used)
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=X20P
+```
+
+#### Multi-Device Scenarios
+
+If you have multiple devices of the same family attached simultaneously and wish to connect to a specific device, you can specify a launch parameter "DEVICE_SERIAL_STRING":
+
+- **F9P/F9R**: Serial string should be programmed using u-center software ("CFG-USB-SERIAL_NO_STRx")
+- **X20P**: Uses factory-programmed iSerial (e.g., "DBENI0OW") which is reliable and unique per device
+
+```bash
+# Connect to specific X20P device by serial
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=X20P -p DEVICE_SERIAL_STRING:=DBENI0OW
+```
 
 The frame ID used in ROS2 messages for that device can also be specified using the launch parameter "FRAME_ID".
 
-Note: these parameters are not written to the device.  They only instruct the node on how to behave.
+Note: these parameters are not written to the device. They only instruct the node on how to behave.
 
 # ROS2 UBX NAV Messages
 
@@ -250,7 +284,7 @@ Example launch configuration files are included as "ublox_mb+r_base.launch.py" a
 
 Both base and rover will output position data which can be used to publish NavSatFix messages (as described above).  The rover also outputs heading data via UBX-NAV-RELPOSNED messages.  Refer to Section 2.4 "Using the heading output" in the app note for more information.
 
-Note: as this mode required two ZED-F9P devices connected simultaneously, you will need to configure each device with a different serial string and specify these in the launch files.  See description above on device identification parameters.
+Note: as this mode requires two ZED-F9P devices connected simultaneously, you will need to configure each device with a different serial string and specify these in the launch files. See description above on device identification parameters. For X20P devices, the factory-programmed iSerial can be used directly without additional configuration.
 
 # Helpful tips
 

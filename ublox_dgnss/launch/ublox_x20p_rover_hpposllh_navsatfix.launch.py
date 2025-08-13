@@ -20,7 +20,7 @@ def generate_launch_description():
     "namespace", default_value=""
   )
   device_family_arg = DeclareLaunchArgument(
-    "device_family", default_value=TextSubstitution(text="F9P")
+    "device_family", default_value=TextSubstitution(text="X20P")
   )
   device_serial_string_arg = DeclareLaunchArgument(
     "device_serial_string",
@@ -37,8 +37,8 @@ def generate_launch_description():
             {'DEVICE_SERIAL_STRING': device_serial_string},
             {'FRAME_ID': frame_id},
             {'CFG_USBOUTPROT_NMEA': False},
-            {'CFG_RATE_MEAS': 10},
-            {'CFG_RATE_NAV': 100},
+            {'CFG_RATE_MEAS': 40},
+            {'CFG_RATE_NAV': 1},
             {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
             {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
             {'CFG_MSGOUT_UBX_NAV_COV_USB': 1},

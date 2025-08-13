@@ -13,17 +13,16 @@ def generate_launch_description():
     "log_level", default_value=TextSubstitution(text="INFO")
   )
   device_family_arg = DeclareLaunchArgument(
-    "device_family", default_value=TextSubstitution(text="F9P")
+    "device_family", default_value=TextSubstitution(text="X20P")
   )
 
   params = [{'DEVICE_FAMILY': LaunchConfiguration("device_family")},
             {'CFG_USBOUTPROT_NMEA': False},
-            {'CFG_RATE_MEAS': 100},
+            {'CFG_RATE_MEAS': 40},
             {'CFG_RATE_NAV': 1},
-            {'CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB': 1},
+            {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
             {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
-            {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1}
-            ]
+            {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1}]
 
   container1 = ComposableNodeContainer(
     name='ublox_dgnss_container',

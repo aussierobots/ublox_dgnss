@@ -34,10 +34,12 @@ pkg_check_modules(libusb REQUIRED libusb-1.0)
 
 include_directories(include SYSTEM)
 
+# TODO: Review - Added device_family.cpp for device family support
 add_library(ublox_dgnss_components SHARED
   src/usb.cpp
   src/ublox_dgnss_node.cpp
   src/parameters.cpp
+  src/device_family.cpp
 )
 
 target_compile_definitions(ublox_dgnss_components
