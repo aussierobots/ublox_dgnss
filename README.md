@@ -1,10 +1,12 @@
-Presently have an [issue with the apt packages](https://github.com/ros2/ros2/issues/1708) which we are tring to resolve. Works if you build locally. 
+Presently have an [issue with the apt packages](https://github.com/ros2/ros2/issues/1708) which we are tring to resolve. Works if you build locally.
 
 # ublox-dgnss
 
-This usb based driver is focused on UBLOX Generation 9 UBX messaging, for a DGNSS rover. High precision data is available. A moving base station configuration has been added. This package also supports a fixed base station and moving rover use case.
+This usb based driver is focused on UBLOX  UBX messaging, for a DGNSS rover and base station. High precision data is available.
 
-RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node. 
+A moving base station configuration has been added. This package also supports a fixed base station and moving rover use case.
+
+RTCM messages can be delivered externally. Alternately the ntrip_client_node can be utilised to retrieve RTCM messages from a castor to publish `/ntrip_client/rtcm` messages which will be received by the ublox_dgnss_node.
 
 Work has started on SPARTN support - basic commands are available to enable it on the device and to confirm that the messages are being used (when delivered to the device).
 
@@ -16,47 +18,72 @@ You may need to create a udev rule as follows:
 
 /etc/udev/rules.d/99-ublox-gnss.rules
 ```
-  # UBLOX ZED-F9P/F9R (CDC-ACM)
-  ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
-  
-  # UBLOX X20P UART1 (Vendor-Specific)  
-  ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev"
-  
-  # UBLOX X20P UART2 (Vendor-Specific)
-  ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev"
+# UBLOX ZED-F9P/F9R (CDC-ACM)
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
+
+# UBLOX ZED-X20P (CDC-ACM)
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01ab", MODE="0666", GROUP="plugdev"
+# UBLOX X20P UART1 (Vendor-Specific)
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev"
+# UBLOX X20P UART2 (Vendor-Specific)
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev"
 ```
 
-This driver follows the UBX standards used for the ZED-F9P/F9R as documented in the [F9P interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-F9-HPG-1.32_InterfaceDescription_UBX-22008968.pdf) and [F9R interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-F9-HPS-1.30_InterfaceDescription_UBX-22010984.pdf).
+This driver follows the UBX standards used for the ZED-X20P/F9P/F9R as documented in the [X20P intergration manual](https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf) and [X20P interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-20-HPG-2.00_InterfaceDescription_UBXDOC-304424225-19888.pdf). Earlier manual versions are available on the u-blox website.
 
-It implements a subset of the specification related to achieving high precision output as a rover. U-center can be used to alter settings. Any configuration parameter changed by this driver, will be applied only in RAM. Upon a restart (hot, cold or warm) or after a hot plug usb attach event, the configuration stored in the driver will be sent to the device.
+It implements a subset of the specification related to achieving high precision output as a rover and base station. U-center can be used to alter settings. Any configuration parameter changed by this driver, will be applied only in RAM. Upon a restart (hot, cold or warm) or after a hot plug usb attach event, the configuration stored in the driver will be sent to the device.
+
+## ZED-X20P support
+
+The UBLOX ZED-X20P has only just been released. There are some differences between the F9P and X20P. On the whole the UBX messages are the same specification but there are some like `/ubx_rxm_rtcm` that have been deprecated, on the device, in the manual, in fabor of the newer `/ubx_rxm_cor`.
+
+Two new launch files with 25 HZ output have been added specific for the X20P
+
+```zsh
+ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh.launch.py
+```
+
+```zsh
+ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh_navsatfix.launch.py
+```
+
+otherwise all other launch files have been modified such that adding `-- DEVICE_FAMILY:=x20p` will enable the launch file and UBLOX NODE to connect to a ZED-X20P. If not included the scripts default to f9p device family.
 
 ## Start commands
 
 There are multiple ways to start the node. Its been built using composition. An executable is provider. An example follows which turns off NMEA output at startup.
-```
+
+``` zsh
 ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p CFG_USBOUTPROT_NMEA:=False
 ```
+
 Parameters can be set at launch and some examples are provided to launch high precision pos ecef|llh
-```
+
+``` zsh
 ros2 launch ublox_dgnss ublox_rover_hpposecef.launch.py
 ```
-```
+
+``` zsh
 ros2 launch ublox_dgnss ublox_rover_hpposllh.launch.py
 ```
 
 ## Services
 
 Four services are provided to reset odo, cold start, warm start and hot start.
-```
+
+``` zsh
 ros2 service call /ublox_dgnss/reset_odo ublox_ubx_interfaces/srv/ResetODO
 ```
-```
+
+``` zsh
 ros2 service call /ublox_dgnss/cold_start ublox_ubx_interfaces/srv/ColdStart '{reset_type: 1}'
 ```
-```
+
+``` zsh
 ros2 service call /ublox_dgnss/warm_start ublox_ubx_interfaces/srv/WarmStart '{reset_type: 1}'
 ```
-```
+
+``` zsh
 ros2 service call /ublox_dgnss/hot_start ublox_ubx_interfaces/srv/HotStart '{reset_type: 1}'
 ```
 
@@ -64,13 +91,16 @@ ros2 service call /ublox_dgnss/hot_start ublox_ubx_interfaces/srv/HotStart '{res
 
 Parameter values can be set at any time or passed when the node starts
 
-```
+``` zsh
 ros2 param set /ublox_dgnss CFG_RATE_NAV 2
 ```
+
 or the current value retrieved
-```
+
+``` zsh
 ros2 param get /ublox_dgnss CFG_RATE_NAV
 ```
+
 ### UBX Parameters
 
 The following parameters may be set. Its a subset of the full UBX Gen 9 configuration parameter list.
@@ -162,7 +192,6 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_SFODO_LATENCY
   CFG_SFODO_QUANT_ERROR
 
-
 ### Device Identification Parameters
 
 aka Use with Multiple Devices
@@ -206,7 +235,8 @@ Note: these parameters are not written to the device. They only instruct the nod
 # ROS2 UBX NAV Messages
 
 The following messages may be outputted. They included a `std_msgs/Header header` with the remainder of the fields matching the UBX output. Note that field names use different notation as the UBX field name notation is not compliant with the ROS IDL field names.
-```
+
+``` zsh
 /ubx_esf_meas
 
 /ubx_esf_status
@@ -239,7 +269,8 @@ The following messages may be outputted. They included a `std_msgs/Header header
 ```
 
 The following topics are subscribed to
-```
+
+``` zsh
 /ubx_esf_meas_to_device
 /ntrip_client/rtcm
 ```
@@ -252,7 +283,7 @@ Note that this node relies on (and hence subscribes to) three UBX Nav messages, 
 
 If the ublox device is not configured to publish these three messages, the navsatfix message will likewise not be published.
 
-```
+``` zsh
 /fix
 ```
 
@@ -261,9 +292,11 @@ If the ublox device is not configured to publish these three messages, the navsa
 A basic NTRIP client is provided, that focuses in binary RTCM data. Its purpose is to acquire the RTCM data from an internet based NTRIP Castor and publish [RTCM Messages](https://index.ros.org/p/rtcm_msgs/).
 
 An example launch file is provided. You will need to set values appropriate for the NTRIP Castor intended to be used
-```
+
+``` zsh
 ros2 launch ublox_dgnss ntrip_client.launch.py use_https:=true host:=ntrip.data.gnss.ga.gov.au port:=443 mountpoint:=MBCH00AUS0 username:=username password:=password
 ```
+
 Note the launch file has been configured to also use environment variables `NTRIP_USERNAME` & `NTRIP_PASSWORD` such that you dont need credentials in the launch scripts.
 
 # Fixed Base and Rover
@@ -276,7 +309,7 @@ Example launch files are provided for this use case. Run `ublox_fb+r_base.launch
 
 The ZED-F9P devices support the "moving base and rover" mode of operation, using two devices on a mobile vehicle to provide both position and orientation data.  Further information on this mode, including physical connections between the two devices and the host machine are included in the following ublox application note.
 
-https://www.u-blox.com/sites/default/files/documents/ZED-F9P-MovingBase_AppNote_UBX-19009093.pdf
+[ZED-F9P Moving base applications](https://www.u-blox.com/sites/default/files/documents/ZED-F9P-MovingBase_AppNote_UBX-19009093.pdf)
 
 Note: the ZED-F9R device does not support this mode.
 
@@ -301,12 +334,13 @@ This [RTCM 3 Message cheat sheet](https://www.use-snip.com/kb/knowledge-base/an-
 
 Ensure CFG_MSGOUT_UBX_NAV_STATUS_USB is set to 1. It is lower priority message but can be used to determine what type of GPS fix and the type of differential error correction that has been supplied.
 
-```
+``` zsh
 ros2 topic echo /ubx_nav_status
 ```
 
 should output a message similar to
-```
+
+``` zsh
 header:
   stamp:
     sec: 1684907069
@@ -337,14 +371,15 @@ If the `gps_fix.fix_type` = 3, it means its a 3D fix. The `diff_soln` and `diff_
 
 ## How precise is my solution?
 
-
 After making sure that the deivce is processing RTCM messages and assuming that you have launched the node with `ros2 launch ublox_dgnss ublox_rover_hpposllh.launch.py`, run the following the command
 
-```
+``` zsh
 ros2 topic echo /ubx_nav_hp_pos_llh
 ```
+
 You should see something similiar to
-```
+
+``` zsh
 header:
   stamp:
     sec: 1684907675
@@ -379,9 +414,10 @@ The driver output the raw UBX data into the message so some interpreting is requ
 If in doubt as to what the scaling is, please look at the F9 interface description for an explanation. All debug log output have had scaling applied.
 
 If you would like to calculate the high precision lon, lat and height values use the following code as a guide
-```
-   // Extract the LLH and high-precision components
-    double lat = ubx_hppos_llh_msg->lat * 1e-7 + ubx_hppos_llh_msg->lat_hp * 1e-9;
-    double lon = ubx_hppos_llh_msg->lon * 1e-7 + ubx_hppos_llh_msg->lon_hp * 1e-9;
-    double alt = ubx_hppos_llh_msg->height * 1e-3 + ubx_hppos_llh_msg->height_hp * 1e-4;
+
+``` c++
+// Extract the LLH and high-precision components
+double lat = ubx_hppos_llh_msg->lat * 1e-7 + ubx_hppos_llh_msg->lat_hp * 1e-9;
+double lon = ubx_hppos_llh_msg->lon * 1e-7 + ubx_hppos_llh_msg->lon_hp * 1e-9;
+double alt = ubx_hppos_llh_msg->height * 1e-3 + ubx_hppos_llh_msg->height_hp * 1e-4;
 ```
