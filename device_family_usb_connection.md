@@ -417,39 +417,8 @@ if (rc < 0) {
 
 ## Hotplug Coordination for Multi-Device Families
 
-### X20P Dual Device Scenario
-```cpp
-// For X20P, we may have both UART1 (050c) and UART2 (050d) connected
-// The hotplug logic needs to handle this intelligently
-
-void register_hotplug_callbacks() {
-    auto device_info = ublox_dgnss::get_device_family_info(device_family_);
-    
-    if (device_info.dual_uart_capable) {
-        // X20P: Register for specific product IDs based on selection logic
-        uint16_t target_product_id;
-        
-        if (serial_str_.empty()) {
-            // No serial string: prefer UART1 (primary)
-            target_product_id = device_info.product_ids[0]; // 0x050c
-        } else {
-            // Serial string specified: need to register for both and filter in callback
-            target_product_id = LIBUSB_HOTPLUG_MATCH_ANY;
-        }
-        
-        libusb_hotplug_register_callback(ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 
-                                        LIBUSB_HOTPLUG_ENUMERATE, vendor_id_, 
-                                        target_product_id, class_id_, 
-                                        hotplug_attach_callback_fn, NULL, &hp_[0]);
-    } else {
-        // F9P/F9R: Single device, use primary product ID
-        libusb_hotplug_register_callback(ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED,
-                                        LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
-                                        device_info.product_ids[0], class_id_,
-                                        hotplug_attach_callback_fn, NULL, &hp_[0]);
-    }
-}
-```
+### Actual Implementation
+The system registers hotplug callbacks for **all product IDs** in the device family:
 
 ## Connection Flow Comparison
 
@@ -511,7 +480,20 @@ void register_hotplug_callbacks() {
 10. Begin UBX Protocol Communication
 ```
 
-### X20P Connection Sequence  
+### X20P Connection Sequence (Primary: 0x01ab)
+```
+1. Device Detection (1546:01ab) - Uses F9P/F9R code path
+2. Open USB Device Handle  
+3. Get Configuration Descriptor
+4. Validate: 2 interfaces required (Control + Data)
+5. Claim Interface 0 (CDC Control) and Interface 1 (CDC Data)
+6. Execute CDC-ACM Line State Control (0x21, 0x22)
+7. Discover CDC Class-Specific Endpoints
+8. Setup USB Transfers on Data Interface
+9. Begin UBX Protocol Communication
+```
+
+### X20P Vendor-Specific UART Sequence (0x050c/0x050d)
 ```
 1. Device Detection (1546:050c or 1546:050d)
 2. Open USB Device Handle
