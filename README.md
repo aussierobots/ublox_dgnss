@@ -35,7 +35,7 @@ It implements a subset of the specification related to achieving high precision 
 
 ## ZED-X20P support
 
-The UBLOX ZED-X20P has only just been released. There are some differences between the F9P and X20P. On the whole the UBX messages are the same specification but there are some like `/ubx_rxm_rtcm` that have been deprecated, on the device, in the manual, in fabor of the newer `/ubx_rxm_cor`.
+The UBLOX ZED-X20P has only just been released. There are some differences between the F9P and X20P. On the whole the UBX messages are the same specification but there are some like `/ubx_rxm_rtcm` that have been deprecated, on the device, in the manual, in favor of the newer `/ubx_rxm_cor`.
 
 Two new launch files with 25 HZ output have been added specific for the X20P
 
@@ -47,7 +47,7 @@ ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh.launch.py
 ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh_navsatfix.launch.py
 ```
 
-otherwise all other launch files have been modified such that adding `-- DEVICE_FAMILY:=x20p` will enable the launch file and UBLOX NODE to connect to a ZED-X20P. If not included the scripts default to f9p device family.
+otherwise all other launch files have been modified such that adding `-- DEVICE_FAMILY:=x20p` will enable the launch file and UBLOX NODE to connect to a ZED-X20P. If not added the launch files default to the f9p device family.
 
 ## Start commands
 
