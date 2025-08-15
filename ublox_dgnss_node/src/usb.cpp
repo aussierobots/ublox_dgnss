@@ -18,6 +18,8 @@
 #include <cstring>
 #include <string>
 #include <memory>
+#include <sstream>
+#include <iomanip>
 #include "ublox_dgnss_node/callback.hpp"
 #include "ublox_dgnss_node/usb.hpp"
 
@@ -31,6 +33,7 @@ Connection::Connection(
 {
   vendor_id_ = vendor_id;
   product_ids_ = product_ids;
+  connected_product_id_ = 0;  // Initialize to 0, will be set when device connects
   serial_str_ = serial_str;
   device_family_ = device_family;
   class_id_ = LIBUSB_HOTPLUG_MATCH_ANY;
@@ -276,6 +279,9 @@ bool Connection::open_device()
   if (rc < 0) {
     throw std::string("Error getting device descriptor: ") + *libusb_error_name(rc);
   }
+
+  connected_product_id_ = dev_desc.idProduct;
+
   auto num_configurations = dev_desc.bNumConfigurations;       // this should be 1
   if (num_configurations != 1) {
     throw std::string("Error bNumConfigurations is not 1 - dont know which configuration to use");
@@ -368,6 +374,7 @@ bool Connection::open_device()
             if ((ep_desc->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
               if (ep_desc->bEndpointAddress & LIBUSB_ENDPOINT_IN) {
                 ep_data_in_addr_ = ep_desc->bEndpointAddress;
+                data_in_max_packet_size_ = ep_desc->wMaxPacketSize;
               } else {
                 ep_data_out_addr_ = ep_desc->bEndpointAddress;
               }
@@ -400,14 +407,28 @@ bool Connection::open_device()
   if (use_cdc_control) {
     // CDC-ACM line state setup for F9P/F9R and X20P 0x01ab
     rc = libusb_control_transfer(
-      devh_, 0x21, 0x22, ACM_CTRL_DTR | ACM_CTRL_RTS,
+      devh_, 0x21, USB_CDC_SET_CONTROL_LINE_STATE, ACM_CTRL_DTR | ACM_CTRL_RTS,
       0, NULL, 0, 0);
     if (rc < 0 && rc != LIBUSB_ERROR_BUSY) {
       throw libusb_error_name(rc);
     }
   } else {
-    // X20P vendor-specific interfaces don't need CDC-ACM control transfers
-    // Device is ready for communication after interface claiming
+    // X20P UART1/UART2 interfaces are not currently supported
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P &&
+      (dev_desc.idProduct == 0x050c || dev_desc.idProduct == 0x050d))
+    {
+      const char * interface_name = (dev_desc.idProduct == 0x050c) ? "UART1" : "UART2";
+      std::string error_msg = std::string("X20P ") + interface_name + " interface (0x" +
+        std::to_string(dev_desc.idProduct) + ") is not currently supported. " +
+        "Please use the main X20P interface (0x01ab) instead. " +
+        "See GitHub issue: https://github.com/aussierobots/ublox_dgnss/issues/48";
+
+      if (debug_cb_fn_) {
+        (debug_cb_fn_)(error_msg);
+      }
+
+      throw UsbException(error_msg);
+    }
   }
 
   return true;
@@ -432,6 +453,10 @@ char * Connection::device_speed_txt()
     case LIBUSB_SPEED_SUPER_PLUS:
       speed_txt = const_cast<char *>("SPEED_SUPER_PLUS (10000 MBit/s)");
       break;
+    // future libusb version not available yet in ubuntu 24.04
+    // case LIBUSB_SPEED_SUPER_PLUS_X2:
+    //   speed_txt = const_cast<char *>("SPEED_SUPER_PLUS_X2(20000 MBit/s)");
+    //   break;
     default:
       speed_txt = const_cast<char *>("SPEED_UNKNOWN");
       break;
@@ -514,10 +539,25 @@ void Connection::write_char(u_char c)
 
 void Connection::write_buffer(u_char * buf, size_t size)
 {
+  if (debug_cb_fn_) {
+    std::ostringstream oss;
+    oss << "write_buffer: sending " << size << " bytes to endpoint 0x"
+        << std::hex << ep_data_out_addr_ << std::dec;
+    (debug_cb_fn_)(oss.str());
+  }
+
   int actual_length;
   int rc = libusb_bulk_transfer(
     devh_, ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT, buf, size,
-    &actual_length, 0);
+    &actual_length, timeout_ms_);  // Use timeout instead of 0
+
+  if (debug_cb_fn_) {
+    std::ostringstream oss;
+    oss << "write_buffer: result rc=" << rc << " actual_length=" << actual_length
+        << " requested=" << size;
+    (debug_cb_fn_)(oss.str());
+  }
+
   if (rc < 0) {
     std::string exception_msg("Error while sending buf: ");
     exception_msg.append(libusb_error_name(rc));
@@ -664,11 +704,11 @@ void Connection::write_buffer_async(u_char * buf, size_t size, void * user_data)
     throw UsbException("No exception callback function set");
   }
 
-  auto transfer_out = make_transer_out(buf, size);
+  auto transfer_out = make_transfer_out(buf, size);
   submit_transfer(transfer_out, "async submit transfer out: ");
 }
 
-std::shared_ptr<transfer_t> Connection::make_transer_out(u_char * buf, size_t size)
+std::shared_ptr<transfer_t> Connection::make_transfer_out(u_char * buf, size_t size)
 {
   auto transfer = std::make_shared<transfer_t>();
   transfer->type = USB_OUT;
@@ -880,6 +920,9 @@ void Connection::handle_usb_events()
 {
   if (!keep_running_) {return;}
 
+  // don’t call into libusb until init() has succeeded
+  if (ctx_ == nullptr) {return;}
+
   // int rc = libusb_handle_events_timeout_completed(ctx_, &timeout_tv_, &usb_event_completed_);
   int rc = libusb_handle_events_timeout(ctx_, &timeout_tv_);
   switch (rc) {
@@ -887,13 +930,19 @@ void Connection::handle_usb_events()
       keep_running_ = false;
       break;
     case LIBUSB_ERROR_NO_DEVICE: {
-        attached_ = false;
-        // close_devh();
+        if (++no_device_streak_ >= kNoDeviceThreshold) {
+          attached_ = false;
+        }
       }
       break;
     default:
       break;
   }
+
+  if (rc >= 0) {
+    no_device_streak_ = 0;
+  }
+
   if (rc < 0) {
     throw UsbException(libusb_error_name(rc));
   }

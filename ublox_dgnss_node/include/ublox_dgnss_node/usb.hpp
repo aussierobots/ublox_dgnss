@@ -40,6 +40,11 @@
 #define ACM_CTRL_DTR   0x01
 #define ACM_CTRL_RTS   0x02
 
+// USB CDC Line Coding for UART configuration
+#define USB_CDC_SET_LINE_CODING    0x20
+#define USB_CDC_GET_LINE_CODING    0x21
+#define USB_CDC_SET_CONTROL_LINE_STATE 0x22
+
 #define IN_BUFFER_SIZE 64 * 200
 #define SERIAL_STRING_BUFFER_SIZE 256
 
@@ -119,13 +124,15 @@ private:
   int log_level_;
   int vendor_id_;
   std::vector<uint16_t> product_ids_;
+  uint16_t connected_product_id_;  // Actual connected device product ID
   std::string serial_str_;
   ublox_dgnss::DeviceFamily device_family_;
   int class_id_;
-  int ep_data_out_addr_;
-  int ep_data_in_addr_;
-  int ep_comms_in_addr_;
+  int ep_data_out_addr_ = 0;
+  int ep_data_in_addr_ = 0;
+  int ep_comms_in_addr_ = 0;
   u_int8_t num_interfaces_ = 0;
+  size_t data_in_max_packet_size_ = 64;  // default safe for FS bulk
   unsigned int timeout_ms_;
 
 // asynchronous comms
@@ -143,6 +150,9 @@ private:
 
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
   std::mutex transfer_queue_mutex_;
+
+  int no_device_streak_ = 0;
+  static constexpr int kNoDeviceThreshold = 3;
 
 private:
   libusb_device_handle * open_device_with_serial_string(
@@ -162,7 +172,7 @@ private:
 
 
   std::shared_ptr<transfer_t> make_transfer_in();
-  std::shared_ptr<transfer_t> make_transer_out(u_char * buf, size_t size);
+  std::shared_ptr<transfer_t> make_transfer_out(u_char * buf, size_t size);
   void submit_transfer(
     std::shared_ptr<transfer_t> transfer,
     const std::string msg = "Error submit transfer: ",
@@ -210,7 +220,7 @@ public:
   }
   int product_id()
   {
-    return product_ids_.empty() ? 0 : product_ids_[0];
+    return connected_product_id_;
   }
   const std::vector<uint16_t> & product_ids() const
   {

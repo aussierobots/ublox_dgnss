@@ -310,11 +310,13 @@ public:
 
     // Device family-aware USB connection creation
     auto device_info = ublox_dgnss::get_device_family_info(device_family_);
-    RCLCPP_DEBUG(get_logger(), "Make USB Connection - Device: %s, Product IDs: %zu, Serial: '%s'",
-                 device_info.description.c_str(), device_info.product_ids.size(),
-                 serial_str_.c_str());
-    usbc_ = std::make_shared<usb::Connection>(U_BLOX_AG_VENDOR_ID, device_info.product_ids,
-                                              serial_str_, device_family_);
+    RCLCPP_DEBUG(
+      get_logger(), "Make USB Connection - Device: %s, Product IDs: %zu, Serial: '%s'",
+      device_info.description.c_str(), device_info.product_ids.size(),
+      serial_str_.c_str());
+    usbc_ = std::make_shared<usb::Connection>(
+      U_BLOX_AG_VENDOR_ID, device_info.product_ids,
+      serial_str_, device_family_);
 
     RCLCPP_DEBUG(get_logger(), "setting up usb callbacks ...");
     usbc_->set_in_callback(connection_in_callback);
@@ -648,8 +650,9 @@ private:
 
     // Get the parameter value and convert to uppercase for case-insensitive matching
     device_family_str_ = param_client->get_parameter<std::string>(DEVICE_FAMILY_PARAM_NAME);
-    std::transform(device_family_str_.begin(), device_family_str_.end(),
-                   device_family_str_.begin(), ::toupper);
+    std::transform(
+      device_family_str_.begin(), device_family_str_.end(),
+      device_family_str_.begin(), ::toupper);
 
     // Validate device family string
     if (ublox_dgnss::is_valid_device_family_string(device_family_str_)) {
@@ -662,13 +665,15 @@ private:
         std::snprintf(hex_buf, sizeof(hex_buf), "0x%04x", info.product_ids[i]);
         product_ids_str += hex_buf;
       }
-      RCLCPP_INFO(get_logger(), "Device family: %s (Product IDs: [%s], Reliable iSerial: %s)",
-                  info.description.c_str(), product_ids_str.c_str(),
-                  info.reliable_iserial ? "YES" : "NO");
+      RCLCPP_INFO(
+        get_logger(), "Device family: %s (Product IDs: [%s], Reliable iSerial: %s)",
+        info.description.c_str(), product_ids_str.c_str(),
+        info.reliable_iserial ? "YES" : "NO");
     } else {
-      RCLCPP_WARN(get_logger(),
-                  "Invalid DEVICE_FAMILY '%s', defaulting to 'F9P'. Valid options: F9P, F9R, X20P",
-                  device_family_str_.c_str());
+      RCLCPP_WARN(
+        get_logger(),
+        "Invalid DEVICE_FAMILY '%s', defaulting to 'F9P'. Valid options: F9P, F9R, X20P",
+        device_family_str_.c_str());
       device_family_str_ = "F9P";
       device_family_ = ublox_dgnss::DeviceFamily::F9P;
     }
@@ -677,11 +682,25 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void log_usbc()
   {
+    if (!usbc_) {
+      RCLCPP_WARN(this->get_logger(), "USB connection object is null");
+      return;
+    }
+
+    // Build endpoint string dynamically to avoid printing invalid 0x00 for ep_comms
+    std::ostringstream ep_info;
+    ep_info << "ep_data out: 0x" << std::hex << std::setw(2) << std::setfill('0')
+            << static_cast<int>(usbc_->ep_data_out_addr())
+            << " in: 0x" << std::setw(2) << static_cast<int>(usbc_->ep_data_in_addr());
+    if (usbc_->ep_comms_in_addr() != 0) {
+      ep_info << " ep_comms in: 0x" << std::setw(2) << static_cast<int>(usbc_->ep_comms_in_addr());
+    }
+
     RCLCPP_INFO(
-      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x " \
-      "serial_str: %s bus: %03d address: %03d " \
-      "port_number: %d speed: %s num_interfaces: %u " \
-      "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
+      this->get_logger(),
+      "usb vendor_id: 0x%04x product_id: 0x%04x "
+      "serial_str: %s bus: %03d address: %03d "
+      "port_number: %d speed: %s num_interfaces: %u %s",
       usbc_->vendor_id(),
       usbc_->product_id(),
       usbc_->serial_str().c_str(),
@@ -690,9 +709,7 @@ private:
       usbc_->port_number(),
       usbc_->device_speed_txt(),
       usbc_->num_interfaces(),
-      usbc_->ep_data_out_addr(),
-      usbc_->ep_data_in_addr(),
-      usbc_->ep_comms_in_addr());
+      ep_info.str().c_str());
   }
 
   inline rclcpp::ParameterValue make_ros_param_value(
@@ -1060,8 +1077,10 @@ public:
 
     // Only attempt to process events if connected and not in error
     if (usbc_->driver_state() == usb::USBDriverState::DISCONNECTED) {
-      RCLCPP_WARN(get_logger(), "handle_usb_events_callback - usb disconnected!");
-      return;
+      RCLCPP_DEBUG_THROTTLE(
+        get_logger(), *get_clock(), 100,
+        "handle_usb_events_callback - usb disconnected (waiting) ....");
+      // return;
     }
 
     if (usbc_->driver_state() == usb::USBDriverState::ERROR) {
@@ -1265,6 +1284,36 @@ public:
 
     size_t len = transfer_in->actual_length;
     unsigned char * buf = transfer_in->buffer;
+
+    /* TODO: Review - Header stripping code no longer needed since UART1/UART2 interfaces are blocked
+    // Strip 2-byte status headers from X20P UART1/UART2 vendor-specific interfaces
+    std::vector<uint8_t> payload;
+    if ((usbc_->product_id() == 0x050c || usbc_->product_id() == 0x050d) &&
+        len > 0) {
+      const size_t mps = 64;  // Known max packet size for these interfaces
+      payload.reserve(len);
+
+      size_t off = 0;
+      while (off < len) {
+        const size_t chunk = std::min(mps, len - off);
+        if (chunk > 2) {
+          // Skip the first two status bytes, copy the rest of this USB packet
+          payload.insert(payload.end(), buf + off + 2, buf + off + chunk);
+        }
+        // If chunk <= 2, packet contained only status—nothing to copy
+        off += chunk;
+      }
+
+      if (!payload.empty()) {
+        // Use cleaned payload for processing
+        buf = payload.data();
+        len = payload.size();
+      } else {
+        // No payload data, skip processing
+        len = 0;
+      }
+    }
+    */
 
     if (len > 0) {
       // NMEA string starts with a $

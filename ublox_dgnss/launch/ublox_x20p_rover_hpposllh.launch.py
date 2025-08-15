@@ -20,9 +20,18 @@ def generate_launch_description():
             {'CFG_USBOUTPROT_NMEA': False},
             {'CFG_RATE_MEAS': 40},
             {'CFG_RATE_NAV': 1},
+            # USB output (for 0x01ab CDC-ACM interface)
             {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB': 1},
             {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
-            {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1}]
+            {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1},
+            # UART1 output (for 0x050c vendor-specific interface)  
+            {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1': 1},
+            {'CFG_MSGOUT_UBX_NAV_STATUS_UART1': 5},
+            {'CFG_MSGOUT_UBX_RXM_COR_UART1': 1},
+            # UART2 output (for 0x050d vendor-specific interface)
+            {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2': 1},
+            {'CFG_MSGOUT_UBX_NAV_STATUS_UART2': 5},
+            {'CFG_MSGOUT_UBX_RXM_COR_UART2': 1}]
 
   container1 = ComposableNodeContainer(
     name='ublox_dgnss_container',

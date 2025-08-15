@@ -84,11 +84,12 @@ Device Descriptor:
   - Serial String: u-center programmed (like F9P devices)
   - Control Setup: **Requires CDC-ACM control** (`0x21, 0x22, DTR|RTS`)
   - **Driver Behavior**: Same as F9P/F9R, no special handling needed
-- **USB Device 2&3 (0x050c/0x050d)**: **Vendor-specific UART interfaces**
-  - Interface Count: 1 per device (single vendor-specific interface)
+- **USB Device 2&3 (0x050c/0x050d)**: **Vendor-specific UART interfaces (NOT SUPPORTED)**
+  - Interface Count: 1 per device (single vendor-specific interface)  
   - USB Class: 255 (Vendor Specific) - **No CDC-ACM protocol**
   - Serial String: Factory programmed and reliable
   - Control Setup: **NO CDC-ACM control** - causes `LIBUSB_ERROR_PIPE`
+  - **Status**: Currently unsupported - see [GitHub Issue #48](https://github.com/aussierobots/ublox_dgnss/issues/48)
 - **Priority**: 0x01ab listed first in device family (F9P-compatible gets priority)
 
 ## USB Architecture Family Differences
@@ -506,6 +507,44 @@ The system registers hotplug callbacks for **all product IDs** in the device fam
 9. Begin UBX Protocol Communication
 ```
 
+### X20P UART Interface Limitations (0x050c/0x050d)
+
+**Current Status**: **UNSUPPORTED** - These interfaces are not functional in the current driver.
+
+#### Investigation Summary
+Multiple approaches were attempted to enable UART1/UART2 interfaces:
+
+1. **USB Packet Analysis**: Discovered 2-byte status headers per 64-byte USB packet
+2. **Header Stripping**: Successfully removed status headers but received all zeros (no UART data)
+3. **USB-to-UART Bridge Initialization**: Attempted various vendor control sequences:
+   - Set baudrate (38400)
+   - Configure line format (8N1)  
+   - Enable UART mode
+   - Enable bridge functionality
+4. **CDC Control Transfers**: Failed with `LIBUSB_ERROR_PIPE` (expected for vendor-specific interfaces)
+
+#### Root Cause
+Despite UBX being enabled by default on UART1, the USB-to-UART bridge initialization sequence is incomplete. The specific vendor control protocol for this chip is unknown.
+
+#### Error Handling
+```cpp
+// Current implementation blocks UART1/UART2 interfaces with clear error message
+if (device_family_ == ublox_dgnss::DeviceFamily::X20P &&
+    (dev_desc.idProduct == 0x050c || dev_desc.idProduct == 0x050d)) {
+  
+  const char* interface_name = (dev_desc.idProduct == 0x050c) ? "UART1" : "UART2";
+  std::string error_msg = std::string("X20P ") + interface_name + " interface (0x" + 
+    std::to_string(dev_desc.idProduct) + ") is not currently supported. " +
+    "Please use the main X20P interface (0x01ab) instead. " +
+    "See GitHub issue: https://github.com/aussierobots/ublox_dgnss/issues/48";
+  
+  throw UsbException(error_msg);
+}
+```
+
+#### Workaround
+**Use the main X20P interface (0x01ab)** which provides identical functionality to F9P/F9R devices and supports all GNSS operations.
+
 ## Implementation Status
 
 ### Device Family Support Matrix
@@ -513,7 +552,8 @@ The system registers hotplug callbacks for **all product IDs** in the device fam
 |---------------|----------------|-------------------|--------------|-----------------|
 | **F9P** | ✅ Implemented | ✅ Full Support | ✅ Single Instance | ✅ Optional/Search |
 | **F9R** | ✅ Implemented | ✅ Full Support | ✅ Single Instance | ✅ Optional/Search |  
-| **X20P** | ✅ Implemented | ✅ Full Support | ✅ UART Selection | ⚠️ Factory Display |
+| **X20P (0x01ab)** | ✅ Implemented | ✅ Full Support | ✅ Single Instance | ✅ Factory Display |
+| **X20P (UART1/2)** | ❌ Not Supported | ❌ Blocked | ❌ See Issue #48 | ✅ Factory Display |
 
 ### Current Capabilities
 - **Multi-Family Support**: F9P, F9R, and X20P devices supported simultaneously
@@ -645,7 +685,8 @@ lsusb -t | grep -i ublox
 Device Family | Interface Count | USB Class | Serial String | Connection Status | UBX Communication
 F9P          | 2              | CDC-ACM   | Optional      | ✅ Verified       | ✅ Working
 F9R          | 2              | CDC-ACM   | Optional      | ✅ Verified       | ✅ Working  
-X20P         | 1              | Vendor    | Factory Set   | ✅ Verified       | ✅ Working
+X20P (0x01ab) | 2              | CDC-ACM   | User Set      | ✅ Verified       | ✅ Working
+X20P (UART)   | 1              | Vendor    | Factory Set   | ❌ Unsupported    | ❌ Issue #48
 ```
 
 ### Verified Test Scenarios
@@ -662,6 +703,17 @@ X20P         | 1              | Vendor    | Factory Set   | ✅ Verified       |
 - **F9P/F9R**: Previously verified with CDC-ACM architecture
 - **Parameter System**: All device families integrate with ROS2 parameter framework
 - **USB Initialization**: All families complete initialization successfully
+
+### Known Limitations
+1. **❌ X20P UART1/UART2 interfaces (0x050c/0x050d)**: Not supported due to unknown USB-to-UART bridge protocol
+   - **Impact**: Users must use main interface (0x01ab) 
+   - **Tracking**: [GitHub Issue #48](https://github.com/aussierobots/ublox_dgnss/issues/48)
+   - **Workaround**: Main interface (0x01ab) provides full functionality
+
+### Supported X20P Configuration
+- **✅ Primary Interface (0x01ab)**: Full F9P/F9R compatibility with CDC-ACM protocol
+- **❌ UART1 Interface (0x050c)**: Blocked with clear error message  
+- **❌ UART2 Interface (0x050d)**: Blocked with clear error message
 
 ### Next Testing Priorities
 1. ✅ **Serial string display enhancement** - X20P now displays actual device iSerial

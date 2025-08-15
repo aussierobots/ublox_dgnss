@@ -21,11 +21,11 @@ You may need to create a udev rule as follows:
 # UBLOX ZED-F9P/F9R (CDC-ACM)
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
 
-# UBLOX ZED-X20P (CDC-ACM)
+# UBLOX ZED-X20P (CDC-ACM) - SUPPORTED
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01ab", MODE="0666", GROUP="plugdev"
-# UBLOX X20P UART1 (Vendor-Specific)
+# UBLOX X20P UART1 (Vendor-Specific) - NOT SUPPORTED
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev"
-# UBLOX X20P UART2 (Vendor-Specific)
+# UBLOX X20P UART2 (Vendor-Specific) - NOT SUPPORTED
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev"
 ```
 
@@ -37,7 +37,16 @@ It implements a subset of the specification related to achieving high precision 
 
 The UBLOX ZED-X20P has only just been released. There are some differences between the F9P and X20P. On the whole the UBX messages are the same specification but there are some like `/ubx_rxm_rtcm` that have been deprecated, on the device, in the manual, in favor of the newer `/ubx_rxm_cor`.
 
-Two new launch files with 25 HZ output have been added specific for the X20P
+**⚠️ Important: X20P Interface Limitations**
+
+The X20P device presents multiple USB interfaces:
+- **✅ Main Interface (0x01ab)**: Fully supported with F9P/F9R compatibility
+- **❌ UART1 Interface (0x050c)**: Not currently supported  
+- **❌ UART2 Interface (0x050d)**: Not currently supported
+
+**Use only the main X20P interface (0x01ab) for full functionality.** See [GitHub Issue #48](https://github.com/aussierobots/ublox_dgnss/issues/48) for technical details.
+
+Two new launch files with 25 HZ output have been added specific for the X20P main interface:
 
 ```zsh
 ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh.launch.py
@@ -47,7 +56,7 @@ ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh.launch.py
 ros2 launch ublox_dgnss ublox_x20p_rover_hpposllh_navsatfix.launch.py
 ```
 
-otherwise all other launch files have been modified such that adding `-- DEVICE_FAMILY:=x20p` will enable the launch file and UBLOX NODE to connect to a ZED-X20P. If not added the launch files default to the f9p device family.
+otherwise all other launch files have been modified such that adding `-- DEVICE_FAMILY:=x20p` will enable the launch file and UBLOX NODE to connect to a ZED-X20P main interface. If not added the launch files default to the f9p device family.
 
 ## Start commands
 
@@ -170,6 +179,8 @@ Values will be as described in the integration manual (without scaling applied).
   CFG_UART2OUTPROT_NMEA
   CFG_UART2OUTPROT_RTCM3X
   CFG_UART2OUTPROT_UBX
+
+**Note**: For X20P devices, UART1/UART2 parameters configure the device's physical UART ports, not the USB UART interfaces (0x050c/0x050d) which are not supported.
   CFG_USBINPROT_NMEA
   CFG_USBINPROT_RTCM3X
   CFG_USBINPROT_UBX
@@ -199,7 +210,8 @@ aka Use with Multiple Devices
 By default, the ublox_dgnss node will search for and connect to the first device which matches the supported u-blox device families. The node automatically detects device families:
 
 - **F9P/F9R**: Uses product ID 0x01a9 with CDC-ACM USB architecture
-- **X20P**: Uses product IDs 0x050c (UART1) or 0x050d (UART2) with Vendor-Specific USB architecture
+- **X20P**: Uses product ID 0x01ab (main interface) with CDC-ACM USB architecture  
+  - ⚠️ UART interfaces 0x050c/0x050d are not supported
 
 #### Device Family Selection
 
@@ -212,7 +224,7 @@ ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=F9P
 # For F9R devices (sensor fusion capable)
 ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=F9R
 
-# For X20P devices (dual UART, UART1 will be used)
+# For X20P devices (main interface 0x01ab only)
 ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p DEVICE_FAMILY:=X20P
 ```
 
