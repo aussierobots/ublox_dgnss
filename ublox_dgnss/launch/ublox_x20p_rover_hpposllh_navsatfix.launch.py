@@ -44,20 +44,21 @@ def generate_launch_description():
             {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
             {'CFG_MSGOUT_UBX_NAV_COV_USB': 1},
             {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1},
-            # UART1 output (for 0x050c vendor-specific interface)
-            {'CFG_UART1INPROT_UBX': True},
-            {'CFG_UART1OUTPROT_UBX': True},
-            {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1': 1},
-            {'CFG_MSGOUT_UBX_NAV_STATUS_UART1': 5},
-            {'CFG_MSGOUT_UBX_NAV_COV_UART1': 1},
-            {'CFG_MSGOUT_UBX_RXM_COR_UART1': 1},
-            # UART2 output (for 0x050d vendor-specific interface)
-            {'CFG_UART2INPROT_UBX': True},
-            {'CFG_UART2OUTPROT_UBX': True},
-            {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2': 1},
-            {'CFG_MSGOUT_UBX_NAV_STATUS_UART2': 5},
-            {'CFG_MSGOUT_UBX_NAV_COV_UART2': 1},
-            {'CFG_MSGOUT_UBX_RXM_COR_UART2': 1}]
+            # # UART1 output (for 0x050c vendor-specific interface)
+            # {'CFG_UART1INPROT_UBX': True},
+            # {'CFG_UART1OUTPROT_UBX': True},
+            # {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1': 1},
+            # {'CFG_MSGOUT_UBX_NAV_STATUS_UART1': 5},
+            # {'CFG_MSGOUT_UBX_NAV_COV_UART1': 1},
+            # {'CFG_MSGOUT_UBX_RXM_COR_UART1': 1},
+            # # UART2 output (for 0x050d vendor-specific interface)
+            # {'CFG_UART2INPROT_UBX': True},
+            # {'CFG_UART2OUTPROT_UBX': True},
+            # {'CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2': 1},
+            # {'CFG_MSGOUT_UBX_NAV_STATUS_UART2': 5},
+            # {'CFG_MSGOUT_UBX_NAV_COV_UART2': 1},
+            # {'CFG_MSGOUT_UBX_RXM_COR_UART2': 1}
+            ]
 
   container1 = ComposableNodeContainer(
     name='ublox_dgnss_container',
