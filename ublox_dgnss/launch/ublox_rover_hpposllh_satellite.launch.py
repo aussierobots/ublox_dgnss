@@ -9,11 +9,17 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
   """Generate launch description for ublox_dgnss components."""
 
+  device_family = LaunchConfiguration("device_family")
+
   log_level_arg = DeclareLaunchArgument(
     "log_level", default_value=TextSubstitution(text="INFO")
   )
+  device_family_arg = DeclareLaunchArgument(
+    "device_family", default_value=TextSubstitution(text="F9P")
+  )
 
-  params = [{'CFG_USBOUTPROT_NMEA': False},
+  params = [{"DEVICE_FAMILY": device_family},
+            {'CFG_USBOUTPROT_NMEA': False},
             {'CFG_UART1OUTPROT_UBX': False},
             {'CFG_UART1OUTPROT_NMEA': False},
             {'CFG_UART1OUTPROT_RTCM3X': False},
@@ -52,5 +58,6 @@ def generate_launch_description():
 
   return launch.LaunchDescription([
     log_level_arg,
+    device_family_arg,
     container1,
     ])

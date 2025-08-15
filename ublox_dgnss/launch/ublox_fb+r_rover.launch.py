@@ -13,12 +13,16 @@ from launch_ros.descriptions import ComposableNode
 def generate_launch_description():
 
     log_level = LaunchConfiguration("log_level")
+    device_family = LaunchConfiguration("device_family")
     namespace = LaunchConfiguration("namespace")
     device_serial_string = LaunchConfiguration("device_serial_string")
     frame_id = LaunchConfiguration("frame_id")
 
     log_level_arg = DeclareLaunchArgument(
         "log_level", default_value=TextSubstitution(text="INFO")
+    )
+    device_family_arg = DeclareLaunchArgument(
+        "device_family", default_value=TextSubstitution(text="F9P")
     )
     namespace_arg = DeclareLaunchArgument("namespace", default_value="rover")
     device_serial_string_arg = DeclareLaunchArgument(
@@ -33,6 +37,7 @@ def generate_launch_description():
     )
 
     params = [
+        {"DEVICE_FAMILY": device_family},
         {"DEVICE_SERIAL_STRING": device_serial_string},
         {"FRAME_ID": frame_id},
         {"CFG_USBOUTPROT_NMEA": False},
@@ -87,6 +92,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             log_level_arg,
+            device_family_arg,
             namespace_arg,
             device_serial_string_arg,
             frame_id_arg,

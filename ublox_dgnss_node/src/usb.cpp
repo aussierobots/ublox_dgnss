@@ -18,6 +18,8 @@
 #include <cstring>
 #include <string>
 #include <memory>
+#include <sstream>
+#include <iomanip>
 #include "ublox_dgnss_node/callback.hpp"
 #include "ublox_dgnss_node/usb.hpp"
 
@@ -25,12 +27,17 @@ using namespace std::placeholders;
 
 namespace usb
 {
-Connection::Connection(int vendor_id, int product_id, std::string serial_str, int log_level)
+Connection::Connection(
+  int vendor_id, const std::vector<uint16_t> & product_ids, std::string serial_str,
+  ublox_dgnss::DeviceFamily device_family, int log_level)
 {
   vendor_id_ = vendor_id;
-  product_id_ = product_id;
+  product_ids_ = product_ids;
+  connected_product_id_ = 0;  // Initialize to 0, will be set when device connects
   serial_str_ = serial_str;
+  device_family_ = device_family;
   class_id_ = LIBUSB_HOTPLUG_MATCH_ANY;
+
   log_level_ = log_level;
   ctx_ = NULL;
   devh_ = NULL;
@@ -81,11 +88,16 @@ void Connection::init()
     static_cast<libusb_hotplug_callback_fn>(hotplug_attach_callback_t<int(libusb_context * ctx,
     libusb_device * device, libusb_hotplug_event event, void * user_data)>::callback);
 
-  rc = libusb_hotplug_register_callback(
-    ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
-    product_id_, class_id_, hotplug_attach_callback_fn, NULL, &hp_[0]);
-  if (LIBUSB_SUCCESS != rc) {
-    throw std::string("Error registering hotplug attach callback");
+  // Register hotplug callbacks for ALL product IDs in device family
+  hp_attach_.resize(product_ids_.size());
+  for (size_t i = 0; i < product_ids_.size(); i++) {
+    rc = libusb_hotplug_register_callback(
+      ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
+      product_ids_[i], class_id_, hotplug_attach_callback_fn, NULL, &hp_attach_[i]);
+    if (LIBUSB_SUCCESS != rc) {
+      throw std::string("Error registering hotplug attach callback for product ID: ") +
+            std::to_string(product_ids_[i]);
+    }
   }
 
   // setup C style to C++ style callback
@@ -96,11 +108,15 @@ void Connection::init()
     static_cast<libusb_hotplug_callback_fn>(hotplug_detach_callback_t<int(libusb_context * ctx,
     libusb_device * device, libusb_hotplug_event event, void * user_data)>::callback);
 
-  rc = libusb_hotplug_register_callback(
-    ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
-    product_id_, class_id_, hotplug_detach_callback_fn, NULL, &hp_[1]);
-  if (LIBUSB_SUCCESS != rc) {
-    throw std::string("Error registering hotplug detach callback");
+  hp_detach_.resize(product_ids_.size());
+  for (size_t i = 0; i < product_ids_.size(); i++) {
+    rc = libusb_hotplug_register_callback(
+      ctx_, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, vendor_id_,
+      product_ids_[i], class_id_, hotplug_detach_callback_fn, NULL, &hp_detach_[i]);
+    if (LIBUSB_SUCCESS != rc) {
+      throw std::string("Error registering hotplug detach callback for product ID: ") +
+            std::to_string(product_ids_[i]);
+    }
   }
 
   /* Set debugging output level.
@@ -112,10 +128,9 @@ void Connection::init()
     #endif
 }
 
-// Function to open a USB device with a specific Vendor ID, Product ID, and serial number string
 libusb_device_handle * Connection::open_device_with_serial_string(
   libusb_context * ctx,
-  int vendor_id, int product_id,
+  int vendor_id, const std::vector<uint16_t> & product_ids,
   std::string serial_str,
   char * serial_num_string)
 {
@@ -143,7 +158,20 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       throw std::string("Error getting device descriptor: ") + libusb_error_name(rc);
     }
 
-    if (desc.idVendor != vendor_id || desc.idProduct != product_id) {
+    // Check if device matches vendor and any of the product IDs
+    if (desc.idVendor != vendor_id) {
+      continue;
+    }
+
+    bool product_id_match = false;
+    for (uint16_t product_id : product_ids) {
+      if (desc.idProduct == product_id) {
+        product_id_match = true;
+        break;
+      }
+    }
+
+    if (!product_id_match) {
       continue;
     }
 
@@ -153,12 +181,40 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       throw std::string("Error opening device: ") + libusb_error_name(rc);
     }
 
-    // Read the serial number string
+    // Enhanced serial number reading with device family awareness
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
-      reinterpret_cast<unsigned char *>(serial_num_string), sizeof(serial_num_string));
-    if (rc < 0 && rc != LIBUSB_ERROR_INVALID_PARAM) {
-      throw std::string("Error getting string descriptor ascii: ") + libusb_error_name(rc);
+      reinterpret_cast<unsigned char *>(serial_num_string), SERIAL_STRING_BUFFER_SIZE);
+
+    // Product ID-specific serial string handling
+    auto device_info = ublox_dgnss::get_device_family_info(device_family_);
+    bool reliable_iserial = false;
+
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+      // X20P: Serial behavior depends on which USB device we're using
+      if (desc.idProduct == 0x01ab) {
+        // 0x01ab: F9P/F9R-compatible behavior (IDENTICAL serial handling)
+        reliable_iserial = false;  // User-programmed via u-center, may be empty
+      } else {
+        // 0x050c/0x050d: Vendor-specific behavior (DIFFERENT serial handling)
+        reliable_iserial = true;  // Factory programmed, always reliable
+      }
+    } else {
+      // F9P/F9R: Standard behavior
+      reliable_iserial = device_info.reliable_iserial;
+    }
+
+    if (rc < 0) {
+      if (reliable_iserial) {
+        // Factory iSerial should be reliable (X20P 0x050c/0x050d)
+        throw std::string("Serial string read failed (unexpected): ") + libusb_error_name(rc);
+      } else {
+        // User-programmed iSerial may not be reliable (F9P/F9R + X20P 0x01ab)
+        if (rc != LIBUSB_ERROR_INVALID_PARAM) {
+          throw std::string("Serial string read failed: ") + libusb_error_name(rc);
+        }
+        // LIBUSB_ERROR_INVALID_PARAM is expected if serial not programmed
+      }
     }
 
     // if specified serial string is empty, we can just return now but assign
@@ -186,9 +242,9 @@ bool Connection::open_device()
 {
   driver_state_ = USBDriverState::CONNECTING;
 
-  char serial_num_string[256];
+  char serial_num_string[SERIAL_STRING_BUFFER_SIZE];
   devh_ = open_device_with_serial_string(
-    ctx_, vendor_id_, product_id_, serial_str_,
+    ctx_, vendor_id_, product_ids_, serial_str_,
     serial_num_string);
   if (!devh_) {
     if (serial_str_.empty()) {
@@ -203,28 +259,17 @@ bool Connection::open_device()
     return false;
   }
 
-  // retrieve
-
   int rc = libusb_set_auto_detach_kernel_driver(devh_, true);
   if (rc < 0) {
     throw std::string("Error set auto detach kernel driver: ") + libusb_error_name(rc);
   }
 
-  /* As we are dealing with a CDC-ACM device, it's highly probable that
-   * Linux already attached the cdc-acm driver to this device.
-   * We need to detach the drivers from all the USB interfaces. The CDC-ACM
-   * Class defines two interfaces: the Control interface and the
-   * Data interface.
+  /*
+   * Different device families have different interface patterns:
+   * - X20P/F9P/F9R: CDC-ACM with 2 interfaces (Control + Data)
+   * - X20P: Vendor Specific with 1 interface
+   * Interface claiming is now done after we determine the actual interface count.
    */
-  for (int if_num = 0; if_num < 2; if_num++) {
-    if (libusb_kernel_driver_active(devh_, if_num)) {
-      libusb_detach_kernel_driver(devh_, if_num);
-    }
-    rc = libusb_claim_interface(devh_, if_num);
-    if (rc < 0) {
-      throw std::string("Error claiming interface: ") + libusb_error_name(rc);
-    }
-  }
 
   dev_ = libusb_get_device(devh_);
 
@@ -234,6 +279,9 @@ bool Connection::open_device()
   if (rc < 0) {
     throw std::string("Error getting device descriptor: ") + *libusb_error_name(rc);
   }
+
+  connected_product_id_ = dev_desc.idProduct;
+
   auto num_configurations = dev_desc.bNumConfigurations;       // this should be 1
   if (num_configurations != 1) {
     throw std::string("Error bNumConfigurations is not 1 - dont know which configuration to use");
@@ -247,8 +295,60 @@ bool Connection::open_device()
   }
 
   num_interfaces_ = conf_desc->bNumInterfaces;
-  if (num_interfaces_ != 2) {
-    throw std::string("Error config bNumInterfaces != 2");
+
+  /*
+   * CRITICAL: X20P presents as THREE SEPARATE USB DEVICES from one physical module:
+   * - 0x01a9: F9P/F9R-compatible CDC-ACM (IDENTICAL architecture, 2 interfaces)
+   * - 0x01ab: X20P-compatible CDC-ACM (IDENTICAL architecture, 2 interfaces)
+   * - 0x050c: Vendor-specific UART1 (DIFFERENT architecture, 1 interface)
+   * - 0x050d: Vendor-specific UART2 (DIFFERENT architecture, 1 interface)
+   */
+  auto device_info = ublox_dgnss::get_device_family_info(device_family_);
+  uint8_t expected_interfaces;
+
+  if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+    // X20P: Architecture depends on which USB device we're connecting to
+    if (dev_desc.idProduct == 0x01ab) {
+      // 0x01ab: F9P/F9R-compatible CDC-ACM interface (IDENTICAL to F9P/F9R)
+      expected_interfaces = 2;
+    } else {
+      // 0x050c/0x050d: Vendor-specific UART interfaces (DIFFERENT from F9P/F9R)
+      expected_interfaces = 1;
+    }
+  } else {
+    // F9P/F9R: CDC-ACM architecture (2 interfaces: Control + Data)
+    expected_interfaces = 2;
+  }
+
+  if (num_interfaces_ != expected_interfaces) {
+    throw std::string("Interface count mismatch for ") + device_info.name +
+          ": expected " + std::to_string(expected_interfaces) +
+          ", got " + std::to_string(num_interfaces_);
+  }
+
+  // Product ID-aware serial string handling for display
+  // Now that we have device descriptor, handle serial string display logic
+  if (device_family_ == ublox_dgnss::DeviceFamily::X20P && strlen(serial_num_string) > 0) {
+    // X20P: Only use factory iSerial for 0x050c/0x050d (reliable factory serial)
+    if (dev_desc.idProduct == 0x050c || dev_desc.idProduct == 0x050d) {
+      serial_str_ = std::string(serial_num_string);
+    }
+    // For 0x01ab: Keep original search parameter (F9P-style, may be user-programmed)
+  } else {
+    // F9P/F9R: Keep original search parameter (iSerial may be empty/unreliable)
+    // serial_str_ remains as the user-provided search parameter
+  }
+
+  // Device interface claiming
+  for (uint8_t if_num = 0; if_num < num_interfaces_; if_num++) {
+    if (libusb_kernel_driver_active(devh_, if_num)) {
+      libusb_detach_kernel_driver(devh_, if_num);
+    }
+    rc = libusb_claim_interface(devh_, if_num);
+    if (rc < 0) {
+      throw std::string("Error claiming interface ") + std::to_string(if_num) +
+            " for " + device_info.name + ": " + libusb_error_name(rc);
+    }
   }
 
   for (uint8_t i = 0; i < num_interfaces_; i++) {
@@ -258,28 +358,77 @@ bool Connection::open_device()
 
       switch (interface_desc->bInterfaceClass) {
         case LIBUSB_CLASS_COMM:
-          // should only have one endpoint
+          // CDC-ACM Control interface - should only have one endpoint
           ep_comms_in_addr_ = interface_desc->endpoint[0].bEndpointAddress;
           break;
         case LIBUSB_CLASS_DATA:
+          // CDC-ACM Data interface - has IN and OUT endpoints
           ep_data_out_addr_ = interface_desc->endpoint[0].bEndpointAddress;
           ep_data_in_addr_ = interface_desc->endpoint[1].bEndpointAddress;
           break;
+        case 255:  // LIBUSB_CLASS_VENDOR_SPEC
+          // X20P devices use vendor-specific class with bulk endpoints on single interface
+          for (uint8_t ep = 0; ep < interface_desc->bNumEndpoints; ep++) {
+            const struct libusb_endpoint_descriptor * ep_desc = &interface_desc->endpoint[ep];
+
+            if ((ep_desc->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
+              if (ep_desc->bEndpointAddress & LIBUSB_ENDPOINT_IN) {
+                ep_data_in_addr_ = ep_desc->bEndpointAddress;
+                data_in_max_packet_size_ = ep_desc->wMaxPacketSize;
+              } else {
+                ep_data_out_addr_ = ep_desc->bEndpointAddress;
+              }
+            }
+          }
+          break;
         default:
-          throw std::string("Error unknown bInterfaceClass");
+          throw std::string("Error unknown bInterfaceClass: ") +
+                std::to_string(interface_desc->bInterfaceClass);
       }
     }
   }
   libusb_free_config_descriptor(conf_desc);
 
-  /* Start configuring the device:
-   * - set line state
+  /*
+   * CRITICAL DISTINCTION:
+   * - F9P/F9R: Always CDC-ACM, always need control transfers
+   * - X20P 0x01ab: F9P/F9R-compatible CDC-ACM, IDENTICAL behavior (needs control)
+   * - X20P 0x050c/0x050d: Vendor-specific, NO CDC-ACM, causes LIBUSB_ERROR_PIPE if attempted
    */
-  rc = libusb_control_transfer(
-    devh_, 0x21, 0x22, ACM_CTRL_DTR | ACM_CTRL_RTS,
-    0, NULL, 0, 0);
-  if (rc < 0 && rc != LIBUSB_ERROR_BUSY) {
-    throw libusb_error_name(rc);
+  bool use_cdc_control = false;
+  if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+    // X20P: CDC control ONLY for F9P-compatible interface (0x01ab)
+    use_cdc_control = (dev_desc.idProduct == 0x01ab);
+  } else {
+    // F9P/F9R: Always use CDC-ACM control (standard behavior)
+    use_cdc_control = true;
+  }
+
+  if (use_cdc_control) {
+    // CDC-ACM line state setup for F9P/F9R and X20P 0x01ab
+    rc = libusb_control_transfer(
+      devh_, 0x21, USB_CDC_SET_CONTROL_LINE_STATE, ACM_CTRL_DTR | ACM_CTRL_RTS,
+      0, NULL, 0, 0);
+    if (rc < 0 && rc != LIBUSB_ERROR_BUSY) {
+      throw libusb_error_name(rc);
+    }
+  } else {
+    // X20P UART1/UART2 interfaces are not currently supported
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P &&
+      (dev_desc.idProduct == 0x050c || dev_desc.idProduct == 0x050d))
+    {
+      const char * interface_name = (dev_desc.idProduct == 0x050c) ? "UART1" : "UART2";
+      std::string error_msg = std::string("X20P ") + interface_name + " interface (0x" +
+        std::to_string(dev_desc.idProduct) + ") is not currently supported. " +
+        "Please use the main X20P interface (0x01ab) instead. " +
+        "See GitHub issue: https://github.com/aussierobots/ublox_dgnss/issues/48";
+
+      if (debug_cb_fn_) {
+        (debug_cb_fn_)(error_msg);
+      }
+
+      throw UsbException(error_msg);
+    }
   }
 
   return true;
@@ -304,6 +453,10 @@ char * Connection::device_speed_txt()
     case LIBUSB_SPEED_SUPER_PLUS:
       speed_txt = const_cast<char *>("SPEED_SUPER_PLUS (10000 MBit/s)");
       break;
+    // future libusb version not available yet in ubuntu 24.04
+    // case LIBUSB_SPEED_SUPER_PLUS_X2:
+    //   speed_txt = const_cast<char *>("SPEED_SUPER_PLUS_X2(20000 MBit/s)");
+    //   break;
     default:
       speed_txt = const_cast<char *>("SPEED_UNKNOWN");
       break;
@@ -386,10 +539,25 @@ void Connection::write_char(u_char c)
 
 void Connection::write_buffer(u_char * buf, size_t size)
 {
+  if (debug_cb_fn_) {
+    std::ostringstream oss;
+    oss << "write_buffer: sending " << size << " bytes to endpoint 0x"
+        << std::hex << ep_data_out_addr_ << std::dec;
+    (debug_cb_fn_)(oss.str());
+  }
+
   int actual_length;
   int rc = libusb_bulk_transfer(
     devh_, ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT, buf, size,
-    &actual_length, 0);
+    &actual_length, timeout_ms_);  // Use timeout instead of 0
+
+  if (debug_cb_fn_) {
+    std::ostringstream oss;
+    oss << "write_buffer: result rc=" << rc << " actual_length=" << actual_length
+        << " requested=" << size;
+    (debug_cb_fn_)(oss.str());
+  }
+
   if (rc < 0) {
     std::string exception_msg("Error while sending buf: ");
     exception_msg.append(libusb_error_name(rc));
@@ -536,11 +704,11 @@ void Connection::write_buffer_async(u_char * buf, size_t size, void * user_data)
     throw UsbException("No exception callback function set");
   }
 
-  auto transfer_out = make_transer_out(buf, size);
+  auto transfer_out = make_transfer_out(buf, size);
   submit_transfer(transfer_out, "async submit transfer out: ");
 }
 
-std::shared_ptr<transfer_t> Connection::make_transer_out(u_char * buf, size_t size)
+std::shared_ptr<transfer_t> Connection::make_transfer_out(u_char * buf, size_t size)
 {
   auto transfer = std::make_shared<transfer_t>();
   transfer->type = USB_OUT;
@@ -752,6 +920,9 @@ void Connection::handle_usb_events()
 {
   if (!keep_running_) {return;}
 
+  // don’t call into libusb until init() has succeeded
+  if (ctx_ == nullptr) {return;}
+
   // int rc = libusb_handle_events_timeout_completed(ctx_, &timeout_tv_, &usb_event_completed_);
   int rc = libusb_handle_events_timeout(ctx_, &timeout_tv_);
   switch (rc) {
@@ -759,13 +930,19 @@ void Connection::handle_usb_events()
       keep_running_ = false;
       break;
     case LIBUSB_ERROR_NO_DEVICE: {
-        attached_ = false;
-        // close_devh();
+        if (++no_device_streak_ >= kNoDeviceThreshold) {
+          attached_ = false;
+        }
       }
       break;
     default:
       break;
   }
+
+  if (rc >= 0) {
+    no_device_streak_ = 0;
+  }
+
   if (rc < 0) {
     throw UsbException(libusb_error_name(rc));
   }
@@ -794,11 +971,15 @@ void Connection::shutdown()
   keep_running_ = false;
 
   // de register hotplug callbacks
-  if (!hp_[0]) {
-    libusb_hotplug_deregister_callback(ctx_, hp_[0]);
+  for (auto handle : hp_attach_) {
+    if (handle) {
+      libusb_hotplug_deregister_callback(ctx_, handle);
+    }
   }
-  if (!hp_[1]) {
-    libusb_hotplug_deregister_callback(ctx_, hp_[1]);
+  for (auto handle : hp_detach_) {
+    if (handle) {
+      libusb_hotplug_deregister_callback(ctx_, handle);
+    }
   }
 
   close_devh();

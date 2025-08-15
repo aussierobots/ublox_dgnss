@@ -22,12 +22,14 @@
 #include <optional>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "ublox_dgnss_node/visibility_control.h"
 #include "ublox_dgnss_node/usb.hpp"
 #include "ublox_dgnss_node/parameters.hpp"
+#include "ublox_dgnss_node/device_family.hpp"
 #include "ublox_dgnss_node/ubx/ubx_cfg.hpp"
 #include "ublox_dgnss_node/ubx/ubx_mon.hpp"
 #include "ublox_dgnss_node/ubx/ubx_inf.hpp"
@@ -157,12 +159,10 @@ public:
     parameter_manager_->set_device_batch_callback(
       std::bind(&UbloxDGNSSNode::send_parameters_to_device_batch, this, std::placeholders::_1)
     );
-    // parameter_manager_->set_device_send_callback(
-    //   std::bind(&UbloxDGNSSNode::send_parameter_to_device, this, std::placeholders::_1));
 
-    // check for device serial string parameter
+    // Check device family first, then device serial string with family-aware messaging
+    check_for_device_family_param(parameters_client);
     check_for_device_serial_param(parameters_client);
-    // check for frame_id parameter
     check_for_frame_id_param(parameters_client);
 
     // check that the CFG parameters are valid that have been supplied as args/yaml
@@ -175,6 +175,9 @@ public:
       }
       // check for specified frame_id string, silently skip over it - already handled above
       if (strcmp(name.c_str(), FRAME_ID_PARAM_NAME.c_str()) == 0) {
+        continue;
+      }
+      if (strcmp(name.c_str(), DEVICE_FAMILY_PARAM_NAME.c_str()) == 0) {
         continue;
       }
       // ignore other parameters that don't start with "CFG"
@@ -305,8 +308,15 @@ public:
     usb::connection_debug_cb_fn connection_debug_callback = std::bind(
       &UbloxDGNSSNode::usb_debug_callback, this, _1);
 
-    RCLCPP_DEBUG(get_logger(), "Make USB Connection - serial string: '%s'", serial_str_.c_str());
-    usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
+    // Device family-aware USB connection creation
+    auto device_info = ublox_dgnss::get_device_family_info(device_family_);
+    RCLCPP_DEBUG(
+      get_logger(), "Make USB Connection - Device: %s, Product IDs: %zu, Serial: '%s'",
+      device_info.description.c_str(), device_info.product_ids.size(),
+      serial_str_.c_str());
+    usbc_ = std::make_shared<usb::Connection>(
+      U_BLOX_AG_VENDOR_ID, device_info.product_ids,
+      serial_str_, device_family_);
 
     RCLCPP_DEBUG(get_logger(), "setting up usb callbacks ...");
     usbc_->set_in_callback(connection_in_callback);
@@ -391,14 +401,6 @@ public:
   UBLOX_DGNSS_NODE_LOCAL
   void perform_usb_initialization(bool from_timer = false)
   {
-    // // Guard against double initialization
-    // if (usbc_->driver_state() == usb::USBDriverState::CONNECTING ||
-    //   usbc_->driver_state() == usb::USBDriverState::CONNECTED)
-    // {
-    //   RCLCPP_WARN(get_logger(), "USB initialization already in progress or completed");
-    //   return;
-    // }
-
     if (from_timer) {
       RCLCPP_INFO(get_logger(), "Starting USB initialization");
     } else {
@@ -527,6 +529,10 @@ private:
   std::string serial_str_;
   const std::string DEV_STRING_PARAM_NAME = "DEVICE_SERIAL_STRING";
 
+  ublox_dgnss::DeviceFamily device_family_;
+  std::string device_family_str_;
+  const std::string DEVICE_FAMILY_PARAM_NAME = "DEVICE_FAMILY";
+
   std::string unique_id_;
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;
@@ -574,19 +580,36 @@ private:
   {
     // default to empty string
     serial_str_ = "";
+    auto info = ublox_dgnss::get_device_family_info(device_family_);
+
     // Check if the parameter exists
     if (!param_client->has_parameter(DEV_STRING_PARAM_NAME)) {
-      RCLCPP_INFO(
-        this->get_logger(), "Parameter %s not found, will use first ublox device.",
-        DEV_STRING_PARAM_NAME.c_str());
+      if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+        // X20P: Multiple USB interfaces available
+        RCLCPP_INFO(
+          this->get_logger(), "Parameter %s not found, will use first available %s USB interface.",
+          DEV_STRING_PARAM_NAME.c_str(), info.name.c_str());
+      } else {
+        // F9P/F9R: Standard message
+        RCLCPP_INFO(
+          this->get_logger(), "Parameter %s not found, will use first %s device.",
+          DEV_STRING_PARAM_NAME.c_str(), info.name.c_str());
+      }
       return;
     }
 
     // Get the parameter value
     serial_str_ = param_client->get_parameter<std::string>(DEV_STRING_PARAM_NAME);
-    RCLCPP_INFO(
-      this->get_logger(), "Parameter %s found with value: %s",
-      DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str());
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+      RCLCPP_INFO(
+        this->get_logger(),
+        "Parameter %s found with value: %s (will connect to matching %s USB interface)",
+        DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str(), info.name.c_str());
+    } else {
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s found with value: %s",
+        DEV_STRING_PARAM_NAME.c_str(), serial_str_.c_str());
+    }
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -609,15 +632,75 @@ private:
       FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
   }
 
+  // Device family parameter validation with default F9P
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_device_family_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // Default to F9P for backward compatibility
+    device_family_str_ = "F9P";
+    device_family_ = ublox_dgnss::DeviceFamily::F9P;
+
+    // Check if the parameter exists
+    if (!param_client->has_parameter(DEVICE_FAMILY_PARAM_NAME)) {
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, defaulting to 'F9P' device family",
+        DEVICE_FAMILY_PARAM_NAME.c_str());
+      return;
+    }
+
+    // Get the parameter value and convert to uppercase for case-insensitive matching
+    device_family_str_ = param_client->get_parameter<std::string>(DEVICE_FAMILY_PARAM_NAME);
+    std::transform(
+      device_family_str_.begin(), device_family_str_.end(),
+      device_family_str_.begin(), ::toupper);
+
+    // Validate device family string
+    if (ublox_dgnss::is_valid_device_family_string(device_family_str_)) {
+      device_family_ = ublox_dgnss::string_to_device_family(device_family_str_);
+      auto info = ublox_dgnss::get_device_family_info(device_family_);
+      std::string product_ids_str;
+      for (size_t i = 0; i < info.product_ids.size(); ++i) {
+        if (i > 0) {product_ids_str += ", ";}
+        char hex_buf[16];
+        std::snprintf(hex_buf, sizeof(hex_buf), "0x%04x", info.product_ids[i]);
+        product_ids_str += hex_buf;
+      }
+      RCLCPP_INFO(
+        get_logger(), "Device family: %s (Product IDs: [%s], Reliable iSerial: %s)",
+        info.description.c_str(), product_ids_str.c_str(),
+        info.reliable_iserial ? "YES" : "NO");
+    } else {
+      RCLCPP_WARN(
+        get_logger(),
+        "Invalid DEVICE_FAMILY '%s', defaulting to 'F9P'. Valid options: F9P, F9R, X20P",
+        device_family_str_.c_str());
+      device_family_str_ = "F9P";
+      device_family_ = ublox_dgnss::DeviceFamily::F9P;
+    }
+  }
 
   UBLOX_DGNSS_NODE_LOCAL
   void log_usbc()
   {
+    if (!usbc_) {
+      RCLCPP_WARN(this->get_logger(), "USB connection object is null");
+      return;
+    }
+
+    // Build endpoint string dynamically to avoid printing invalid 0x00 for ep_comms
+    std::ostringstream ep_info;
+    ep_info << "ep_data out: 0x" << std::hex << std::setw(2) << std::setfill('0')
+            << static_cast<int>(usbc_->ep_data_out_addr())
+            << " in: 0x" << std::setw(2) << static_cast<int>(usbc_->ep_data_in_addr());
+    if (usbc_->ep_comms_in_addr() != 0) {
+      ep_info << " ep_comms in: 0x" << std::setw(2) << static_cast<int>(usbc_->ep_comms_in_addr());
+    }
+
     RCLCPP_INFO(
-      this->get_logger(), "usb vendor_id: 0x%04x product_id: 0x%04x " \
-      "serial_str: %s bus: %03d address: %03d " \
-      "port_number: %d speed: %s num_interfaces: %u " \
-      "ep_data out: 0x%02x in: 0x%02x ep_comms in: 0x%02x",
+      this->get_logger(),
+      "usb vendor_id: 0x%04x product_id: 0x%04x "
+      "serial_str: %s bus: %03d address: %03d "
+      "port_number: %d speed: %s num_interfaces: %u %s",
       usbc_->vendor_id(),
       usbc_->product_id(),
       usbc_->serial_str().c_str(),
@@ -626,9 +709,7 @@ private:
       usbc_->port_number(),
       usbc_->device_speed_txt(),
       usbc_->num_interfaces(),
-      usbc_->ep_data_out_addr(),
-      usbc_->ep_data_in_addr(),
-      usbc_->ep_comms_in_addr());
+      ep_info.str().c_str());
   }
 
   inline rclcpp::ParameterValue make_ros_param_value(
@@ -676,63 +757,6 @@ private:
   }
 
 public:
-// TODO(soon) remove old code
-// // declare ubx ros parameter
-//   UBLOX_DGNSS_NODE_LOCAL
-//   void set_or_declare_ubx_cfg_param(
-//     const ubx::cfg::ubx_cfg_item_t & ubx_ci,
-//     const ubx::value_t & ubx_value, bool is_initial = false)
-//   {
-//     bool p_set = has_parameter(ubx_ci.ubx_config_item);
-
-//     rclcpp::ParameterValue p_value = make_ros_param_value(ubx_ci.ubx_type, ubx_value);
-
-//     rclcpp::Parameter p;
-//     if (p_set) {
-//       // parameter set via argument override at startup
-//       p = get_parameter(ubx_ci.ubx_config_item);
-//     } else {
-//       p = rclcpp::Parameter(ubx_ci.ubx_config_item, p_value);
-//     }
-
-//     // this following cache map contains values retrieved from the GPS device and needs to be set
-//     // before either declaring or setting the ROS2 parameter. The on set parameter callback
-//     // functions use this cache map to determine if the values have changed. If they have then
-//     // it sets the value on the gps device
-
-//     if (is_initial)
-//     {
-//       if (p_set) {
-//         parameter_manager_->set_parameter_cache(p.get_name(), p.get_parameter_value(),
-//           PARAM_USER, ParamValueSource::START_ARG);
-//       } else {
-//         // RCLCPP_DEBUG(
-//         //   get_logger(), "cfg initial ubx item parameter - name: %s",
-//         //   p.get_name().c_str()
-//         // );
-//         parameter_manager_->set_parameter_cache(p.get_name(), {},
-//           PARAM_INITIAL, ParamValueSource::UNKNOWN);
-//       }
-//     }
-//     else
-//     // this is a subsequent update
-//     {
-//       if (p_set) {
-//         RCLCPP_DEBUG(
-//           get_logger(), "cfg update parameter - name: %s",
-//           p.get_name().c_str()
-//         );
-//         set_parameter(p);
-//       } else {
-//         RCLCPP_INFO(
-//           get_logger(), "cfg update declare_parameter name: %s",
-//           p.get_name().c_str()
-//         );
-//         auto d_value = declare_parameter(p.get_name(), p_value);
-//       }
-//     }
-//   }
-
   UBLOX_DGNSS_NODE_LOCAL
   void update_param_from_device(
     const ubx::cfg::ubx_cfg_item_t & ubx_ci,
@@ -1053,8 +1077,10 @@ public:
 
     // Only attempt to process events if connected and not in error
     if (usbc_->driver_state() == usb::USBDriverState::DISCONNECTED) {
-      RCLCPP_WARN(get_logger(), "handle_usb_events_callback - usb disconnected!");
-      return;
+      RCLCPP_DEBUG_THROTTLE(
+        get_logger(), *get_clock(), 100,
+        "handle_usb_events_callback - usb disconnected (waiting) ....");
+      // return;
     }
 
     if (usbc_->driver_state() == usb::USBDriverState::ERROR) {
@@ -1258,6 +1284,36 @@ public:
 
     size_t len = transfer_in->actual_length;
     unsigned char * buf = transfer_in->buffer;
+
+    /* TODO: Review - Header stripping code no longer needed since UART1/UART2 interfaces are blocked
+    // Strip 2-byte status headers from X20P UART1/UART2 vendor-specific interfaces
+    std::vector<uint8_t> payload;
+    if ((usbc_->product_id() == 0x050c || usbc_->product_id() == 0x050d) &&
+        len > 0) {
+      const size_t mps = 64;  // Known max packet size for these interfaces
+      payload.reserve(len);
+
+      size_t off = 0;
+      while (off < len) {
+        const size_t chunk = std::min(mps, len - off);
+        if (chunk > 2) {
+          // Skip the first two status bytes, copy the rest of this USB packet
+          payload.insert(payload.end(), buf + off + 2, buf + off + chunk);
+        }
+        // If chunk <= 2, packet contained only status—nothing to copy
+        off += chunk;
+      }
+
+      if (!payload.empty()) {
+        // Use cleaned payload for processing
+        buf = payload.data();
+        len = payload.size();
+      } else {
+        // No payload data, skip processing
+        len = 0;
+      }
+    }
+    */
 
     if (len > 0) {
       // NMEA string starts with a $
