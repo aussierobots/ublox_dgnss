@@ -14,7 +14,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rtcm_msgs REQUIRED)
-find_package(libcurl_vendor REQUIRED)
+find_package(CURL REQUIRED)
 
 include_directories(include SYSTEM)
 

@@ -13,7 +13,7 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>libcurl_vendor</depend>
+  <depend>libcurl-dev</depend>
   <exec_depend>std_msgs</exec_depend>
   <depend>rtcm_msgs</depend>
   <build_depend>pkg-config</build_depend>
