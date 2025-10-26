@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2025-10-27)
+------------------
 * Merge pull request `#49 <https://github.com/aussierobots/ublox_dgnss/issues/49>`_ from aussierobots/X20P
   Add X20P device family support with USB architecture adaptation
 * - Add clear error message directing users to main interface (0x01ab)
