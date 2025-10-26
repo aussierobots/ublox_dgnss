@@ -2,6 +2,20 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#49 <https://github.com/aussierobots/ublox_dgnss/issues/49>`_ from aussierobots/X20P
+  Add X20P device family support with USB architecture adaptation
+* - Add clear error message directing users to main interface (0x01ab)
+  - Update documentation with interface limitations and GitHub Issue `#48 <https://github.com/aussierobots/ublox_dgnss/issues/48>`_
+  - Comment out experimental header stripping code
+  - Add X20P configuration parameters to launch files
+* Documentation updates to match code
+* added new device family for X20P
+* Added support for X20P and changed USB connection to support USB UARTs
+* added new device family to add X20P
+* Contributors: Nick Hortovanyi
+
 0.6.0 (2025-07-28)
 ------------------
 * Fix for handle_usb_event starting before usb connection

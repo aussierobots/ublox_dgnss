@@ -2,6 +2,13 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#50 <https://github.com/aussierobots/ublox_dgnss/issues/50>`_ from ahcorde/ahcorde/rolling/libcurl
+  Replaced libcurl_vendor package with deb or pixi
+* Replaced libcurl_vendor package with deb or pixi
+* Contributors: Alejandro Hernandez Cordero, Nick Hortovanyi
+
 0.6.0 (2025-07-28)
 ------------------
 
