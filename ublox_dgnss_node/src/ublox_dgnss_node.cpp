@@ -767,7 +767,7 @@ public:
     parameter_manager_->update_parameter_cache(
       ubx_ci.ubx_config_item,
       p_value,
-      PARAM_VALGET,
+      PARAM_LOADED,
       ParamValueSource::DEVICE_ACTUAL);
 
     // Then update ROS parameter - callback will see DEVICE_ACTUAL in cache
