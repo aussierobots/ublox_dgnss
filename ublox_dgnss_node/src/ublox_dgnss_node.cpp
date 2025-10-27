@@ -3695,8 +3695,8 @@ private:
 
     // send the final requests
     if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
-      RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
-      ubx_cfg_->cfg_val_get_poll_async();
+      RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async_all_layers ... %s", item_list.c_str());
+      ubx_cfg_->cfg_val_get_poll_async_all_layers();
       ubx_cfg_->cfg_val_get_keys_clear();
     }
 
