@@ -261,6 +261,9 @@ public:
 
   void parameter_processing_callback();
 
+  size_t count_parameters_by_status(ParamStatus status);
+  std::vector<std::string> get_parameters_by_status(ParamStatus status);
+
   // Helper methods
   void log_parameter_cache_state();
 

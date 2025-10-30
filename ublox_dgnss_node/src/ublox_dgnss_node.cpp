@@ -523,6 +523,10 @@ private:
 
   rclcpp::TimerBase::SharedPtr param_processing_timer_;
 
+  std::chrono::steady_clock::time_point param_fetch_start_time_;
+  bool param_fetch_in_progress_ = false;
+  static constexpr auto PARAM_FETCH_TIMEOUT = std::chrono::seconds(5);
+
   std::string frame_id_;
   const std::string FRAME_ID_PARAM_NAME = "FRAME_ID";
 
@@ -1131,6 +1135,10 @@ public:
     }
 
     parameter_manager_->parameter_processing_callback();
+
+    if (param_fetch_in_progress_) {
+      check_param_fetch_completion();
+    }
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -3650,12 +3658,15 @@ private:
 
     std::lock_guard<std::mutex> lock(cfg_batch_mutex_);
 
+    param_fetch_start_time_ = std::chrono::steady_clock::now();
+    param_fetch_in_progress_ = true;
+
     ubx_cfg_->cfg_val_get_keys_clear();
-    ubx_cfg_->cfg_set_val_get_layer_ram();
+    ubx_cfg_->cfg_set_val_get_layer_default();
 
     std::string item_list;
     size_t initial_params = 0;
-    size_t n = 20;     // every n keys send a request
+    size_t n = 10;     // every n keys send a request
 
     parameter_manager_->iterate_config_items(
       [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
@@ -3684,7 +3695,7 @@ private:
           // every n keys send a request
           if (initial_params % n == 0) {
             if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
-              RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async ... %s", item_list.c_str());
+              RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async_all_layers ... %s", item_list.c_str());
               item_list = "";
               ubx_cfg_->cfg_val_get_poll_async_all_layers();
               ubx_cfg_->cfg_val_get_keys_clear();
@@ -3695,7 +3706,7 @@ private:
 
     // send the final requests
     if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
-      RCLCPP_DEBUG(get_logger(), "cfg_val_get_poll_async_all_layers ... %s", item_list.c_str());
+      RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async_all_layers ... %s", item_list.c_str());
       ubx_cfg_->cfg_val_get_poll_async_all_layers();
       ubx_cfg_->cfg_val_get_keys_clear();
     }
@@ -3703,6 +3714,49 @@ private:
     RCLCPP_INFO(
       get_logger(), "Requested %zu device parameter values via CFG-VALGET",
       initial_params);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_param_fetch_completion()
+  {
+      auto now = std::chrono::steady_clock::now();
+      auto elapsed = now - param_fetch_start_time_;
+
+      // Query ParameterManager state (no external counters!)
+      size_t valget_count = parameter_manager_->count_parameters_by_status(PARAM_VALGET);
+
+      if (valget_count == 0) {
+          // Success: All requested params received responses
+          param_fetch_in_progress_ = false;
+          device_readiness_state_ = DeviceReadinessState::READY;
+
+          size_t loaded_count = parameter_manager_->count_parameters_by_status(PARAM_LOADED);
+          RCLCPP_INFO(get_logger(),
+              "Parameter fetch completed successfully - %zu parameters loaded from device",
+              loaded_count);
+
+          parameter_manager_->log_parameter_cache_state();
+          return;
+      }
+
+      if (elapsed > PARAM_FETCH_TIMEOUT) {
+          // Timeout: Some params stuck in PARAM_VALGET
+          auto stuck_params = parameter_manager_->get_parameters_by_status(PARAM_VALGET);
+
+          RCLCPP_ERROR(get_logger(),
+              "Parameter fetch TIMEOUT after %ld seconds! %zu parameters stuck in PARAM_VALGET:",
+              std::chrono::duration_cast<std::chrono::seconds>(elapsed).count(),
+              stuck_params.size());
+
+          for (const auto & param : stuck_params) {
+              RCLCPP_ERROR(get_logger(), "  Missing response: %s", param.c_str());
+          }
+
+          param_fetch_in_progress_ = false;
+          device_readiness_state_ = DeviceReadinessState::READY;
+          RCLCPP_WARN(get_logger(),
+              "Proceeding with partial parameter initialization (degraded mode)");
+      }
   }
 
   UBLOX_DGNSS_NODE_LOCAL
