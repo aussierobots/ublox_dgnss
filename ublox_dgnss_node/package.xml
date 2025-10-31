@@ -17,7 +17,6 @@
   <depend>ublox_ubx_msgs</depend>
   <depend>ublox_ubx_interfaces</depend>
   <depend>rtcm_msgs</depend>
-  <depend>libtoml11-dev</depend>
   <depend>ament_index_cpp</depend>
 
   <build_depend>pkg-config</build_depend>
