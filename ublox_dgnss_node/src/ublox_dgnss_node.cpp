@@ -30,6 +30,7 @@
 #include "ublox_dgnss_node/usb.hpp"
 #include "ublox_dgnss_node/parameters.hpp"
 #include "ublox_dgnss_node/device_family.hpp"
+#include "ublox_dgnss_node/ubx/ubx_config_loader.hpp"
 #include "ublox_dgnss_node/ubx/ubx_cfg.hpp"
 #include "ublox_dgnss_node/ubx/ubx_mon.hpp"
 #include "ublox_dgnss_node/ubx/ubx_inf.hpp"
@@ -150,20 +151,22 @@ public:
       RCLCPP_WARN(get_logger(), "parameter client service not available, waiting again...");
     }
 
+    // Check device family first, then device serial string with family-aware messaging
+    check_for_device_family_param(parameters_client);
+    check_for_ubx_config_file_param(parameters_client);
+    check_for_device_serial_param(parameters_client);
+    check_for_frame_id_param(parameters_client);
+
     // Initialize ParameterManager EARLY for parameter validation
     parameter_manager_ = std::make_shared<ParameterManager>(get_logger());
 
-    // Initialize UBX config from global map
-    parameter_manager_->initialize_ubx_config(ubx::cfg::ubxKeyCfgItemMap);
+    // Initialize UBX config with three-priority loading
+    loaded_config_map_ = load_ubx_config();
+    parameter_manager_->initialize_ubx_config(loaded_config_map_);
 
     parameter_manager_->set_device_batch_callback(
       std::bind(&UbloxDGNSSNode::send_parameters_to_device_batch, this, std::placeholders::_1)
     );
-
-    // Check device family first, then device serial string with family-aware messaging
-    check_for_device_family_param(parameters_client);
-    check_for_device_serial_param(parameters_client);
-    check_for_frame_id_param(parameters_client);
 
     // check that the CFG parameters are valid that have been supplied as args/yaml
     std::vector<std::string> prefixes;
@@ -475,6 +478,86 @@ public:
   }
 
 private:
+  UBLOX_DGNSS_NODE_LOCAL
+  ubx::cfg::ubx_cfg_item_map_t load_ubx_config()
+  {
+    // Three-priority config loading: UBX_CONFIG_FILE > DEVICE_FAMILY > F9P default
+    ubx::cfg::ubx_cfg_item_map_t config_map;
+    bool config_loaded = false;
+
+    // Priority 1: Check for UBX_CONFIG_FILE parameter (user-specified TOML file)
+
+    if (!config_file_.empty()) {
+      try {
+        RCLCPP_INFO(get_logger(), "Loading UBX config from file: %s", config_file_.c_str());
+        config_map = ubx::cfg::UbxConfigLoader::load_from_toml(
+          config_file_, ubx::cfg::ubxKeyCfgItemMap);
+        loaded_config_file_ = config_file_;
+        loaded_config_family_ = ubx::cfg::UbxConfigLoader::get_toml_device_family(config_file_);
+        config_loaded = true;
+        RCLCPP_INFO(
+          get_logger(), "Loaded %zu parameters from %s (family: %s)",
+          config_map.size(), config_file_.c_str(), loaded_config_family_.c_str());
+      } catch (const std::exception & e) {
+        RCLCPP_WARN(
+          get_logger(), "Failed to load config file '%s': %s",
+          config_file_.c_str(), e.what());
+      }
+    }
+
+    // Priority 2: If no config file, use DEVICE_FAMILY parameter to load default TOML
+    if (!config_loaded) {
+      try {
+        std::string default_toml =
+          ubx::cfg::UbxConfigLoader::get_default_toml_path(device_family_str_);
+        RCLCPP_INFO(
+          get_logger(), "Loading default UBX config for %s: %s",
+          device_family_str_.c_str(), default_toml.c_str());
+        config_map = ubx::cfg::UbxConfigLoader::load_from_toml(
+          default_toml, ubx::cfg::ubxKeyCfgItemMap);
+        loaded_config_file_ = default_toml;
+        loaded_config_family_ = device_family_str_;
+        config_loaded = true;
+        RCLCPP_INFO(
+          get_logger(), "Loaded %zu parameters from %s TOML",
+          config_map.size(), device_family_str_.c_str());
+      } catch (const std::exception & e) {
+        RCLCPP_WARN(
+          get_logger(), "Failed to load default config for %s: %s",
+          device_family_str_.c_str(), e.what());
+      }
+    }
+
+    // Priority 3: Fall back to F9P default TOML
+    if (!config_loaded) {
+      try {
+        std::string f9p_toml = ubx::cfg::UbxConfigLoader::get_default_toml_path("F9P");
+        RCLCPP_INFO(get_logger(), "Falling back to F9P default config: %s", f9p_toml.c_str());
+        config_map = ubx::cfg::UbxConfigLoader::load_from_toml(
+          f9p_toml, ubx::cfg::ubxKeyCfgItemMap);
+        loaded_config_file_ = f9p_toml;
+        loaded_config_family_ = "F9P";
+        config_loaded = true;
+        RCLCPP_INFO(
+          get_logger(), "Loaded %zu parameters from F9P default TOML",
+          config_map.size());
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Failed to load F9P fallback config: %s", e.what());
+      }
+    }
+
+    // Final fallback: Use full static map if all TOML loading failed
+    if (!config_loaded) {
+      RCLCPP_WARN(get_logger(), "All TOML loading failed, using full static ubxKeyCfgItemMap");
+      config_map = ubx::cfg::ubxKeyCfgItemMap;
+      loaded_config_family_ = "FULL_STATIC_MAP";
+      loaded_config_file_ = "ubx_cfg_item_map.hpp";
+    }
+
+    return config_map;
+  }
+
+private:
   bool keep_running_ = true;
   bool device_attached_ = false;
   bool is_initialising_;
@@ -537,6 +620,12 @@ private:
   std::string device_family_str_;
   const std::string DEVICE_FAMILY_PARAM_NAME = "DEVICE_FAMILY";
 
+  ubx::cfg::ubx_cfg_item_map_t loaded_config_map_;
+  std::string loaded_config_family_;  // Which family config was loaded
+  std::string loaded_config_file_;    // Which file was loaded
+  std::string config_file_;  // User-specified config file path (from parameter)
+  const std::string UBX_CONFIG_FILE_PARAM_NAME = "UBX_CONFIG_FILE";
+
   std::string unique_id_;
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;
@@ -578,6 +667,32 @@ private:
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::ColdStart>::SharedPtr cold_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::ResetODO>::SharedPtr reset_odo_service_;
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_ubx_config_file_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // Default to empty (will use device family default)
+    config_file_ = "";
+
+    // Check if UBX_CONFIG_FILE parameter exists
+    if (!param_client->has_parameter(UBX_CONFIG_FILE_PARAM_NAME)) {
+      RCLCPP_DEBUG(
+        get_logger(), "Parameter %s not found, will use device family default",
+        UBX_CONFIG_FILE_PARAM_NAME.c_str());
+      return;
+    }
+
+    // Get the parameter value
+    config_file_ = param_client->get_parameter<std::string>(UBX_CONFIG_FILE_PARAM_NAME);
+
+    if (!config_file_.empty()) {
+      RCLCPP_INFO(
+        get_logger(), "UBX_CONFIG_FILE parameter set: %s", config_file_.c_str());
+    } else {
+      RCLCPP_DEBUG(
+        get_logger(), "UBX_CONFIG_FILE parameter is empty, will use device family default");
+    }
+  }
 
   UBLOX_DGNSS_NODE_LOCAL
   void check_for_device_serial_param(rclcpp::SyncParametersClient::SharedPtr param_client)
@@ -3695,7 +3810,9 @@ private:
           // every n keys send a request
           if (initial_params % n == 0) {
             if (ubx_cfg_->cfg_val_get_keys_size() > 0) {
-              RCLCPP_INFO(get_logger(), "cfg_val_get_poll_async_all_layers ... %s", item_list.c_str());
+              RCLCPP_INFO(
+                get_logger(), "cfg_val_get_poll_async_all_layers ... %s",
+                item_list.c_str());
               item_list = "";
               ubx_cfg_->cfg_val_get_poll_async_all_layers();
               ubx_cfg_->cfg_val_get_keys_clear();
@@ -3719,44 +3836,47 @@ private:
   UBLOX_DGNSS_NODE_LOCAL
   void check_param_fetch_completion()
   {
-      auto now = std::chrono::steady_clock::now();
-      auto elapsed = now - param_fetch_start_time_;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = now - param_fetch_start_time_;
 
-      // Query ParameterManager state (no external counters!)
-      size_t valget_count = parameter_manager_->count_parameters_by_status(PARAM_VALGET);
+    // Query ParameterManager state (no external counters!)
+    size_t valget_count = parameter_manager_->count_parameters_by_status(PARAM_VALGET);
 
-      if (valget_count == 0) {
-          // Success: All requested params received responses
-          param_fetch_in_progress_ = false;
-          device_readiness_state_ = DeviceReadinessState::READY;
+    if (valget_count == 0) {
+      // Success: All requested params received responses
+      param_fetch_in_progress_ = false;
+      device_readiness_state_ = DeviceReadinessState::READY;
 
-          size_t loaded_count = parameter_manager_->count_parameters_by_status(PARAM_LOADED);
-          RCLCPP_INFO(get_logger(),
-              "Parameter fetch completed successfully - %zu parameters loaded from device",
-              loaded_count);
+      size_t loaded_count = parameter_manager_->count_parameters_by_status(PARAM_LOADED);
+      RCLCPP_INFO(
+        get_logger(),
+        "Parameter fetch completed successfully - %zu parameters loaded from device",
+        loaded_count);
 
-          parameter_manager_->log_parameter_cache_state();
-          return;
+      parameter_manager_->log_parameter_cache_state();
+      return;
+    }
+
+    if (elapsed > PARAM_FETCH_TIMEOUT) {
+      // Timeout: Some params stuck in PARAM_VALGET
+      auto stuck_params = parameter_manager_->get_parameters_by_status(PARAM_VALGET);
+
+      RCLCPP_ERROR(
+        get_logger(),
+        "Parameter fetch TIMEOUT after %ld seconds! %zu parameters stuck in PARAM_VALGET:",
+        std::chrono::duration_cast<std::chrono::seconds>(elapsed).count(),
+        stuck_params.size());
+
+      for (const auto & param : stuck_params) {
+        RCLCPP_ERROR(get_logger(), "  Missing response: %s", param.c_str());
       }
 
-      if (elapsed > PARAM_FETCH_TIMEOUT) {
-          // Timeout: Some params stuck in PARAM_VALGET
-          auto stuck_params = parameter_manager_->get_parameters_by_status(PARAM_VALGET);
-
-          RCLCPP_ERROR(get_logger(),
-              "Parameter fetch TIMEOUT after %ld seconds! %zu parameters stuck in PARAM_VALGET:",
-              std::chrono::duration_cast<std::chrono::seconds>(elapsed).count(),
-              stuck_params.size());
-
-          for (const auto & param : stuck_params) {
-              RCLCPP_ERROR(get_logger(), "  Missing response: %s", param.c_str());
-          }
-
-          param_fetch_in_progress_ = false;
-          device_readiness_state_ = DeviceReadinessState::READY;
-          RCLCPP_WARN(get_logger(),
-              "Proceeding with partial parameter initialization (degraded mode)");
-      }
+      param_fetch_in_progress_ = false;
+      device_readiness_state_ = DeviceReadinessState::READY;
+      RCLCPP_WARN(
+        get_logger(),
+        "Proceeding with partial parameter initialization (degraded mode)");
+    }
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -3950,7 +4070,7 @@ private:
     std::string item_list;
     size_t i = 0;
     bool trans_start = false;
-    size_t n = 1;     // every n output a request
+    size_t n = 10;     // every n output a request
     parameter_manager_->iterate_config_items(
       [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
         trans_start = true;
