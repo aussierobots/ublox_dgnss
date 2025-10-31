@@ -5,7 +5,7 @@
 
 [metadata]
 device_family = "X20P"
-description = "NEO-X20P full configuration"
+description = "ZED-X20P full configuration"
 version = "1.0"
 parameter_count = 99
 

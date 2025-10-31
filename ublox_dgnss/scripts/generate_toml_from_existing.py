@@ -142,7 +142,7 @@ def main():
         x20p_params,
         config_dir / 'x20p_ubx_config.toml',
         'X20P',
-        'NEO-X20P full configuration'
+        'ZED-X20P full configuration'
     )
 
     # Summary
