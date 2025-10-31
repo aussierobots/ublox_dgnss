@@ -28,12 +28,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "usb.hpp"
 #include "ublox_dgnss_node/ubx/ubx_cfg_item.hpp"
+#include "ublox_dgnss_node/ubx/ubx_cfg_item_map.hpp"
 
 namespace ublox_dgnss
 {
 
 // Type definitions for UBX configuration
-using ubx_cfg_item_map_t = std::map<ubx::cfg::ubx_key_id_t, ubx::cfg::ubx_cfg_item_t>;
+using ubx_cfg_item_map_t = ubx::cfg::ubx_cfg_item_map_t;
 
 // Parameter state definitions
 enum ParamValueSource

@@ -288,26 +288,26 @@ void ParameterManager::parameter_processing_callback()
 
 size_t ParameterManager::count_parameters_by_status(ParamStatus status)
 {
-    std::lock_guard<std::mutex> lock(param_cache_mutex_);
-    size_t count = 0;
-    for (const auto & [param_name, p_state] : param_cache_map_) {
-        if (p_state.param_status == status) {
-            count++;
-        }
+  std::lock_guard<std::mutex> lock(param_cache_mutex_);
+  size_t count = 0;
+  for (const auto & [param_name, p_state] : param_cache_map_) {
+    if (p_state.param_status == status) {
+      count++;
     }
-    return count;
+  }
+  return count;
 }
 
 std::vector<std::string> ParameterManager::get_parameters_by_status(ParamStatus status)
 {
-    std::lock_guard<std::mutex> lock(param_cache_mutex_);
-    std::vector<std::string> params;
-    for (const auto & [param_name, p_state] : param_cache_map_) {
-        if (p_state.param_status == status) {
-            params.push_back(param_name);
-        }
+  std::lock_guard<std::mutex> lock(param_cache_mutex_);
+  std::vector<std::string> params;
+  for (const auto & [param_name, p_state] : param_cache_map_) {
+    if (p_state.param_status == status) {
+      params.push_back(param_name);
     }
-    return params;
+  }
+  return params;
 }
 
 void ParameterManager::log_parameter_cache_state()
