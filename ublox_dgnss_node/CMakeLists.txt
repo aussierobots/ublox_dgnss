@@ -21,6 +21,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_cmake_test REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 # find_package(ament_cmake_uncrustify REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -28,18 +29,19 @@ find_package(std_msgs REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
 find_package(rtcm_msgs REQUIRED)
+find_package(toml11 REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
 
 include_directories(include SYSTEM)
 
-# TODO: Review - Added device_family.cpp for device family support
 add_library(ublox_dgnss_components SHARED
   src/usb.cpp
   src/ublox_dgnss_node.cpp
   src/parameters.cpp
   src/device_family.cpp
+  src/ubx_config_loader.cpp
 )
 
 target_compile_definitions(ublox_dgnss_components
@@ -55,6 +57,7 @@ target_link_libraries(ublox_dgnss_components PUBLIC
   ${std_msgs_TARGETS}
   ${ublox_ubx_interfaces_TARGETS}
   ${ublox_ubx_msgs_TARGETS}
+  ament_index_cpp::ament_index_cpp
   rclcpp::rclcpp
   rclcpp_components::component
   rclcpp_components::component_manager

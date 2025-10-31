@@ -9,8 +9,14 @@ find_package(ublox_dgnss_node REQUIRED)
 find_package(ublox_nav_sat_fix_hp_node REQUIRED)
 
 install(
-  DIRECTORY launch 
+  DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
+  FILES_MATCHING PATTERN "*.toml"
 )
 
 ament_package()

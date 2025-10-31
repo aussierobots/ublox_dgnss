@@ -3,7 +3,7 @@
 <package format="3">
   <name>ublox_dgnss_node</name>
   <version>0.7.0</version>
-  <description>Provides a ublox_gnss node for a u-blox GPS GNSS receiver using Gen 9 UBX Protocol</description>
+  <description>Provides a ublox_gnss node for a u-blox GPS GNSS receiver using Gen 9 and Gen 20 UBX Protocol</description>
   <maintainer email="nick@aussierobots.com.au">Nick Hortovanyi</maintainer>
   <license>Apache License, Version 2.0</license>
 
@@ -17,6 +17,9 @@
   <depend>ublox_ubx_msgs</depend>
   <depend>ublox_ubx_interfaces</depend>
   <depend>rtcm_msgs</depend>
+  <depend>libtoml11-dev</depend>
+  <depend>ament_index_cpp</depend>
+
   <build_depend>pkg-config</build_depend>
 
   <test_depend>ament_lint_auto</test_depend>
