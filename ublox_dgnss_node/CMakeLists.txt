@@ -29,7 +29,6 @@ find_package(std_msgs REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
 find_package(rtcm_msgs REQUIRED)
-find_package(toml11 REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
