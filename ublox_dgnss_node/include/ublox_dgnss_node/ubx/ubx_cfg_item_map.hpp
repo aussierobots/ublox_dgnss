@@ -66,13 +66,11 @@ const ubx_cfg_item_t CFG_UART2OUTPROT_NMEA = {"CFG_UART2OUTPROT_NMEA", 0x1076000
 const ubx_cfg_item_t CFG_UART2OUTPROT_RTCM3X = {"CFG_UART2OUTPROT_RTCM3X", 0x10760004, L, 1, NA};
 
 // cfg usbinprot
-// @exclude: X20P
 const ubx_cfg_item_t CFG_USBINPROT_UBX = {"CFG_USBINPROT_UBX", 0x10770001, L, 1, NA};
 const ubx_cfg_item_t CFG_USBINPROT_NMEA = {"CFG_USBINPROT_NMEA", 0x10770002, L, 1, NA};
 const ubx_cfg_item_t CFG_USBINPROT_RTCM3X = {"CFG_USBINPROT_RTCM3X", 0x10770004, L, 1, NA};
 
 // cfg usboutprot
-// @exclude: X20P
 const ubx_cfg_item_t CFG_USBOUTPROT_UBX = {"CFG_USBOUTPROT_UBX", 0x10780001, L, 1, NA};
 const ubx_cfg_item_t CFG_USBOUTPROT_NMEA = {"CFG_USBOUTPROT_NMEA", 0x10780002, L, 1, NA};
 const ubx_cfg_item_t CFG_USBOUTPROT_RTCM3X = {"CFG_USBOUTPROT_RTCM3X", 0x10780004, L, 1, NA};
@@ -256,7 +254,6 @@ const ubx_cfg_item_t CFG_SFODO_LATENCY =
 {"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
 
 // cfg msgout - msg output rate configurations
-// @exclude: X20P
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
 {"CFG_MSGOUT_UBX_NAV_STATUS_USB", 0x2091001d, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_SVIN_USB =
@@ -295,8 +292,6 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_VELECEF_USB =
 {"CFG_MSGOUT_UBX_NAV_VELECEF_USB", 0x20910040, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_VELNED_USB =
 {"CFG_MSGOUT_UBX_NAV_VELNED_USB", 0x20910045, U1, 0, NA};
-const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RTCM_USB =
-{"CFG_MSGOUT_UBX_RXM_RTCM_USB", 0x2091026b, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_COR_USB =
 {"CFG_MSGOUT_UBX_RXM_COR_USB", 0x209106b9, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_MEASX_USB =
@@ -305,12 +300,16 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RAWX_USB =
 {"CFG_MSGOUT_UBX_RXM_RAWX_USB", 0x209102a7, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_MON_COMMS_USB =
 {"CFG_MSGOUT_UBX_MON_COMMS_USB", 0x20910352, U1, 0, NA};
-const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_SPARTN_USB =
-{"CFG_MSGOUT_UBX_RXM_SPARTN_USB", 0x20910608, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIG_USB =
 {"CFG_MSGOUT_UBX_SEC_SIG_USB", 0x20910637, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIGLOG_USB =
 {"CFG_MSGOUT_UBX_SEC_SIGLOG_USB", 0x2091068c, U1, 0, NA};
+
+// @exclude: X20P
+const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RTCM_USB =
+{"CFG_MSGOUT_UBX_RXM_RTCM_USB", 0x2091026b, U1, 0, NA};
+const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_SPARTN_USB =
+{"CFG_MSGOUT_UBX_RXM_SPARTN_USB", 0x20910608, U1, 0, NA};
 
 // @only: F9R
 const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_MEAS_USB =
