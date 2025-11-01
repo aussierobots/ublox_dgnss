@@ -1,5 +1,3 @@
-Presently have an [issue with the apt packages](https://github.com/ros2/ros2/issues/1708) which we are tring to resolve. Works if you build locally.
-
 # ublox-dgnss
 
 This usb based driver is focused on UBLOX  UBX messaging, for a DGNSS rover and base station. High precision data is available.
