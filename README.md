@@ -17,14 +17,14 @@ You may need to create a udev rule as follows:
 /etc/udev/rules.d/99-ublox-gnss.rules
 ```
 # UBLOX ZED-F9P/F9R (CDC-ACM)
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev", ENV{ID_MM_DEVICE_IGNORE}="1"
 
 # UBLOX ZED-X20P (CDC-ACM) - SUPPORTED
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01ab", MODE="0666", GROUP="plugdev"
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01ab", MODE="0666", GROUP="plugdev", ENV{ID_MM_DEVICE_IGNORE}="1"
 # UBLOX X20P UART1 (Vendor-Specific) - NOT SUPPORTED
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev"
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050c", MODE="0666", GROUP="plugdev", ENV{ID_MM_DEVICE_IGNORE}="1"
 # UBLOX X20P UART2 (Vendor-Specific) - NOT SUPPORTED
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev"
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="050d", MODE="0666", GROUP="plugdev", ENV{ID_MM_DEVICE_IGNORE}="1"
 ```
 
 This driver follows the UBX standards used for the ZED-X20P/F9P/F9R as documented in the [X20P intergration manual](https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf) and [X20P interface description](https://content.u-blox.com/sites/default/files/documents/u-blox-20-HPG-2.00_InterfaceDescription_UBXDOC-304424225-19888.pdf). Earlier manual versions are available on the u-blox website.
