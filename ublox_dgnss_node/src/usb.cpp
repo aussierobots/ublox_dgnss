@@ -41,7 +41,7 @@ Connection::Connection(
   log_level_ = log_level;
   ctx_ = NULL;
   devh_ = NULL;
-  timeout_ms_ = 45;
+  timeout_ms_ = 0;
   timeout_tv_ = {1, 0};       // default the timeout to 1 seconds
   keep_running_ = true;
 
