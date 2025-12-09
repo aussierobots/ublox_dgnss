@@ -150,6 +150,7 @@ private:
 
   std::deque<std::shared_ptr<transfer_t>> transfer_queue_;
   std::mutex transfer_queue_mutex_;
+  std::mutex write_mutex_;
 
   int no_device_streak_ = 0;
   static constexpr int kNoDeviceThreshold = 3;

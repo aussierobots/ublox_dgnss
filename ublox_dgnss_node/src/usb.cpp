@@ -41,7 +41,7 @@ Connection::Connection(
   log_level_ = log_level;
   ctx_ = NULL;
   devh_ = NULL;
-  timeout_ms_ = 0;
+  timeout_ms_ = 250;
   timeout_tv_ = {1, 0};       // default the timeout to 1 seconds
   keep_running_ = true;
 
@@ -539,6 +539,8 @@ void Connection::write_char(u_char c)
 
 void Connection::write_buffer(u_char * buf, size_t size)
 {
+  const std::lock_guard<std::mutex> lock(write_mutex_);
+
   if (debug_cb_fn_) {
     std::ostringstream oss;
     oss << "write_buffer: sending " << size << " bytes to endpoint 0x"
