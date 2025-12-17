@@ -1392,7 +1392,11 @@ public:
 
     RCLCPP_DEBUG(get_logger(), "rtcm_callback msg.message: 0x%s", oss.str().c_str());
 
-    usbc_->write_buffer(data_out.data(), data_out.size());
+    try {
+      usbc_->write_buffer(data_out.data(), data_out.size());
+    } catch (const usb::UsbException & e) {
+      RCLCPP_WARN(get_logger(), "RTCM write failed: %s", e.what());
+    }
   }
 
 // handle host in from ublox gps to host callback
