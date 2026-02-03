@@ -70,6 +70,7 @@ struct navigation_fix_flags_t
     {
       l_t diffCorr : 1;                       // 1 = differential corrections available
       l_t carrSolnValid : 1;                  // 1 = valid carrSoln
+      u1_t reserved : 4;                      // reserved
       map_matching_status_t mapMatching : 2;  // map matching status
     } bits;
   };
@@ -81,9 +82,11 @@ struct navigation_status_flags2_t
     x1_t all;
     struct
     {
-      psm_state_status_t psmState : 2;          // power save mode state
-      spoof_det_state_t spoofDetState : 2;      // spoofing detection state
-      carrier_solution_status_t carrSoln : 2;   // carrier phase range solution status
+      psm_state_status_t psmState : 2;          // bits 0-1: power save mode state
+      l_t reserved1 : 1;                        // bit 2: reserved
+      spoof_det_state_t spoofDetState : 2;      // bits 3-4: spoofing detection state
+      l_t reserved2 : 1;                        // bit 5: reserved
+      carrier_solution_status_t carrSoln : 2;   // bits 6-7: carrier phase range solution status
     } bits;
   };
 };
