@@ -838,17 +838,17 @@ void Connection::cleanup_transfer_queue()
           msg.append("LIBUSB_TRANSFER_STALL");
           break;
         case LIBUSB_TRANSFER_NO_DEVICE:
-          msg.append("LIBUSB_TRANSFER_STALL");
+          msg.append("LIBUSB_TRANSFER_NO_DEVICE");
           break;
         case LIBUSB_TRANSFER_OVERFLOW:
-          msg.append("LIBUSB_TRANSFER_STALL");
+          msg.append("LIBUSB_TRANSFER_OVERFLOW");
           break;
         default:
           msg.append(" UNKNOWN LIBUSB TRANSFER STATUS");
       }
       (debug_cb_fn_)(msg);
 
-      transfer_queue_.erase(it++);
+      it = transfer_queue_.erase(it);
     } else {
       ++it;
     }
