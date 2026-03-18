@@ -16,7 +16,7 @@
 #include "ublox_dgnss_node/ubx/ubx_cfg_item_map.hpp"
 
 #include <algorithm>
-#include <filesystem>
+// #include <filesystem>
 #include <stdexcept>
 #include <sstream>
 #include <vector>
@@ -233,15 +233,19 @@ ubx_cfg_item_map_t UbxConfigLoader::load_from_toml(
 
 std::string UbxConfigLoader::get_default_toml_path(const std::string & device_family)
 {
-  std::filesystem::path package_share;
-  ament_index_cpp::get_package_share_directory("ublox_dgnss", package_share);
+  auto package_share = ament_index_cpp::get_package_share_directory("ublox_dgnss");
+  // waiting for fix to be applied to jazzy & humble
+  // std::filesystem::path package_share;
+  // ament_index_cpp::get_package_share_directory("ublox_dgnss", package_share);
 
   std::string family_lower = device_family;
   std::transform(
     family_lower.begin(), family_lower.end(),
     family_lower.begin(), ::tolower);
 
-  return package_share.string() + "/config/" + family_lower + "_ubx_config.toml";
+  return package_share + "/config/" + family_lower + "_ubx_config.toml";
+  // waiting for fix to be applied to jazzy & humble
+  //return package_share.string() + "/config/" + family_lower + "_ubx_config.toml";
 }
 
 std::string UbxConfigLoader::get_toml_device_family(const std::string & toml_file_path)
