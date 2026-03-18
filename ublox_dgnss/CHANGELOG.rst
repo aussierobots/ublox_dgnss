@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2026-03-18)
+------------------
 * Fixed X20P parameters
 * Chg NEO to ZED
 * feat: Add TOML-based device family configuration filtering

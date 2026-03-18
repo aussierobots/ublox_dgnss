@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2026-03-18)
+------------------
 * fixed uncrustitfy comment space
 * reverted fix for warning as not supported jazzy & humble
 * fix c++ header include for crustify
