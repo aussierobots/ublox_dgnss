@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.2 (2026-03-19)
+------------------
 * uncrustify fixes
 * Add flags for LPP and has correction used
 * Add lpp_corr_used and has_corr_used to flags
