@@ -50,6 +50,8 @@ struct flags_t
       l_t cr_corr_used : 1;
       l_t do_corr_used : 1;
       l_t clas_corr_used : 1;
+      l_t lpp_corr_used : 1;
+      l_t has_corr_used : 1;
     } bits;
   };
 };
@@ -150,6 +152,8 @@ public:
       oss << ", cr_corr_used: " << static_cast<int>(sat_data[i].flags.bits.cr_corr_used);
       oss << ", do_corr_used: " << static_cast<int>(sat_data[i].flags.bits.do_corr_used);
       oss << ", clas_corr_used: " << static_cast<int>(sat_data[i].flags.bits.clas_corr_used);
+      oss << ", lpp_corr_used: " << static_cast<int>(sat_data[i].flags.bits.lpp_corr_used);
+      oss << ", has_corr_used: " << static_cast<int>(sat_data[i].flags.bits.has_corr_used);
       oss << "}";
     }
 
