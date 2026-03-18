@@ -3005,7 +3005,7 @@ private:
       sv_info_msg.flags.clas_corr_used = sv_info_payload.flags.bits.clas_corr_used;
       sv_info_msg.flags.lpp_corr_used = sv_info_payload.flags.bits.lpp_corr_used;
       sv_info_msg.flags.has_corr_used = sv_info_payload.flags.bits.has_corr_used;
- 
+
       msg->sv_info.push_back(sv_info_msg);
     }
 

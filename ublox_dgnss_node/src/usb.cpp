@@ -532,10 +532,10 @@ void Connection::write_char(u_char c)
   {
     const std::lock_guard<std::mutex> lock(write_mutex_);
     rc = libusb_bulk_transfer(
-     devh_,
-     ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
-     &c,
-     1,
+      devh_,
+      ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
+      &c,
+      1,
       &actual_length,
       timeout_ms_);  // Use timeout instead of 0
   }  // end lock scope
