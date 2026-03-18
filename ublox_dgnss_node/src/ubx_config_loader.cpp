@@ -245,7 +245,7 @@ std::string UbxConfigLoader::get_default_toml_path(const std::string & device_fa
 
   return package_share + "/config/" + family_lower + "_ubx_config.toml";
   // waiting for fix to be applied to jazzy & humble
-  //return package_share.string() + "/config/" + family_lower + "_ubx_config.toml";
+  // return package_share.string() + "/config/" + family_lower + "_ubx_config.toml";
 }
 
 std::string UbxConfigLoader::get_toml_device_family(const std::string & toml_file_path)
