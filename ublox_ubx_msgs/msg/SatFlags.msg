@@ -53,3 +53,5 @@ bool pr_corr_used
 bool cr_corr_used
 bool do_corr_used
 bool clas_corr_used
+bool lpp_corr_used
+bool has_corr_used
