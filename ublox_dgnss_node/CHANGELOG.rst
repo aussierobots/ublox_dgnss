@@ -2,6 +2,77 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed uncrustitfy comment space
+* reverted fix for warning as not supported jazzy & humble
+* fix c++ header include for crustify
+* Fixed iterator bug and case labels
+* Fix deprecation warning
+* Merge remote-tracking branch 'refs/remotes/origin/main'
+* Merge pull request `#57 <https://github.com/aussierobots/ublox_dgnss/issues/57>`_ from stan-guer/fix/nav-status-parsing
+  fix nav-status decoding
+* fix nav-status decoding
+  According to u-blox 20 HPG 2.00 , the status bits in the fixStat and
+  flag2 fields in the ubx-nav-status message are not always consecutive,
+  there are padding bits in there that are not accounted for in this
+  decoding logic. Fix that.
+  An obvious outcome is that the ubx-nav-status now properly shows
+  RTK float or int status, the same status value that is in the (correctly
+  decoded) ubx-nav-pvt message.
+* sync write lock scope changed
+* Merge pull request `#56 <https://github.com/aussierobots/ublox_dgnss/issues/56>`_ from BravoBravoIX/fix/usb-timeout-handling
+* Improve USB write stability: 250ms timeout and mutex protection
+  - Set timeout_ms\_ to 250ms instead of 0 (blocking) for hang safety
+  - Add write_mutex\_ to serialize write_buffer() calls
+* Fix USB timeout crash in rtcm_callback
+  Add exception handling for USB write failures in RTCM callback to prevent
+  node crashes when USB bulk transfers timeout.
+  Changes:
+  - Wrap write_buffer() call in try/catch in rtcm_callback()
+  - Change timeout_ms from 45ms to 0 (blocking) to match v0.6.1 behavior
+  The 45ms timeout was too tight for slower USB 1.1 devices (F9P) causing
+  intermittent LIBUSB_ERROR_TIMEOUT exceptions that crashed the node.
+  Setting timeout to 0 restores blocking behavior consistent with
+  write_buffer_async() and the previous stable release.
+* Fixed X20P parameters
+* build: Remove libtoml11-dev from package dependencies
+* build: Remove toml11 dependency from CMakeLists
+* feat: Replace toml11 with embedded SimpleTomlParser
+  Implement custom TOML parser in anonymous namespace to handle UBX
+  config files without external dependencies. Supports sections, string
+  values, arrays, and numeric values.
+* feat: Implement three-priority UBX config loading system
+  - Add UBX_CONFIG_FILE parameter for custom TOML configs
+  - Load device family default TOML based on DEVICE_FAMILY parameter
+  - Fallback to F9P default, then full static map if loading fails
+  - Add check_for_ubx_config_file_param() following existing pattern
+* feat: Add device family annotations to UBX parameter definitions
+  - Add @exclude and @only annotations for device-specific parameters
+  - Mark UART2 parameters as X20P-only (@only: X20P)
+  - Mark ESF sensor fusion parameters as F9R-only (@only: F9R)
+  - Mark L5/L6 signal parameters as X20P-only (@exclude: F9P,F9R)
+  - Fix typo: CFG_ODO_VALLPGAIN -> CFG_ODO_VELLPGAIN
+* refactor: Move ubx_cfg_item_map_t type alias to ubx::cfg namespace
+  - Relocate type alias from ublox_dgnss to ubx::cfg namespace for consistency
+  - Add type alias reference in parameters.hpp for convenience
+* feat: Add TOML-based device family configuration filtering
+  - Implement UbxConfigLoader for filtering parameters by device family
+  - Add Python script to generate TOML files with @exclude/@only annotations
+  - Generate F9P, F9R, X20P config files from existing parameter map
+  - Enable three-priority loading: UBX_CONFIG_FILE > DEVICE_FAMILY > F9P default
+* build: Add toml11 and ament_index_cpp dependencies
+  - Add libtoml11-dev dependency for TOML config parsing
+  - Add ament_index_cpp for runtime package resource lookup
+  - Install TOML config files to share directory
+* New feature for param val get state reporting
+* fix(params): Set PARAM_LOADED when device response arrives, not PARAM_VALGET
+  CFG-VALGET responses should transition directly to PARAM_LOADED rather than
+  temporarily using PARAM_VALGET status. Eliminates invalid semantic state and
+  callback dependency. Foundation for reliable async completion tracking.
+* change to cfg_val_get_poll_async_all_layers()
+* Contributors: BravoBravoIX, Nick Hortovanyi, Stan Guerassimov
+
 0.7.0 (2025-10-27)
 ------------------
 * Merge pull request `#49 <https://github.com/aussierobots/ublox_dgnss/issues/49>`_ from aussierobots/X20P

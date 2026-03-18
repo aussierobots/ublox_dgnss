@@ -2,6 +2,21 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed X20P parameters
+* Chg NEO to ZED
+* feat: Add TOML-based device family configuration filtering
+  - Implement UbxConfigLoader for filtering parameters by device family
+  - Add Python script to generate TOML files with @exclude/@only annotations
+  - Generate F9P, F9R, X20P config files from existing parameter map
+  - Enable three-priority loading: UBX_CONFIG_FILE > DEVICE_FAMILY > F9P default
+* build: Add toml11 and ament_index_cpp dependencies
+  - Add libtoml11-dev dependency for TOML config parsing
+  - Add ament_index_cpp for runtime package resource lookup
+  - Install TOML config files to share directory
+* Contributors: Nick Hortovanyi
+
 0.7.0 (2025-10-27)
 ------------------
 * Merge pull request `#49 <https://github.com/aussierobots/ublox_dgnss/issues/49>`_ from aussierobots/X20P

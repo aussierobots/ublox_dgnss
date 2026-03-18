@@ -2,6 +2,9 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2025-10-27)
 ------------------
 * Merge pull request `#50 <https://github.com/aussierobots/ublox_dgnss/issues/50>`_ from ahcorde/ahcorde/rolling/libcurl
