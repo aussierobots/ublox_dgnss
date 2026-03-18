@@ -2,6 +2,11 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add new correlation flags to SatFlags.msg
+* Contributors: Nick Hortovanyi
+
 0.7.1 (2026-03-18)
 ------------------
 

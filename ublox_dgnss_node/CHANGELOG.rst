@@ -2,6 +2,13 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* uncrustify fixes
+* Add flags for LPP and has correction used
+* Add lpp_corr_used and has_corr_used to flags
+* Contributors: Nick Hortovanyi
+
 0.7.1 (2026-03-18)
 ------------------
 * fixed uncrustitfy comment space
