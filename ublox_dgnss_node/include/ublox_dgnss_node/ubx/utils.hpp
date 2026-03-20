@@ -14,6 +14,7 @@
 
 #ifndef UBLOX_DGNSS_NODE__UBX__UTILS_HPP_
 #define UBLOX_DGNSS_NODE__UBX__UTILS_HPP_
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <vector>
