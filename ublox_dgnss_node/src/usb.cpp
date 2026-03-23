@@ -148,6 +148,8 @@ libusb_device_handle * Connection::open_device_with_serial_string(
     deviceCount = rc;
   }
 
+  int f9r_count = 0;
+
   // Iterate through the list to find the desired device
   for (ssize_t i = 0; i < deviceCount; i++) {
     libusb_device * device = deviceList[i];
@@ -175,6 +177,10 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       continue;
     }
 
+    f9r_count++;
+    if (f9r_count == 1) {
+      continue;
+    }
     // Open the device
     rc = libusb_open(device, &devHandle);
     if (rc < 0) {
@@ -532,10 +538,10 @@ void Connection::write_char(u_char c)
   {
     const std::lock_guard<std::mutex> lock(write_mutex_);
     rc = libusb_bulk_transfer(
-      devh_,
-      ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
-      &c,
-      1,
+     devh_,
+     ep_data_out_addr_ | LIBUSB_ENDPOINT_OUT,
+     &c,
+     1,
       &actual_length,
       timeout_ms_);  // Use timeout instead of 0
   }  // end lock scope
