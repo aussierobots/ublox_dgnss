@@ -214,6 +214,7 @@ const ubx_cfg_item_t CFG_ODO_COGLPGAIN = {"CFG_ODO_COGLPGAIN", 0x20220032, U1, 1
 const ubx_cfg_item_t CFG_RATE_MEAS = {"CFG_RATE_MEAS", 0x30210001, U2, .001, S};
 const ubx_cfg_item_t CFG_RATE_NAV = {"CFG_RATE_NAV", 0x30210002, U2, 1, NA};
 const ubx_cfg_item_t CFG_RATE_TIMEREF = {"CFG_RATE_TIMEREF", 0x20210003, E1, 1, NA};
+const ubx_cfg_item_t CFG_RATE_NAV_PRIO = {"CFG_RATE_NAV_PRIO", 0x30210004, U1, 1, NA};
 enum CFG_RATE_TIMEREF_ENUM
 {
   ALIGN_UTC = 0,         // Align measurements to UTC time
@@ -471,6 +472,7 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_RATE_MEAS.ubx_key_id, CFG_RATE_MEAS},
   {CFG_RATE_NAV.ubx_key_id, CFG_RATE_NAV},
   {CFG_RATE_TIMEREF.ubx_key_id, CFG_RATE_TIMEREF},
+  {CFG_RATE_NAV_PRIO.ubx_key_id, CFG_RATE_NAV_PRIO},
 
   {CFG_SFIMU_AUTO_MNTALG_ENA.ubx_key_id, CFG_SFIMU_AUTO_MNTALG_ENA},
   {CFG_SFIMU_IMU_MNTALG_YAW.ubx_key_id, CFG_SFIMU_IMU_MNTALG_YAW},
