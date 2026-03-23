@@ -236,6 +236,12 @@ const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_PITCH =
 {"CFG_SFIMU_IMU_MNTALG_PITCH", 0x3006002e, I2, .001, DEG};
 const ubx_cfg_item_t CFG_SFIMU_IMU_MNTALG_ROLL =
 {"CFG_SFIMU_IMU_MNTALG_ROLL", 0x3006002f, I2, .001, DEG};
+const ubx_cfg_item_t CFG_SFIMU_IMU2ANT_LA_X =
+{"CFG_SFIMU_IMU2ANT_LA_X", 0x30060020, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFIMU_IMU2ANT_LA_Y =
+{"CFG_SFIMU_IMU2ANT_LA_Y", 0x30060021, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFIMU_IMU2ANT_LA_Z =
+{"CFG_SFIMU_IMU2ANT_LA_Z", 0x30060022, I2, 1, CM};
 
 // cfg sfodo - sensor fusion odometer configuration
 // @only: F9R
@@ -253,6 +259,12 @@ const ubx_cfg_item_t CFG_SFODO_QUANT_ERROR =
 {"CFG_SFODO_QUANT_ERROR", 0x40070008, U4, 1e-6, M};
 const ubx_cfg_item_t CFG_SFODO_LATENCY =
 {"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
+const ubx_cfg_item_t CFG_SFODO_IMU2VRP_LA_X =
+{"CFG_SFODO_IMU2VRP_LA_X", 0x30070012, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFODO_IMU2VRP_LA_Y =
+{"CFG_SFODO_IMU2VRP_LA_Y", 0x30070013, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFODO_IMU2VRP_LA_Z =
+{"CFG_SFODO_IMU2VRP_LA_Z", 0x30070014, I2, 1, CM};
 
 // cfg msgout - msg output rate configurations
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
@@ -478,6 +490,9 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_SFIMU_IMU_MNTALG_YAW.ubx_key_id, CFG_SFIMU_IMU_MNTALG_YAW},
   {CFG_SFIMU_IMU_MNTALG_PITCH.ubx_key_id, CFG_SFIMU_IMU_MNTALG_PITCH},
   {CFG_SFIMU_IMU_MNTALG_ROLL.ubx_key_id, CFG_SFIMU_IMU_MNTALG_ROLL},
+  {CFG_SFIMU_IMU2ANT_LA_X.ubx_key_id, CFG_SFIMU_IMU2ANT_LA_X},
+  {CFG_SFIMU_IMU2ANT_LA_Y.ubx_key_id, CFG_SFIMU_IMU2ANT_LA_Y},
+  {CFG_SFIMU_IMU2ANT_LA_Z.ubx_key_id, CFG_SFIMU_IMU2ANT_LA_Z},
 
   {CFG_SFODO_COMBINE_TICKS.ubx_key_id, CFG_SFODO_COMBINE_TICKS},
   {CFG_SFODO_COUNT_MAX.ubx_key_id, CFG_SFODO_COUNT_MAX},
@@ -486,6 +501,9 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_SFODO_FACTOR.ubx_key_id, CFG_SFODO_FACTOR},
   {CFG_SFODO_LATENCY.ubx_key_id, CFG_SFODO_LATENCY},
   {CFG_SFODO_QUANT_ERROR.ubx_key_id, CFG_SFODO_QUANT_ERROR},
+  {CFG_SFODO_IMU2VRP_LA_X.ubx_key_id, CFG_SFODO_IMU2VRP_LA_X},
+  {CFG_SFODO_IMU2VRP_LA_Y.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Y},
+  {CFG_SFODO_IMU2VRP_LA_Z.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Z},
 
   {CFG_MSGOUT_UBX_NAV_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_STATUS_USB},
   {CFG_MSGOUT_UBX_NAV_SVIN_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_SVIN_USB},
