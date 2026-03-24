@@ -39,6 +39,7 @@
 #include "ublox_dgnss_node/ubx/ubx_rxm.hpp"
 #include "ublox_dgnss_node/ubx/ubx_esf.hpp"
 #include "ublox_dgnss_node/ubx/ubx_sec.hpp"
+#include "ublox_ubx_msgs/msg/ubx_nav_att.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
@@ -216,6 +217,8 @@ public:
     rclcpp::PublisherOptions pub_options;
     pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
+    ubx_nav_att_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavATT>(
+      "ubx_nav_att", qos, pub_options);
     ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>(
       "ubx_nav_clock", qos, pub_options);
     ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>(
@@ -647,6 +650,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>::SharedPtr ubx_nav_time_utc_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavATT>::SharedPtr ubx_nav_att_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmCor>::SharedPtr ubx_rxm_cor_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>::SharedPtr ubx_rxm_measx_pub_;
@@ -2565,6 +2569,9 @@ private:
       case ubx::UBX_NAV_VELNED:
         ubx_nav_vel_ned_pub(f, ubx_nav_->velned()->payload());
         break;
+      case ubx::UBX_NAV_ATT:
+        ubx_nav_att_pub(f, ubx_nav_->att()->payload());
+        break;
       default:
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
@@ -2721,6 +2728,31 @@ private:
     msg->c_acc = payload->cAcc;
 
     ubx_nav_vel_ned_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_nav_att_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::att::NavAttPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x nav att polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXNavATT>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->itow = payload->iTOW;
+    msg->version = payload->version;
+    msg->roll = payload->roll;
+    msg->pitch = payload->pitch;
+    msg->heading = payload->heading;
+    msg->acc_roll = payload->accRoll;
+    msg->acc_pitch = payload->accPitch;
+    msg->acc_heading = payload->accHeading;
+
+    ubx_nav_att_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

@@ -63,6 +63,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXEsfMeas.msg"
   "msg/UBXEsfStatus.msg"
   "msg/UBXMonComms.msg"
+  "msg/UBXNavATT.msg"
   "msg/UBXNavEOE.msg"
   "msg/UBXNavClock.msg"
   "msg/UBXNavCov.msg"
