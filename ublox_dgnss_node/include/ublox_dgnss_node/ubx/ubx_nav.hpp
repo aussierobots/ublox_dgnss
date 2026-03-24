@@ -20,6 +20,7 @@
 #include <tuple>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
+#include "ublox_dgnss_node/ubx/nav/ubx_nav_att.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_clock.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_cov.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_dop.hpp"
@@ -44,6 +45,7 @@
 namespace ubx::nav
 {
 
+typedef UBXFrameComms<nav::att::NavAttPayload, usb::Connection> UbxNavAttFrameComms;
 typedef UBXFrameComms<nav::clock::NavClockPayload, usb::Connection> UbxNavClockFrameComms;
 typedef UBXFrameComms<nav::cov::NavCovPayload, usb::Connection> UbxNavCovFrameComms;
 typedef UBXFrameComms<nav::dop::NavDOPPayload, usb::Connection> UbxNavDOPFrameComms;
@@ -72,6 +74,7 @@ class UbxNav
 private:
   std::shared_ptr<usb::Connection> usbc_;
 
+  std::shared_ptr<UbxNavAttFrameComms> att_;
   std::shared_ptr<UbxNavClockFrameComms> clock_;
   std::shared_ptr<UbxNavCovFrameComms> cov_;
   std::shared_ptr<UbxNavDOPFrameComms> dop_;
@@ -97,6 +100,7 @@ public:
   explicit UbxNav(std::shared_ptr<usb::Connection> usbc)
   {
     usbc_ = usbc;
+    att_ = std::make_shared<UbxNavAttFrameComms>(usbc_);
     clock_ = std::make_shared<UbxNavClockFrameComms>(usbc_);
     cov_ = std::make_shared<UbxNavCovFrameComms>(usbc_);
     dop_ = std::make_shared<UbxNavDOPFrameComms>(usbc_);
@@ -119,6 +123,10 @@ public:
     velned_ = std::make_shared<UbxNavVelNEDFrameComms>(usbc_);
   }
 
+  std::shared_ptr<UbxNavAttFrameComms> att()
+  {
+    return att_;
+  }
   std::shared_ptr<UbxNavClockFrameComms> clock()
   {
     return clock_;
@@ -202,6 +210,9 @@ public:
   void frame(std::shared_ptr<ubx::Frame> frame)
   {
     switch (frame->msg_id) {
+      case ubx::UBX_NAV_ATT:
+        att_->frame(frame);
+        break;
       case ubx::UBX_NAV_CLOCK:
         clock_->frame(frame);
         break;

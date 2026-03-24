@@ -267,6 +267,8 @@ const ubx_cfg_item_t CFG_SFODO_IMU2VRP_LA_Z =
 {"CFG_SFODO_IMU2VRP_LA_Z", 0x30070014, I2, 1, CM};
 
 // cfg msgout - msg output rate configurations
+const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_ATT_USB =
+{"CFG_MSGOUT_UBX_NAV_ATT_USB", 0x20910022, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
 {"CFG_MSGOUT_UBX_NAV_STATUS_USB", 0x2091001d, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_SVIN_USB =
@@ -505,6 +507,7 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_SFODO_IMU2VRP_LA_Y.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Y},
   {CFG_SFODO_IMU2VRP_LA_Z.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Z},
 
+  {CFG_MSGOUT_UBX_NAV_ATT_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_ATT_USB},
   {CFG_MSGOUT_UBX_NAV_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_STATUS_USB},
   {CFG_MSGOUT_UBX_NAV_SVIN_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_SVIN_USB},
   {CFG_MSGOUT_UBX_NAV_CLOCK_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_CLOCK_USB},
