@@ -1384,7 +1384,7 @@ public:
     }
     std::ostringstream oss;
     std::vector<u_char> data_out;
-    data_out.resize(msg.message.size());
+    data_out.reserve(msg.message.size());
     for (auto b : msg.message) {
       oss << std::hex << std::setfill('0') << std::setw(2) << +b;
       data_out.push_back(b);
