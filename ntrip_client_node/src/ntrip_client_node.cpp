@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include <cstdio>
+#include <atomic>
+#include <mutex>
 #include <curl/curl.h>
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "rtcm_msgs/msg/message.hpp"
@@ -63,6 +66,23 @@ public:
     log_level_ = get_parameter("log_level").as_string();
     maxage_conn_ = get_parameter("maxage_conn").as_int();
 
+    // Initialize pending values before registering callback to avoid race
+    pending_use_https_ = use_https_;
+    pending_host_ = host_;
+    pending_port_ = port_;
+    pending_mountpoint_ = mountpoint_;
+    pending_username_ = username_;
+    pending_password_ = password_;
+    pending_log_level_ = log_level_;
+    pending_maxage_conn_ = maxage_conn_;
+
+    // Register parameter change callback for runtime reconfiguration
+    parameters_callback_handle_ =
+      this->add_on_set_parameters_callback(
+      std::bind(
+        &NTRIPClientNode::on_set_parameters_callback,
+        this, _1));
+
     std::string url = ConnectionUrl();
 
     RCLCPP_INFO(this->get_logger(), "ntrip connection url: '%s'", url.c_str());
@@ -82,25 +102,21 @@ public:
 
     auto handle = curlHandle_->handle;
     if (handle) {
-      curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
+      // Static curl options that never change
       curl_easy_setopt(handle, CURLOPT_HTTP09_ALLOWED, true);
-      curl_easy_setopt(handle, CURLOPT_USERPWD, userpwd.c_str());
-      // curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
-      if (!log_level_.compare("INFO") == 0) {
-        RCLCPP_DEBUG(this->get_logger(), "setting CURLOPT_VERBOSE 1L");
-        curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
-      }
-      curl_easy_setopt(handle, CURLOPT_MAXAGE_CONN, maxage_conn_);
       curl_easy_setopt(handle, CURLOPT_USERAGENT, "NTRIP ros2/ublox_dgnss");
       curl_easy_setopt(handle, CURLOPT_FAILONERROR, true);
       curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &NTRIPClientNode::WriteCallback);
-      curl_easy_setopt(curlHandle_->handle, CURLOPT_WRITEDATA, this);
+      curl_easy_setopt(handle, CURLOPT_WRITEDATA, this);
       curl_easy_setopt(
-        curlHandle_->handle, CURLOPT_PRIVATE,
+        handle, CURLOPT_PRIVATE,
         reinterpret_cast<void *>(desiredCount));
 
+      // Dynamic options extracted to ApplyCurlOptions() for runtime reconfiguration
+      ApplyCurlOptions();
+
       // Start the streaming in a separate thread
-      streaming_exit_ = false;
+      streaming_exit_.store(false);
       streamingThread_ = std::thread(&NTRIPClientNode::DoStreaming, this);
     }
   }
@@ -110,8 +126,23 @@ private:
   std::shared_ptr<CurlHandle> curlHandle_;
   std::thread streamingThread_;
 
-  bool streaming_exit_;
+  std::atomic<bool> streaming_exit_{false};
   bool desired_count_reached_;
+
+  // Runtime parameter reconfiguration support
+  std::mutex params_mutex_;
+  std::atomic<bool> reconfigure_needed_{false};
+  int record_count_{0};
+
+  // Pending parameter values (written by param callback, read by streaming thread)
+  bool pending_use_https_;
+  std::string pending_host_;
+  int pending_port_;
+  std::string pending_mountpoint_;
+  std::string pending_username_;
+  std::string pending_password_;
+  std::string pending_log_level_;
+  long pending_maxage_conn_;
 
   // NTRIP castor connection
   bool use_https_;
@@ -135,6 +166,78 @@ private:
     }
 
     return url;
+  }
+
+  // Parameter callback for runtime reconfiguration
+  rcl_interfaces::msg::SetParametersResult on_set_parameters_callback(
+    const std::vector<rclcpp::Parameter> & parameters)
+  {
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = true;
+
+    std::lock_guard<std::mutex> lock(params_mutex_);
+
+    for (const auto & param : parameters) {
+      const auto & name = param.get_name();
+
+      if (name == "use_https") {
+        pending_use_https_ = param.as_bool();
+      } else if (name == "host") {
+        if (param.as_string().empty()) {
+          result.successful = false;
+          result.reason = "host cannot be empty";
+          return result;
+        }
+        pending_host_ = param.as_string();
+      } else if (name == "port") {
+        auto port = param.as_int();
+        if (port < 1 || port > 65535) {
+          result.successful = false;
+          result.reason = "port must be between 1 and 65535";
+          return result;
+        }
+        pending_port_ = static_cast<int>(port);
+      } else if (name == "mountpoint") {
+        if (param.as_string().empty()) {
+          result.successful = false;
+          result.reason = "mountpoint cannot be empty";
+          return result;
+        }
+        pending_mountpoint_ = param.as_string();
+      } else if (name == "username") {
+        pending_username_ = param.as_string();
+      } else if (name == "password") {
+        pending_password_ = param.as_string();
+      } else if (name == "log_level") {
+        pending_log_level_ = param.as_string();
+      } else if (name == "maxage_conn") {
+        pending_maxage_conn_ = param.as_int();
+      }
+    }
+
+    reconfigure_needed_.store(true);
+    RCLCPP_INFO(this->get_logger(), "Parameter change queued for next streaming cycle");
+
+    return result;
+  }
+
+  // Apply dynamic curl options (called from constructor and DoStreaming)
+  void ApplyCurlOptions()
+  {
+    auto handle = curlHandle_->handle;
+    std::string url = ConnectionUrl();
+    std::string userpwd = username_ + ":" + password_;
+
+    curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(handle, CURLOPT_USERPWD, userpwd.c_str());
+
+    if (log_level_ != "INFO") {
+      curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
+    } else {
+      curl_easy_setopt(handle, CURLOPT_VERBOSE, 0L);
+    }
+
+    curl_easy_setopt(handle, CURLOPT_MAXAGE_CONN, maxage_conn_);
   }
 
   static size_t WriteCallback(char * ptr, size_t size, size_t nmemb, void * userdata)
@@ -168,18 +271,15 @@ private:
     // Publish the message
     node->rtcm_pub_->publish(std::move(message));
 
-    // Keep track of the number of records received
-    static int recordCount = 0;
-    recordCount++;
+    node->record_count_++;
 
     // Get the desired count from the private parameter
     int desiredCount;
     curl_easy_getinfo(node->curlHandle_->handle, CURLINFO_PRIVATE, &desiredCount);
 
-
     // Check if the desired count is reached
-    if (recordCount >= desiredCount) {
-      recordCount = 0;
+    if (node->record_count_ >= desiredCount) {
+      node->record_count_ = 0;
 
       node->desired_count_reached_ = true;
 
@@ -192,13 +292,41 @@ private:
     return size * nmemb;
   }
 
+  // DoStreaming with runtime parameter reconfiguration support
   void DoStreaming()
   {
-    while (!streaming_exit_) {
+    while (!streaming_exit_.load()) {
       desired_count_reached_ = false;
 
       // Perform the request
       CURLcode res = curl_easy_perform(curlHandle_->handle);
+
+      // Reconfigure after perform returns (handle is idle) — tightest response to param changes
+      if (reconfigure_needed_.load()) {
+        std::lock_guard<std::mutex> lock(params_mutex_);
+
+        // Copy pending values to active values
+        use_https_ = pending_use_https_;
+        host_ = pending_host_;
+        port_ = pending_port_;
+        mountpoint_ = pending_mountpoint_;
+        username_ = pending_username_;
+        password_ = pending_password_;
+        log_level_ = pending_log_level_;
+        maxage_conn_ = pending_maxage_conn_;
+
+        // Reconfigure curl with new values
+        ApplyCurlOptions();
+
+        reconfigure_needed_.store(false);
+
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Reconfigured NTRIP connection: %s", ConnectionUrl().c_str());
+
+        // Skip stale res handling — immediately perform with new config
+        continue;
+      }
 
       // Check for any errors
       if (res != CURLE_OK) {
@@ -235,7 +363,7 @@ public:
   NTRIP_CLIENT_NODE_LOCAL
   ~NTRIPClientNode()
   {
-    streaming_exit_ = true;
+    streaming_exit_.store(true);
 
     // Wait for the streaming thread to finish
     streamingThread_.join();
