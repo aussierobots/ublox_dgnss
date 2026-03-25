@@ -211,20 +211,22 @@ bool ParameterManager::update_parameter_status(const std::string & param_name, P
 
 void ParameterManager::restore_user_parameters_to_device()
 {
-  std::lock_guard<std::mutex> lock(param_cache_mutex_);
-
-  size_t user_params_restored = 0;
-
-  for (auto & [param_name, p_state] : param_cache_map_) {
-    if (p_state.param_source == ParamValueSource::START_ARG ||
-      p_state.param_source == ParamValueSource::RUNTIME_USER)
-    {
-      send_parameter_to_device(param_name, PARAM_VALSET);
-      user_params_restored++;
+  std::vector<std::string> to_restore;
+  {
+    std::lock_guard lock(param_cache_mutex_);
+    for (const auto & [param_name, p_state] : param_cache_map_) {
+      if (p_state.param_source == ParamValueSource::START_ARG ||
+          p_state.param_source == ParamValueSource::RUNTIME_USER) {
+        to_restore.push_back(param_name);
+      }
     }
   }
 
-  RCLCPP_INFO(logger_, "Restored %zu user parameters to device", user_params_restored);
+  for (const auto & param_name : to_restore) {
+    send_parameter_to_device(param_name, PARAM_VALSET);
+  }
+
+  RCLCPP_INFO(logger_, "Restored %zu user parameters to device", to_restore.size());
 }
 
 void ParameterManager::reset_device_parameters()
