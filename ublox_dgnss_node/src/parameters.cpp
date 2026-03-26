@@ -216,7 +216,8 @@ void ParameterManager::restore_user_parameters_to_device()
     std::lock_guard lock(param_cache_mutex_);
     for (const auto & [param_name, p_state] : param_cache_map_) {
       if (p_state.param_source == ParamValueSource::START_ARG ||
-          p_state.param_source == ParamValueSource::RUNTIME_USER) {
+        p_state.param_source == ParamValueSource::RUNTIME_USER)
+      {
         to_restore.push_back(param_name);
       }
     }
