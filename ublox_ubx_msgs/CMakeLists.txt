@@ -87,6 +87,7 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXRxmMeasx.msg"
   "msg/UBXRxmRawx.msg"
   "msg/UBXRxmRTCM.msg"
+  "msg/UBXRxmSfrbx.msg"
   "msg/UBXRxmSpartn.msg"
   "msg/UBXRxmSpartnKey.msg"
   "msg/UBXSecSig.msg"

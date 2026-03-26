@@ -63,6 +63,7 @@
 #include "ublox_ubx_msgs/msg/ubx_rxm_measx.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rawx.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_spartn.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_sfrbx.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_spartn_key.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
@@ -262,6 +263,8 @@ public:
       "ubx_rxm_measx", qos, pub_options);
     ubx_rxm_rawx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRawx>(
       "ubx_rxm_rawx", qos, pub_options);
+    ubx_rxm_sfrbx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSfrbx>(
+      "ubx_rxm_sfrbx", qos, pub_options);
     ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
       "ubx_rxm_spartn", qos, pub_options);
     ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
@@ -651,6 +654,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>::SharedPtr ubx_rxm_measx_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRawx>::SharedPtr ubx_rxm_rawx_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSfrbx>::SharedPtr ubx_rxm_sfrbx_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>::SharedPtr ubx_rxm_spartn_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>::SharedPtr ubx_rxm_spartnkey_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
@@ -1101,14 +1105,17 @@ public:
               std::string source_text = to_string(source);
 
               if (state.param_value) {
-                // Check if this is a device update (already in cache with DEVICE_ACTUAL)
-                if (source == ParamValueSource::DEVICE_ACTUAL) {
+                // Check if this is a device echo (same value echoed back from
+                // update_param_from_device calling set_parameter) vs a real user change.
+                // update_param_from_device sets the cache BEFORE calling set_parameter,
+                // so device echoes will have matching values in the cache.
+                bool is_device_echo = (source == ParamValueSource::DEVICE_ACTUAL) &&
+                  (state.param_value.value() == parameter.get_parameter_value());
+                if (is_device_echo) {
                   RCLCPP_DEBUG(
                     get_logger(),
-                    "parameter set %s: %s - source: %s status from: %s to: PARAM_LOADED",
-                    name.c_str(), parameter.value_to_string().c_str(),
-                    source_text.c_str(),
-                    status_text.c_str()
+                    "parameter set %s: %s - device echo, keeping PARAM_LOADED",
+                    name.c_str(), parameter.value_to_string().c_str()
                   );
                   // Don't change to PARAM_USER - this is device data, keep as PARAM_LOADED
                   parameter_manager_->update_parameter_cache(
@@ -2210,6 +2217,12 @@ private:
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
+      case ubx::UBX_RXM_SFRBX:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm sfrbx poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
       case ubx::UBX_RXM_SPARTN:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartn poll sent to usb device",
@@ -2592,6 +2605,10 @@ private:
       case ubx::UBX_RXM_RAWX:
         ubx_rxm_->rawx()->frame(f->ubx_frame);
         ubx_rxm_rawx_pub(f, ubx_rxm_->rawx()->payload());
+        break;
+      case ubx::UBX_RXM_SFRBX:
+        ubx_rxm_->sfrbx()->frame(f->ubx_frame);
+        ubx_rxm_sfrbx_pub(f, ubx_rxm_->sfrbx()->payload());
         break;
       case ubx::UBX_RXM_SPARTN:
         ubx_rxm_->spartn()->frame(f->ubx_frame);
@@ -3449,6 +3466,40 @@ private:
 
     // Publish the message
     ubx_rxm_rawx_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_sfrbx_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::rxm::sfrbx::RxmSfrbxPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm sfrbx polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmSfrbx>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate the main fields
+    msg->gnss_id = payload->gnss_id;
+    msg->sv_id = payload->sv_id;
+    msg->sig_id = payload->sig_id;
+    msg->freq_id = payload->freq_id;
+    msg->num_words = payload->num_words;
+    msg->chn = payload->chn;
+    msg->version = payload->version;
+
+    // Populate the data words
+    for (const auto & word : payload->dwrd) {
+      msg->dwrd.push_back(word);
+    }
+
+    // Publish the message
+    ubx_rxm_sfrbx_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

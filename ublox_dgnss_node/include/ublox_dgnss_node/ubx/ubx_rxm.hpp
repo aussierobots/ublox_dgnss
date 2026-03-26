@@ -27,6 +27,7 @@
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_rawx.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_spartn.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_spartn_key.hpp"
+#include "ublox_dgnss_node/ubx/rxm/ubx_rxm_sfrbx.hpp"
 #include "ublox_dgnss_node/ubx/rxm/ubx_rxm_cor.hpp"
 
 namespace ubx::rxm
@@ -38,6 +39,7 @@ typedef UBXFrameComms<rxm::rawx::RxmRawxPayload, usb::Connection> UbxRxmRawxFram
 typedef UBXFrameComms<rxm::spartn::RxmSpartnPayload, usb::Connection> UbxRxmSpartnFrameComms;
 typedef UBXFrameComms<rxm::spartnkey::RxmSpartnKeyPayload,
     usb::Connection> UbxRxmSpartnKeyFrameComms;
+typedef UBXFrameComms<rxm::sfrbx::RxmSfrbxPayload, usb::Connection> UbxRxmSfrbxFrameComms;
 typedef UBXFrameComms<rxm::cor::RxmCorPayload, usb::Connection> UbxRxmCorFrameComms;
 
 class UbxRxm
@@ -49,6 +51,7 @@ private:
   std::shared_ptr<UbxRxmRawxFrameComms> rawx_;
   std::shared_ptr<UbxRxmSpartnFrameComms> spartn_;
   std::shared_ptr<UbxRxmSpartnKeyFrameComms> spartn_key_;
+  std::shared_ptr<UbxRxmSfrbxFrameComms> sfrbx_;
   std::shared_ptr<UbxRxmCorFrameComms> cor_;
 
 public:
@@ -60,6 +63,7 @@ public:
     rawx_ = std::make_shared<UbxRxmRawxFrameComms>(usbc_);
     spartn_ = std::make_shared<UbxRxmSpartnFrameComms>(usbc_);
     spartn_key_ = std::make_shared<UbxRxmSpartnKeyFrameComms>(usbc_);
+    sfrbx_ = std::make_shared<UbxRxmSfrbxFrameComms>(usbc_);
     cor_ = std::make_shared<UbxRxmCorFrameComms>(usbc_);
   }
   std::shared_ptr<UbxRxmRTCMFrameComms> rtcm()
@@ -81,6 +85,10 @@ public:
   std::shared_ptr<UbxRxmSpartnKeyFrameComms> spartnkey()
   {
     return spartn_key_;
+  }
+  std::shared_ptr<UbxRxmSfrbxFrameComms> sfrbx()
+  {
+    return sfrbx_;
   }
   std::shared_ptr<UbxRxmCorFrameComms> cor()
   {

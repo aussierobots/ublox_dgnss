@@ -67,6 +67,7 @@ const msg_id_t UBX_RXM_RTCM = 0x32;
 const msg_id_t UBX_RXM_MEASX = 0x14;
 const msg_id_t UBX_RXM_RAWX = 0x15;
 const msg_id_t UBX_RXM_SPARTN = 0x33;
+const msg_id_t UBX_RXM_SFRBX = 0x13;
 const msg_id_t UBX_RXM_SPARTNKEY = 0x36;
 
 const msg_class_t UBX_SEC = 0x27;
