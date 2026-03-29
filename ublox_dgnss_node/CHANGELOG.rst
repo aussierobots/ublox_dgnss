@@ -2,6 +2,37 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added UBX_RXM_SFRBX and fixed bug for param set being sent to usb device upon change
+* fix uncrustify formatting
+* fix: handle concurrent access to parameters
+  and remove deadlock risk
+* Merge pull request `#60 <https://github.com/aussierobots/ublox_dgnss/issues/60>`_ from SayedMuhamad/fix/rtcm-callback-resize-to-reserve
+  fix(rtcm_callback): replace resize() with reserve() to prevent leading zero bytes
+* fix(rtcm_callback): replace resize() with reserve() to prevent leading zero bytes
+  In rtcm_callback(), the output buffer was built using:
+  data_out.resize(N);          // pre-fills N zero bytes at indices [0..N-1]
+  for (auto b : msg.message)
+  data_out.push_back(b);     // appends real bytes at indices [N..2N-1]
+  This produced a 2N-byte buffer starting with N zero bytes, which
+  corrupts SPARTN/RTCM3 framing. The u-blox F9P USB parser scans for
+  the 0x73 (SPARTN) or 0xD3 (RTCM3) preamble at byte 0; with leading
+  zeros it never found a valid frame start and silently discarded every
+  correction message.
+  Fix: replace resize() with reserve(). This pre-allocates capacity
+  without filling, so push_back() places the real data at indices
+  [0..N-1] and the resulting buffer is exactly N bytes with the
+  preamble byte at index 0.
+  Fixes: corrections delivered via /ntrip_client/rtcm having zero
+  effect on receiver positioning accuracy.
+* Merge pull request `#59 <https://github.com/aussierobots/ublox_dgnss/issues/59>`_ from wentasah/fix
+  Fix missing include with GCC 14
+* Fix missing include with GCC 14
+  Without this, the compiler complains with:
+  include/ublox_dgnss_node/ubx/utils.hpp:188:8: error: 'reverse_copy' is not a member of 'std'
+* Contributors: Michal Sojka, Nick Hortovanyi, Sayed Muhammad
+
 0.7.2 (2026-03-19)
 ------------------
 * uncrustify fixes
