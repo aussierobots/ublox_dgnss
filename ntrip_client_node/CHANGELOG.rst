@@ -2,8 +2,8 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.3 (2026-03-29)
+------------------
 * Add ros2 runtime parameter reconfiguration support to ntrip_client_node
 * Contributors: Nick Hortovanyi
 
