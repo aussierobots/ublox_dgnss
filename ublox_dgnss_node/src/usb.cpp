@@ -44,6 +44,7 @@ Connection::Connection(
   timeout_ms_ = 250;
   timeout_tv_ = {1, 0};       // default the timeout to 1 seconds
   keep_running_ = true;
+  attached_ = false;
 
   driver_state_ = USBDriverState::DISCONNECTED;
 
