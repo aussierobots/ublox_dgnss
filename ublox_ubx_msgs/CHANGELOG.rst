@@ -2,6 +2,9 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.3 (2026-03-29)
 ------------------
 * Added UBX_RXM_SFRBX and fixed bug for param set being sent to usb device upon change
