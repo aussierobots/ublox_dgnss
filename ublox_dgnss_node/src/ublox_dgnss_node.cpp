@@ -65,6 +65,8 @@
 #include "ublox_ubx_msgs/msg/ubx_rxm_spartn.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_sfrbx.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_spartn_key.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_pmp.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_qzssl6.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
 #include "ublox_ubx_msgs/msg/ubx_mon_comms.hpp"
@@ -229,8 +231,13 @@ public:
       "ubx_nav_hp_pos_ecef", qos, pub_options);
     ubx_nav_hp_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosLLH>(
       "ubx_nav_hp_pos_llh", qos, pub_options);
-    ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>(
-      "ubx_nav_odo", qos, pub_options);
+    // Odometer (NAV-ODO) only supported on F9P/F9R (removed in X20P HPG 2.10)
+    if (device_family_ == ublox_dgnss::DeviceFamily::F9P ||
+      device_family_ == ublox_dgnss::DeviceFamily::F9R)
+    {
+      ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>(
+        "ubx_nav_odo", qos, pub_options);
+    }
     ubx_nav_orb_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOrb>(
       "ubx_nav_orb", qos, pub_options);
     ubx_nav_sat_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSat>(
@@ -265,10 +272,11 @@ public:
       "ubx_rxm_rawx", qos, pub_options);
     ubx_rxm_sfrbx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSfrbx>(
       "ubx_rxm_sfrbx", qos, pub_options);
-    ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
-      "ubx_rxm_spartn", qos, pub_options);
-    ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
-      "ubx_rxm_spartnkey", qos, pub_options);
+    // RXM-SPARTN status output is only relevant on the X20P
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
+      ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
+        "ubx_rxm_spartn", qos, pub_options);
+    }
     ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
       "ubx_esf_status", qos, pub_options);
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
@@ -296,8 +304,13 @@ public:
       node_name + "/cold_start", std::bind(&UbloxDGNSSNode::cold_start_callback, this, _1, _2));
     warm_start_service_ = this->create_service<ublox_ubx_interfaces::srv::WarmStart>(
       node_name + "/warm_start", std::bind(&UbloxDGNSSNode::warm_start_callback, this, _1, _2));
-    reset_odo_service_ = this->create_service<ublox_ubx_interfaces::srv::ResetODO>(
-      node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
+    // Odometer (NAV-RESETODO) only supported on F9P/F9R (removed in X20P HPG 2.10)
+    if (device_family_ == ublox_dgnss::DeviceFamily::F9P ||
+      device_family_ == ublox_dgnss::DeviceFamily::F9R)
+    {
+      reset_odo_service_ = this->create_service<ublox_ubx_interfaces::srv::ResetODO>(
+        node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
+    }
 
 
     usb::connection_in_cb_fn connection_in_callback = std::bind(
@@ -373,17 +386,58 @@ public:
     rclcpp::SubscriptionOptions sub_options;
     sub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
 
-    RCLCPP_DEBUG(get_logger(), "creating UBXEsfMeas subscription ...");
-    ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
-      "/ubx_esf_meas_to_device", 10,
-      std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
-      sub_options);
+    // Each input subscription (data sent to the device) is gated by a bool param via
+    // should_create_input_sub(). RTCM and ESF-MEAS default true (existing behaviour); the
+    // RXM correction-input subscriptions default false (opt-in). ESF-MEAS is restricted to
+    // F9R (sensor fusion); PMP, QZSSL6 and SPARTN-KEY are restricted to X20P.
+    if (should_create_input_sub(
+        "ESF_MEAS_INPUT_ENABLED", true, ublox_dgnss::DeviceFamily::F9R, "ubx_esf_meas"))
+    {
+      RCLCPP_DEBUG(get_logger(), "creating UBXEsfMeas subscription ...");
+      ubx_esf_meas_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXEsfMeas>(
+        "/ubx_esf_meas_to_device", 10,
+        std::bind(&UbloxDGNSSNode::ubx_esf_meas_callback, this, _1),
+        sub_options);
+    }
 
-    RCLCPP_DEBUG(get_logger(), "creating RTCM subscription ...");
-    rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
-      "/ntrip_client/rtcm", 10,
-      std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
-      sub_options);
+    if (should_create_input_sub("RTCM_INPUT_ENABLED", true, std::nullopt, "rtcm")) {
+      RCLCPP_DEBUG(get_logger(), "creating RTCM subscription ...");
+      rtcm_sub_ = this->create_subscription<rtcm_msgs::msg::Message>(
+        "/ntrip_client/rtcm", 10,
+        std::bind(&UbloxDGNSSNode::rtcm_callback, this, _1),
+        sub_options);
+    }
+
+    if (should_create_input_sub(
+        "RXM_PMP_INPUT_ENABLED", false, ublox_dgnss::DeviceFamily::X20P, "ubx_rxm_pmp"))
+    {
+      RCLCPP_DEBUG(get_logger(), "creating UBXRxmPmp subscription ...");
+      ubx_rxm_pmp_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXRxmPmp>(
+        "/ubx_rxm_pmp_to_device", 10,
+        std::bind(&UbloxDGNSSNode::ubx_rxm_pmp_callback, this, _1),
+        sub_options);
+    }
+
+    if (should_create_input_sub(
+        "RXM_QZSSL6_INPUT_ENABLED", false, ublox_dgnss::DeviceFamily::X20P, "ubx_rxm_qzssl6"))
+    {
+      RCLCPP_DEBUG(get_logger(), "creating UBXRxmQzssl6 subscription ...");
+      ubx_rxm_qzssl6_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXRxmQzssl6>(
+        "/ubx_rxm_qzssl6_to_device", 10,
+        std::bind(&UbloxDGNSSNode::ubx_rxm_qzssl6_callback, this, _1),
+        sub_options);
+    }
+
+    if (should_create_input_sub(
+        "RXM_SPARTNKEY_INPUT_ENABLED", false, ublox_dgnss::DeviceFamily::X20P,
+        "ubx_rxm_spartnkey"))
+    {
+      RCLCPP_DEBUG(get_logger(), "creating UBXRxmSpartnKey subscription ...");
+      ubx_rxm_spartnkey_sub_ = this->create_subscription<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
+        "/ubx_rxm_spartnkey_to_device", 10,
+        std::bind(&UbloxDGNSSNode::ubx_rxm_spartnkey_callback, this, _1),
+        sub_options);
+    }
 
     RCLCPP_DEBUG(get_logger(), "initialising all ublox configuration parameters...");
     ublox_init_all_cfg_params();
@@ -611,6 +665,14 @@ private:
 
   std::chrono::steady_clock::time_point param_fetch_start_time_;
   bool param_fetch_in_progress_ = false;
+
+  // Latches to throttle USB-disconnected warnings to once per detach episode
+  // (reset when the USB reconnects/attaches so the next detach logs once again)
+  bool usb_param_disconnected_logged_ = false;
+  mutable bool usb_rtcm_detached_logged_ = false;
+  mutable bool usb_pmp_detached_logged_ = false;
+  mutable bool usb_qzssl6_detached_logged_ = false;
+  mutable bool usb_spartnkey_detached_logged_ = false;
   static constexpr auto PARAM_FETCH_TIMEOUT = std::chrono::seconds(5);
 
   std::string frame_id_;
@@ -656,7 +718,6 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRawx>::SharedPtr ubx_rxm_rawx_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSfrbx>::SharedPtr ubx_rxm_sfrbx_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>::SharedPtr ubx_rxm_spartn_pub_;
-  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>::SharedPtr ubx_rxm_spartnkey_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXMonComms>::SharedPtr ubx_mon_comms_pub_;
@@ -666,6 +727,9 @@ private:
 
   rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
   rclcpp::Subscription<rtcm_msgs::msg::Message>::SharedPtr rtcm_sub_;
+  rclcpp::Subscription<ublox_ubx_msgs::msg::UBXRxmPmp>::SharedPtr ubx_rxm_pmp_sub_;
+  rclcpp::Subscription<ublox_ubx_msgs::msg::UBXRxmQzssl6>::SharedPtr ubx_rxm_qzssl6_sub_;
+  rclcpp::Subscription<ublox_ubx_msgs::msg::UBXRxmSpartnKey>::SharedPtr ubx_rxm_spartnkey_sub_;
 
   rclcpp::Service<ublox_ubx_interfaces::srv::HotStart>::SharedPtr hot_start_service_;
   rclcpp::Service<ublox_ubx_interfaces::srv::WarmStart>::SharedPtr warm_start_service_;
@@ -1248,7 +1312,12 @@ public:
     RCLCPP_DEBUG_ONCE(get_logger(), "initial handle parameter processing callback triggered");
 
     if (usbc_->driver_state() != usb::USBDriverState::CONNECTED) {
-      RCLCPP_WARN(get_logger(), "USB not connection cant handle parameter processing!!");
+      if (!usb_param_disconnected_logged_) {
+        RCLCPP_WARN(get_logger(), "USB not connection cant handle parameter processing!!");
+        usb_param_disconnected_logged_ = true;
+      }
+    } else {
+      usb_param_disconnected_logged_ = false;  // reset on reconnect so next disconnect logs once
     }
 
     if (parameter_manager_ == nullptr) {
@@ -1370,25 +1439,123 @@ public:
       return;
     }
 
-    ubx_esf_->meas_full()->payload()->load_from_msg(msg);
+    ubx_esf_->meas_full()->payload_poll()->load_from_msg(msg);
     RCLCPP_DEBUG(
       get_logger(), "ubx_esf_meas_callback sending payload - %s",
-      ubx_esf_->meas_full()->payload()->to_string().c_str());
+      ubx_esf_->meas_full()->payload_poll()->to_string().c_str());
 
-    ubx_esf_->meas_full()->poll_async();
+    ubx_esf_->meas_full()->send_async();
+  }
+
+  // Decide whether to create a device-input subscription gated by a bool param and an
+  // optional required device family. Declares the param (default_value) if it was not
+  // supplied as an override, so it coexists with
+  // automatically_declare_parameters_from_overrides. Returns true only when the param is
+  // enabled AND (no family restriction OR the device family matches). A family mismatch
+  // only warns when the param was explicitly set, so default-enabled inputs (e.g. ESF on
+  // a non-F9R) do not spam a warning at every startup.
+  UBLOX_DGNSS_NODE_LOCAL
+  bool should_create_input_sub(
+    const std::string & param, bool default_value,
+    std::optional<ublox_dgnss::DeviceFamily> required_family, const char * what)
+  {
+    bool explicitly_set = this->has_parameter(param);
+    if (!explicitly_set) {
+      this->declare_parameter<bool>(param, default_value);
+    }
+    bool enabled = this->get_parameter(param).as_bool();
+    RCLCPP_INFO(get_logger(), "input param %s: %s", param.c_str(), enabled ? "true" : "false");
+    if (!enabled) {
+      return false;
+    }
+    if (required_family && device_family_ != *required_family) {
+      if (explicitly_set) {
+        RCLCPP_WARN(
+          get_logger(),
+          "%s set true but device family is %s - %s input is only supported on %s; "
+          "not subscribing",
+          param.c_str(), device_family_str_.c_str(), what,
+          ublox_dgnss::get_device_family_info(*required_family).name.c_str());
+      }
+      return false;
+    }
+    return true;
+  }
+
+  // Returns true if the USB device is ready to receive data. Throttles the per-message
+  // "not attached" warning to once per detach episode (reset on the first ready check).
+  UBLOX_DGNSS_NODE_LOCAL
+  bool usb_ready_for_rxm_input(const char * what, bool & detached_logged) const
+  {
+    if (usbc_ == nullptr || !usbc_->dev_valid() || !usbc_->attached()) {
+      if (!detached_logged) {
+        RCLCPP_WARN(get_logger(), "USB device not attached - not sending %s to device!", what);
+        detached_logged = true;
+      }
+      return false;
+    }
+    detached_logged = false;  // reset so the next detach episode logs once
+    return true;
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_pmp_callback(const ublox_ubx_msgs::msg::UBXRxmPmp & msg) const
+  {
+    if (!usb_ready_for_rxm_input("ubx_rxm_pmp", usb_pmp_detached_logged_)) {
+      return;
+    }
+    ubx_rxm_->pmp()->payload_poll()->load_from_msg(msg);
+    RCLCPP_DEBUG(
+      get_logger(), "ubx_rxm_pmp_callback sending payload - %s",
+      ubx_rxm_->pmp()->payload_poll()->to_string().c_str());
+    ubx_rxm_->pmp()->send_async();
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_qzssl6_callback(const ublox_ubx_msgs::msg::UBXRxmQzssl6 & msg) const
+  {
+    if (!usb_ready_for_rxm_input("ubx_rxm_qzssl6", usb_qzssl6_detached_logged_)) {
+      return;
+    }
+    ubx_rxm_->qzssl6()->payload_poll()->load_from_msg(msg);
+    RCLCPP_DEBUG(
+      get_logger(), "ubx_rxm_qzssl6_callback sending payload - %s",
+      ubx_rxm_->qzssl6()->payload_poll()->to_string().c_str());
+    ubx_rxm_->qzssl6()->send_async();
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_rxm_spartnkey_callback(const ublox_ubx_msgs::msg::UBXRxmSpartnKey & msg) const
+  {
+    if (!usb_ready_for_rxm_input("ubx_rxm_spartnkey", usb_spartnkey_detached_logged_)) {
+      return;
+    }
+    ubx_rxm_->spartnkey_full()->payload_poll()->load_from_msg(msg);
+    RCLCPP_DEBUG(
+      get_logger(), "ubx_rxm_spartnkey_callback sending payload - %s",
+      ubx_rxm_->spartnkey_full()->payload_poll()->to_string().c_str());
+    ubx_rxm_->spartnkey_full()->send_async();
   }
 
   UBLOX_DGNSS_NODE_LOCAL
   void rtcm_callback(const rtcm_msgs::msg::Message & msg) const
   {
     if (usbc_ == nullptr || !usbc_->dev_valid()) {
-      RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending rtcm to device!");
+      if (!usb_rtcm_detached_logged_) {
+        RCLCPP_WARN(get_logger(), "usbc_ not valid - not sending rtcm to device!");
+        usb_rtcm_detached_logged_ = true;
+      }
       return;
     }
     if (!usbc_->attached()) {
-      RCLCPP_WARN(get_logger(), "USB device not attached - not sending rtcm to device!");
+      if (!usb_rtcm_detached_logged_) {
+        RCLCPP_WARN(get_logger(), "USB device not attached - not sending rtcm to device!");
+        usb_rtcm_detached_logged_ = true;
+      }
       return;
     }
+    // USB attached & valid - reset latch so the next detach episode logs once again
+    usb_rtcm_detached_logged_ = false;
     std::ostringstream oss;
     std::vector<u_char> data_out;
     data_out.reserve(msg.message.size());
@@ -2231,7 +2398,19 @@ private:
         break;
       case ubx::UBX_RXM_SPARTNKEY:
         RCLCPP_DEBUG(
-          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartnkey poll sent to usb device",
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartnkey sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      case ubx::UBX_RXM_PMP:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm pmp sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
+      case ubx::UBX_RXM_QZSSL6:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x rxm qzssl6 sent to usb device",
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
@@ -2614,10 +2793,6 @@ private:
         ubx_rxm_->spartn()->frame(f->ubx_frame);
         ubx_rxm_spartn_pub(f, ubx_rxm_->spartn()->payload());
         break;
-      case ubx::UBX_RXM_SPARTNKEY:
-        ubx_rxm_->spartnkey()->frame(f->ubx_frame);
-        ubx_rxm_spartnkey_pub(f, ubx_rxm_->spartnkey()->payload());
-        break;
       default:
         RCLCPP_WARN(
           get_logger(), "ubx class: 0x%02x id: 0x%02x unknown ... doing nothing",
@@ -2916,6 +3091,11 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::nav::odo::NavOdoPayload> payload)
   {
+    // Publisher is not created on X20P (odometer removed in HPG 2.10)
+    if (!ubx_nav_odo_pub_) {
+      return;
+    }
+
     RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x nav odo polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
@@ -3507,6 +3687,11 @@ private:
     ubx_queue_frame_t * f,
     std::shared_ptr<ubx::rxm::spartn::RxmSpartnPayload> payload)
   {
+    // Publisher is only created on the X20P; skip if a non-X20P device emits the frame
+    if (!ubx_rxm_spartn_pub_) {
+      return;
+    }
+
     RCLCPP_DEBUG(
       get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartn polled payload - %s",
       f->ubx_frame->msg_class, f->ubx_frame->msg_id,
@@ -3527,50 +3712,6 @@ private:
 
     // Publish the message
     ubx_rxm_spartn_pub_->publish(*msg);
-  }
-
-  UBLOX_DGNSS_NODE_LOCAL
-  void ubx_rxm_spartnkey_pub(
-    ubx_queue_frame_t * f,
-    std::shared_ptr<ubx::rxm::spartnkey::RxmSpartnKeyPayload> payload)
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "ubx class: 0x%02x id: 0x%02x rxm spartnkey polled payload - %s",
-      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
-      payload->to_string().c_str());
-
-    // Create message
-    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXRxmSpartnKey>();
-
-    // Populate the header
-    msg->header.frame_id = frame_id_;
-    msg->header.stamp = f->ts;
-
-    // Populate fields
-    msg->version = payload->version;
-    msg->num_keys = payload->numKeys;
-
-    // Populate the repeated key info data
-    for (const auto & key_info_payload : payload->keyInfos) {
-      ublox_ubx_msgs::msg::SpartnKeyInfo key_info_msg;
-      key_info_msg.reserved1 = key_info_payload.reserved1;
-      key_info_msg.key_length_bytes = key_info_payload.keyLengthBytes;
-      key_info_msg.valid_from_wno = key_info_payload.validFromWno;
-      key_info_msg.valid_from_tow = key_info_payload.validFromTow;
-      msg->key_info.push_back(key_info_msg);
-    }
-
-    // Concatenate the key data from each KeyPayload into key_payload
-    msg->key_payload.clear();  // Ensure the key_payload array is empty before populating
-    for (const auto & key_payload : payload->keyPayloads) {
-      // Append the entire key vector from KeyPayload to msg->key_payload
-      msg->key_payload.insert(
-        msg->key_payload.end(), key_payload.key.begin(),
-        key_payload.key.end());
-    }
-
-    // Publish the message
-    ubx_rxm_spartnkey_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL
