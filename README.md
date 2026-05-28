@@ -8,7 +8,7 @@ RTCM messages can be delivered externally. Alternately the ntrip_client_node can
 
 Work has started on SPARTN support - basic commands are available to enable it on the device and to confirm that the messages are being used (when delivered to the device).
 
-This driver supports multiple u-blox device families including ZED-F9P, ZED-F9R, and X20P connected via USB, under Ubuntu 22.04/24.04. The driver uses libusb api 1.0 and automatically adapts to different USB architectures (CDC-ACM for F9 family, Vendor-Specific for X20P).
+This driver supports multiple u-blox device families including ZED-F9P, ZED-F9R, and X20P connected via USB, under Ubuntu 22.04/24.04/26.04. The driver uses libusb api 1.0 and automatically adapts to different USB architectures (CDC-ACM for F9 family, Vendor-Specific for X20P).
 
 This release works with Rolling, Kilted, Jazzy and Humble.
 
