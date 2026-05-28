@@ -273,6 +273,8 @@ The following messages may be outputted. They included a `std_msgs/Header header
 /ubx_rxm_rtcm
 /ubx_rxm_measx
 /ubx_rxm_rawx
+/ubx_rxm_sfrbx
+/ubx_rxm_spartn
 /ubx_sec_sig
 /ubx_sec_sig_log
 
@@ -283,6 +285,33 @@ The following topics are subscribed to
 ``` zsh
 /ubx_esf_meas_to_device
 /ntrip_client/rtcm
+/ubx_rxm_pmp_to_device
+/ubx_rxm_qzssl6_to_device
+/ubx_rxm_spartnkey_to_device
+```
+
+Each input subscription is gated by a bool parameter; the subscription is only created
+when the parameter is `true`. RTCM and ESF-MEAS default `true` (existing behaviour); the
+RXM correction-input subscriptions default `false` (opt-in). The data received on each
+topic is forwarded straight to the receiver over USB.
+
+| Parameter | Default | Device family | Subscribed topic | Sends to device |
+| --- | --- | --- | --- | --- |
+| `RTCM_INPUT_ENABLED` | `true` | all | `/ntrip_client/rtcm` | RTCM3 correction stream (raw bytes) |
+| `ESF_MEAS_INPUT_ENABLED` | `true` | **F9R** | `/ubx_esf_meas_to_device` | UBX-ESF-MEAS (sensor measurements) |
+| `RXM_PMP_INPUT_ENABLED` | `false` | **X20P** | `/ubx_rxm_pmp_to_device` | UBX-RXM-PMP (L-band data from NEO-D9S) |
+| `RXM_QZSSL6_INPUT_ENABLED` | `false` | **X20P** | `/ubx_rxm_qzssl6_to_device` | UBX-RXM-QZSSL6 (QZSS L6 / CLAS from NEO-D9C) |
+| `RXM_SPARTNKEY_INPUT_ENABLED` | `false` | **X20P** | `/ubx_rxm_spartnkey_to_device` | UBX-RXM-SPARTNKEY (dynamic SPARTN decryption keys) |
+
+The "device family" column restricts the subscription to that family (set via the
+`DEVICE_FAMILY` parameter). Enabling a restricted input on another family logs a warning
+and does not subscribe. The `/ubx_rxm_spartn` status output is likewise only published on
+the X20P.
+
+For example, to enable L-band PMP input:
+
+``` zsh
+ros2 run ublox_dgnss_node ublox_dgnss_node --ros-args -p RXM_PMP_INPUT_ENABLED:=True
 ```
 
 # ROS2 NAVSATFIX Messages
