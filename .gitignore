@@ -58,5 +58,3 @@ imgui.ini
 .pytest_cache
 
 *.py[co]
-
-CLAUDE.md

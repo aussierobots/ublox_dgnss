@@ -7,7 +7,7 @@
 device_family = "F9P"
 description = "ZED-F9P baseline configuration"
 version = "1.0"
-parameter_count = 125
+parameter_count = 127
 
 [parameters]
 include = [
@@ -25,6 +25,7 @@ include = [
     "CFG_MSGOUT_RTCM_3X_TYPE1230_UART2",
     "CFG_MSGOUT_RTCM_3X_TYPE1230_USB",
     "CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2",
+    "CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB",
     "CFG_MSGOUT_UBX_MON_COMMS_USB",
     "CFG_MSGOUT_UBX_NAV_CLOCK_USB",
     "CFG_MSGOUT_UBX_NAV_COV_UART1",
@@ -56,8 +57,8 @@ include = [
     "CFG_MSGOUT_UBX_RXM_COR_USB",
     "CFG_MSGOUT_UBX_RXM_MEASX_USB",
     "CFG_MSGOUT_UBX_RXM_RAWX_USB",
-    "CFG_MSGOUT_UBX_RXM_SFRBX_USB",
     "CFG_MSGOUT_UBX_RXM_RTCM_USB",
+    "CFG_MSGOUT_UBX_RXM_SFRBX_USB",
     "CFG_MSGOUT_UBX_RXM_SPARTN_USB",
     "CFG_MSGOUT_UBX_SEC_SIGLOG_USB",
     "CFG_MSGOUT_UBX_SEC_SIG_USB",

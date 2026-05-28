@@ -85,6 +85,8 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/UBXNavVelNED.msg"
   "msg/UBXRxmCor.msg"
   "msg/UBXRxmMeasx.msg"
+  "msg/UBXRxmPmp.msg"
+  "msg/UBXRxmQzssl6.msg"
   "msg/UBXRxmRawx.msg"
   "msg/UBXRxmRTCM.msg"
   "msg/UBXRxmSfrbx.msg"

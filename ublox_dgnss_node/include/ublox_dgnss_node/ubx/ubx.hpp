@@ -413,6 +413,20 @@ public:
     auto frame_poll = container_->frame_poll();
     comms_->write_buffer_async(frame_poll->buf.data(), frame_poll->buf.size(), NULL);
   }
+  // Poll payload instance used when sending dynamic data to the device. Populate this
+  // (e.g. via load_from_msg) then call send_async() - poll_async() must not be used for
+  // input messages as it caches the frame built from this payload on first call.
+  std::shared_ptr<PayloadPoll<T>> payload_poll()
+  {
+    return container_->payload_poll();
+  }
+  // Build a fresh frame from payload_poll() and write it to the device. Unlike
+  // poll_async() this rebuilds every call, so it correctly transmits changing data.
+  void send_async()
+  {
+    auto frame_poll = container_->make_frame_poll();
+    comms_->write_buffer_async(frame_poll->buf.data(), frame_poll->buf.size(), NULL);
+  }
 };
 }  // namespace ubx
 

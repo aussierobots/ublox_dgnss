@@ -22,6 +22,7 @@
 #include <vector>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
+#include "ublox_ubx_msgs/msg/ubx_rxm_spartn_key.hpp"
 
 namespace ubx::rxm::spartnkey
 {
@@ -59,7 +60,10 @@ struct KeyPayload
   }
 };
 
-class RxmSpartnKeyPayload : public UBXPayload
+// Input variant of UBX-RXM-SPARTNKEY used to push dynamic SPARTN decryption keys
+// to the device. Mirrors the ESFMeasFullPayload pattern: load_from_msg() maps a ROS
+// message into the fields and make_poll_payload() serializes them for sending to USB.
+class RxmSpartnKeyFullPayload : public UBXPayload
 {
 public:
   static const msg_class_t MSG_CLASS = UBX_RXM;
@@ -72,42 +76,71 @@ public:
   std::vector<KeyPayload> keyPayloads;
 
 public:
-  RxmSpartnKeyPayload()
+  RxmSpartnKeyFullPayload()
   : UBXPayload(MSG_CLASS, MSG_ID)
   {
   }
-  RxmSpartnKeyPayload(ch_t * payload_polled, u2_t size)
-  : UBXPayload(MSG_CLASS, MSG_ID)
+
+  // Load the payload fields from a ROS message prior to sending to the device
+  void load_from_msg(const ublox_ubx_msgs::msg::UBXRxmSpartnKey & msg)
   {
-    payload_.clear();
-    payload_.reserve(size);
-    payload_.resize(size);
-    memcpy(payload_.data(), payload_polled, size);
+    version = msg.version;
+    reserved0[0] = 0;
+    reserved0[1] = 0;
 
-    version = buf_offset<u1_t>(&payload_, 0);
-    numKeys = buf_offset<u1_t>(&payload_, 1);
-    reserved0[0] = buf_offset<u1_t>(&payload_, 2);
-    reserved0[1] = buf_offset<u1_t>(&payload_, 3);
-
-// Process each key info block (numKeys times)
-    size_t offset = 4;
     keyInfos.clear();
-    for (u1_t i = 0; i < numKeys; ++i) {
-      keyInfos.emplace_back(&payload_, offset);  // Use constructor
-      offset += 8;  // Each key info is 8 bytes
+    for (const auto & ki : msg.key_info) {
+      KeyInfo key_info;
+      key_info.reserved1 = ki.reserved1;
+      key_info.keyLengthBytes = ki.key_length_bytes;
+      key_info.validFromWno = ki.valid_from_wno;
+      key_info.validFromTow = ki.valid_from_tow;
+      keyInfos.push_back(key_info);
     }
 
-    // Process the key payloads (lengths defined in keyLengthBytes)
+    // use the declared key count if provided, otherwise the key_info size
+    numKeys = msg.num_keys;
+    if (numKeys == 0) {
+      numKeys = static_cast<u1_t>(keyInfos.size());
+    }
+
+    // split the concatenated key_payload back into per-key payloads using each
+    // key's keyLengthBytes
     keyPayloads.clear();
-    for (u1_t i = 0; i < numKeys; ++i) {
-      keyPayloads.emplace_back(&payload_, offset, keyInfos[i].keyLengthBytes);  // Use constructor
-      offset += keyInfos[i].keyLengthBytes;
+    size_t offset = 0;
+    for (const auto & key_info : keyInfos) {
+      KeyPayload key_payload;
+      for (u1_t j = 0; j < key_info.keyLengthBytes && offset < msg.key_payload.size(); ++j) {
+        key_payload.key.push_back(msg.key_payload[offset]);
+        ++offset;
+      }
+      keyPayloads.push_back(key_payload);
     }
   }
 
+  // Serialize the payload bytes for sending to the device
   std::tuple<u1_t *, size_t> make_poll_payload()
   {
     payload_.clear();
+
+    payload_.push_back(version);
+    payload_.push_back(numKeys);
+    payload_.push_back(reserved0[0]);
+    payload_.push_back(reserved0[1]);
+
+    for (const auto & key_info : keyInfos) {
+      payload_.push_back(key_info.reserved1);
+      payload_.push_back(key_info.keyLengthBytes);
+      buf_append_u2(&payload_, key_info.validFromWno);
+      buf_append_u4(&payload_, key_info.validFromTow);
+    }
+
+    for (const auto & key_payload : keyPayloads) {
+      for (const auto & byte : key_payload.key) {
+        payload_.push_back(byte);
+      }
+    }
+
     return std::make_tuple(payload_.data(), payload_.size());
   }
 
@@ -116,23 +149,12 @@ public:
     std::ostringstream oss;
     oss << "version: " << +version;
     oss << " numKeys: " << +numKeys;
-
     for (size_t i = 0; i < keyInfos.size(); ++i) {
       oss << "\n  Key " << i + 1 << ": ";
-      oss << "reserved1: " << +keyInfos[i].reserved1;
-      oss << " keyLengthBytes: " << +keyInfos[i].keyLengthBytes;
+      oss << "keyLengthBytes: " << +keyInfos[i].keyLengthBytes;
       oss << " validFromWno: " << keyInfos[i].validFromWno;
       oss << " validFromTow: " << keyInfos[i].validFromTow;
     }
-
-    for (size_t i = 0; i < keyPayloads.size(); ++i) {
-      oss << "\n  Key Payload " << i + 1 << ": ";
-      oss << "key: ";
-      for (size_t j = 0; j < keyPayloads[i].key.size(); ++j) {
-        oss << std::hex << +keyPayloads[i].key[j] << " ";
-      }
-    }
-
     return oss.str();
   }
 };
