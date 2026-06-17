@@ -112,6 +112,12 @@ public:
         handle, CURLOPT_PRIVATE,
         reinterpret_cast<void *>(desiredCount));
 
+      // Advertise NTRIP v2. Modern casters (e.g. Geoscience Australia) only serve the
+      // stream when the request carries this header; without it they reject it (HTTP 404)
+      // and no RTCM is ever received. The slist is freed in the destructor.
+      http_headers_ = curl_slist_append(http_headers_, "Ntrip-Version: Ntrip/2.0");
+      curl_easy_setopt(handle, CURLOPT_HTTPHEADER, http_headers_);
+
       // Dynamic options extracted to ApplyCurlOptions() for runtime reconfiguration
       ApplyCurlOptions();
 
@@ -124,6 +130,7 @@ public:
 private:
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameters_callback_handle_;
   std::shared_ptr<CurlHandle> curlHandle_;
+  struct curl_slist * http_headers_ = nullptr;
   std::thread streamingThread_;
 
   std::atomic<bool> streaming_exit_{false};
@@ -369,6 +376,7 @@ public:
     streamingThread_.join();
 
     curlHandle_.reset();
+    curl_slist_free_all(http_headers_);
     curl_global_cleanup();
     RCLCPP_INFO(this->get_logger(), "finished");
   }
