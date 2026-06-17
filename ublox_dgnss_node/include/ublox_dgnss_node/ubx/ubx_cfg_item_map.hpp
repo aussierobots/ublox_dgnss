@@ -49,6 +49,8 @@ const ubx_cfg_item_t CFG_UART1INPROT_SPARTN = {"CFG_UART1INPROT_SPARTN", 0x10730
 // cfg uart1outprot
 const ubx_cfg_item_t CFG_UART1OUTPROT_UBX = {"CFG_UART1OUTPROT_UBX", 0x10740001, L, 1, NA};
 const ubx_cfg_item_t CFG_UART1OUTPROT_NMEA = {"CFG_UART1OUTPROT_NMEA", 0x10740002, L, 1, NA};
+
+// @exclude: F9R
 const ubx_cfg_item_t CFG_UART1OUTPROT_RTCM3X = {"CFG_UART1OUTPROT_RTCM3X", 0x10740004, L, 1, NA};
 
 // cfg uart2
@@ -63,6 +65,8 @@ const ubx_cfg_item_t CFG_UART2INPROT_SPARTN = {"CFG_UART2INPROT_SPARTN", 0x10750
 // cfg uart2outprot
 const ubx_cfg_item_t CFG_UART2OUTPROT_UBX = {"CFG_UART2OUTPROT_UBX", 0x10760001, L, 1, NA};
 const ubx_cfg_item_t CFG_UART2OUTPROT_NMEA = {"CFG_UART2OUTPROT_NMEA", 0x10760002, L, 1, NA};
+
+// @exclude: F9R
 const ubx_cfg_item_t CFG_UART2OUTPROT_RTCM3X = {"CFG_UART2OUTPROT_RTCM3X", 0x10760004, L, 1, NA};
 
 // cfg usbinprot
@@ -73,6 +77,8 @@ const ubx_cfg_item_t CFG_USBINPROT_RTCM3X = {"CFG_USBINPROT_RTCM3X", 0x10770004,
 // cfg usboutprot
 const ubx_cfg_item_t CFG_USBOUTPROT_UBX = {"CFG_USBOUTPROT_UBX", 0x10780001, L, 1, NA};
 const ubx_cfg_item_t CFG_USBOUTPROT_NMEA = {"CFG_USBOUTPROT_NMEA", 0x10780002, L, 1, NA};
+
+// @exclude: F9R
 const ubx_cfg_item_t CFG_USBOUTPROT_RTCM3X = {"CFG_USBOUTPROT_RTCM3X", 0x10780004, L, 1, NA};
 
 // cfg i2c - I2C interface configuration
@@ -139,6 +145,7 @@ const ubx_cfg_item_t CFG_NAVCOR_ENABLE_GAL_HAS =
 const ubx_cfg_item_t CFG_SPARTN_USE_SOURCE = {"CFG_SPARTN_USE_SOURCE", 0x20a70001, E1, 1, NA};
 
 // cfg tmode - time mode configuration
+// @exclude: F9R
 const ubx_cfg_item_t CFG_TMODE_MODE = {"CFG_TMODE_MODE", 0x20030001, E1, 1, NA};
 enum CFG_TMODE_MODE_ENUM {DISABLED = 0, SURVEY_IN = 1, FIXED = 2};
 const ubx_cfg_item_t CFG_TMODE_POS_TYPE = {"CFG_TMODE_POS_TYPE", 0x20030002, E1, 1, NA};
@@ -274,11 +281,14 @@ const ubx_cfg_item_t CFG_SFODO_QUANT_ERROR =
 const ubx_cfg_item_t CFG_SFODO_LATENCY =
 {"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
 
+// not available
+// @exclude: F9R
+const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_SVIN_USB =
+{"CFG_MSGOUT_UBX_NAV_SVIN_USB", 0x2091008b, U1, 0, NA};
+
 // cfg msgout - msg output rate configurations
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
 {"CFG_MSGOUT_UBX_NAV_STATUS_USB", 0x2091001d, U1, 0, NA};
-const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_SVIN_USB =
-{"CFG_MSGOUT_UBX_NAV_SVIN_USB", 0x2091008b, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_CLOCK_USB =
 {"CFG_MSGOUT_UBX_NAV_CLOCK_USB", 0x20910068, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_COV_USB =
@@ -362,6 +372,7 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_COR_UART2 =
 {"CFG_MSGOUT_UBX_RXM_COR_UART2", 0x209106b8, U1, 0, NA};
 
 // Support both USB type and UART2 type messages simultaneously
+// @exclude: F9R
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1005_USB =
 {"CFG_MSGOUT_RTCM_3X_TYPE1005_USB", 0x209102c0, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1077_USB =
@@ -370,7 +381,6 @@ const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1087_USB =
 {"CFG_MSGOUT_RTCM_3X_TYPE1087_USB", 0x209102d4, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1097_USB =
 {"CFG_MSGOUT_RTCM_3X_TYPE1097_USB", 0x2091031b, U1, 0, NA};
-
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1074_UART2 =
 {"CFG_MSGOUT_RTCM_3X_TYPE1074_UART2", 0x20910360, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1084_UART2 =
@@ -401,7 +411,8 @@ const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1006_USB =
 // const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1006_SPI =
 // {"CFG_MSGOUT_RTCM_3X_TYPE1006_SPI", 0x209102c6, U1, 0, NA};
 
-// RTCM-3X-TYPE4072_0 reference station PVT (moving base) - UART2 + USB enabled, all families
+// RTCM-3X-TYPE4072_0 reference station PVT (moving base) - UART2 + USB enabled
+// @exclude: F9R
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2 =
 {"CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2", 0x20910300, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB =

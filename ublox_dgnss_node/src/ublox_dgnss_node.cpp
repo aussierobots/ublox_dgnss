@@ -3911,6 +3911,7 @@ private:
     std::string item_list;
     size_t i = 0;
     size_t n = 10;     // every n send a request
+    // size_t n = 1;     // use to debug and find specific params faster
     size_t user_params_sent = 0;
 
     parameter_manager_->iterate_config_items(
@@ -3980,6 +3981,7 @@ private:
     std::string item_list;
     size_t initial_params = 0;
     size_t n = 10;     // every n keys send a request
+    // size_t n = 1;     // use to debug and find specific params faster
 
     parameter_manager_->iterate_config_items(
       [&](const ubx::cfg::ubx_cfg_item_t & ubx_ci) {
