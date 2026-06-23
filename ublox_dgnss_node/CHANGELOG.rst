@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.5 (2026-06-23)
+------------------
 * fixed F9R parameters - removed unused
 * updated cmake minimum version
 * Merge pull request `#64 <https://github.com/aussierobots/ublox_dgnss/issues/64>`_ from aussierobots/feat/hpg-2.10-x20p

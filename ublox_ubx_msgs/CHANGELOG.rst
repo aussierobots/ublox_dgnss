@@ -2,8 +2,8 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.5 (2026-06-23)
+------------------
 * updated cmake minimum version
 * Merge pull request `#64 <https://github.com/aussierobots/ublox_dgnss/issues/64>`_ from aussierobots/feat/hpg-2.10-x20p
   Feat/hpg 2.10 x20p

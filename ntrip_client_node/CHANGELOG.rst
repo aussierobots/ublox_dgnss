@@ -2,8 +2,8 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.5 (2026-06-23)
+------------------
 * Merge pull request `#65 <https://github.com/aussierobots/ublox_dgnss/issues/65>`_ from gsokoll/fix/ntrip-version-header
   fix(ntrip_client): send Ntrip-Version: Ntrip/2.0 header
 * fix(ntrip_client): send Ntrip-Version: Ntrip/2.0 header
