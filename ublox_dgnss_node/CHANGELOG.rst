@@ -2,6 +2,16 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed F9R parameters - removed unused
+* updated cmake minimum version
+* Merge pull request `#64 <https://github.com/aussierobots/ublox_dgnss/issues/64>`_ from aussierobots/feat/hpg-2.10-x20p
+  Feat/hpg 2.10 x20p
+* Add X20P RXM input messages (PMP/QZSSL6/SPARTN-KEY) with family-gated subscriptions, input-send fix, and once-per-detach USB warning throttling
+* Add HPG 2.10 config items and disable X20P odometer; regenerate device configs
+* Contributors: Nick Hortovanyi
+
 0.7.4 (2026-04-16)
 ------------------
 * Merge pull request `#62 <https://github.com/aussierobots/ublox_dgnss/issues/62>`_ from gakutasu/fix/init-attach

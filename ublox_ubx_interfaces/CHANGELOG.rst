@@ -2,6 +2,11 @@
 Changelog for package ublox_ubx_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* updated cmake minimum version
+* Contributors: Nick Hortovanyi
+
 0.7.4 (2026-04-16)
 ------------------
 

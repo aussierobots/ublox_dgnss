@@ -2,6 +2,14 @@
 Changelog for package ublox_ubx_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* updated cmake minimum version
+* Merge pull request `#64 <https://github.com/aussierobots/ublox_dgnss/issues/64>`_ from aussierobots/feat/hpg-2.10-x20p
+  Feat/hpg 2.10 x20p
+* Add X20P RXM input messages (PMP/QZSSL6/SPARTN-KEY) with family-gated subscriptions, input-send fix, and once-per-detach USB warning throttling
+* Contributors: Nick Hortovanyi
+
 0.7.4 (2026-04-16)
 ------------------
 
