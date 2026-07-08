@@ -2,8 +2,8 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.6 (2026-07-09)
+------------------
 * Fix get_package_share_directory for humble
 * uncrustify formatting fix
 * fix for humble based include

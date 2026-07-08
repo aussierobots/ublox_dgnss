@@ -2,8 +2,8 @@
 Changelog for package ublox_nav_sat_fix_hp_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.6 (2026-07-09)
+------------------
 * reverted to cmake ver 3.22 for humble
 * updated min cmake version
 * Contributors: Nick Hortovanyi
