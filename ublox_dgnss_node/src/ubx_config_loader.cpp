@@ -22,7 +22,7 @@
 #include <vector>
 #include <fstream>
 
-#include <ament_index_cpp/get_package_share_directory.hpp>
+#include <ament_index_cpp/get_package_share_path.hpp>
 
 namespace
 {
@@ -233,10 +233,7 @@ ubx_cfg_item_map_t UbxConfigLoader::load_from_toml(
 
 std::string UbxConfigLoader::get_default_toml_path(const std::string & device_family)
 {
-  auto package_share = ament_index_cpp::get_package_share_directory("ublox_dgnss");
-  // waiting for fix to be applied to jazzy & humble
-  // std::filesystem::path package_share;
-  // ament_index_cpp::get_package_share_directory("ublox_dgnss", package_share);
+  auto package_share = ament_index_cpp::get_package_share_path("ublox_dgnss").string();
 
   std::string family_lower = device_family;
   std::transform(
@@ -244,8 +241,6 @@ std::string UbxConfigLoader::get_default_toml_path(const std::string & device_fa
     family_lower.begin(), ::tolower);
 
   return package_share + "/config/" + family_lower + "_ubx_config.toml";
-  // waiting for fix to be applied to jazzy & humble
-  // return package_share.string() + "/config/" + family_lower + "_ubx_config.toml";
 }
 
 std::string UbxConfigLoader::get_toml_device_family(const std::string & toml_file_path)
