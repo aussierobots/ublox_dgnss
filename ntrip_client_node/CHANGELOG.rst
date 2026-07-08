@@ -2,6 +2,12 @@
 Changelog for package ntrip_client_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* reverted to cmake ver 3.22 for humble
+* updated min cmake version
+* Contributors: Nick Hortovanyi
+
 0.7.5 (2026-06-23)
 ------------------
 * Merge pull request `#65 <https://github.com/aussierobots/ublox_dgnss/issues/65>`_ from gsokoll/fix/ntrip-version-header

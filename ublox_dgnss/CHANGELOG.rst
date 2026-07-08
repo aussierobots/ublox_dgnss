@@ -2,6 +2,12 @@
 Changelog for package ublox_dgnss
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* reverted to cmake ver 3.22 for humble
+* updated min cmake version
+* Contributors: Nick Hortovanyi
+
 0.7.5 (2026-06-23)
 ------------------
 * fixed F9R parameters - removed unused

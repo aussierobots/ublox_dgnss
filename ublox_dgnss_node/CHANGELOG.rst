@@ -2,6 +2,18 @@
 Changelog for package ublox_dgnss_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix get_package_share_directory for humble
+* uncrustify formatting fix
+* fix for humble based include
+* added ros distro specific package share
+* reverted to cmake ver 3.22 for humble
+* removed deprecated calls to ament_index_cpp::get_package_share_directory()
+  and replaced with ament_index_cpp::get_package_share_path() .
+* updated min cmake version
+* Contributors: Nick Hortovanyi
+
 0.7.5 (2026-06-23)
 ------------------
 * fixed F9R parameters - removed unused
