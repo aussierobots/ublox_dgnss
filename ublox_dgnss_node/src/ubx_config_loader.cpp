@@ -23,7 +23,7 @@
 #include <fstream>
 
 #ifdef ROS_DISTRO_humble
-#include <ament_index_cpp/get_package_share_dir.hpp>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #else
 #include <ament_index_cpp/get_package_share_path.hpp>
 #endif
@@ -238,7 +238,7 @@ ubx_cfg_item_map_t UbxConfigLoader::load_from_toml(
 std::string UbxConfigLoader::get_default_toml_path(const std::string & device_family)
 {
   #ifdef ROS_DISTRO_humble
-  auto package_share = ament_index_cpp::get_package_share_dir("ublox_dgnss");
+  auto package_share = ament_index_cpp::get_package_share_directory("ublox_dgnss");
   #else
   auto package_share = ament_index_cpp::get_package_share_path("ublox_dgnss").string();
   #endif
