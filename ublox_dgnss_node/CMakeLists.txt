@@ -33,6 +33,12 @@ find_package(rtcm_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
 
+# Pass the ROS_DISTRO environment variable to the C++ preprocessor as a string
+if(DEFINED ENV{ROS_DISTRO})
+  add_definitions(-DROS_DISTRO_$ENV{ROS_DISTRO})
+  message(STATUS "Compiling for ROS 2: $ENV{ROS_DISTRO}")
+endif()
+
 include_directories(include SYSTEM)
 
 add_library(ublox_dgnss_components SHARED
