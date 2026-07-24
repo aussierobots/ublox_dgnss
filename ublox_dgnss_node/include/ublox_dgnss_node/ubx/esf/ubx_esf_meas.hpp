@@ -35,7 +35,8 @@ struct flags_t
       u8_t timeMarkSent : 2;
       bool timeMarkEdge : 1;
       bool calibTtagValid : 1;
-      u8_t numMeas : 5;
+      u8_t reserved : 7;  // bits 4..10
+      u8_t numMeas : 5;  // bits 11..15
     } bits;
   };
 };
