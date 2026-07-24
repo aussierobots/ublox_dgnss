@@ -160,6 +160,7 @@ public:
       num_meas = msg.data.size();
     }
     timeTag = msg.time_tag;
+    flags.all = 0;
     flags.bits.timeMarkSent = msg.time_mark_sent;
     flags.bits.timeMarkEdge = msg.time_mark_edge;
     flags.bits.calibTtagValid = msg.calib_ttag_valid;
