@@ -226,6 +226,18 @@ enum CFG_RATE_TIMEREF_ENUM
 
 // Default: included in all families (F9P, F9R, X20P)
 
+// cfg sfcore - sensor fusion core configuration
+// @only: F9R
+// IMU2CRP: 항법해를 출력할 기준점(CRP)을 IMU 기준 레버암으로 지정한다.
+// 미설정 시 해는 IRP(모듈 내 IMU 칩) 기준으로 나오므로, 차량 기준점으로
+// 고정하려면 반드시 설정해야 한다. ZED-F9K Integration Manual §3.2.4.2.4 참조.
+const ubx_cfg_item_t CFG_SFCORE_IMU2CRP_LA_X =
+{"CFG_SFCORE_IMU2CRP_LA_X", 0x30080002, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFCORE_IMU2CRP_LA_Y =
+{"CFG_SFCORE_IMU2CRP_LA_Y", 0x30080003, I2, 1, CM};
+const ubx_cfg_item_t CFG_SFCORE_IMU2CRP_LA_Z =
+{"CFG_SFCORE_IMU2CRP_LA_Z", 0x30080004, I2, 1, CM};
+
 // cfg sfimu - sensor fusion IMU configuration
 // @only: F9R
 const ubx_cfg_item_t CFG_SFIMU_AUTO_MNTALG_ENA =
@@ -506,6 +518,10 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_SFODO_IMU2VRP_LA_X.ubx_key_id, CFG_SFODO_IMU2VRP_LA_X},
   {CFG_SFODO_IMU2VRP_LA_Y.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Y},
   {CFG_SFODO_IMU2VRP_LA_Z.ubx_key_id, CFG_SFODO_IMU2VRP_LA_Z},
+
+  {CFG_SFCORE_IMU2CRP_LA_X.ubx_key_id, CFG_SFCORE_IMU2CRP_LA_X},
+  {CFG_SFCORE_IMU2CRP_LA_Y.ubx_key_id, CFG_SFCORE_IMU2CRP_LA_Y},
+  {CFG_SFCORE_IMU2CRP_LA_Z.ubx_key_id, CFG_SFCORE_IMU2CRP_LA_Z},
 
   {CFG_MSGOUT_UBX_NAV_ATT_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_ATT_USB},
   {CFG_MSGOUT_UBX_NAV_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_STATUS_USB},

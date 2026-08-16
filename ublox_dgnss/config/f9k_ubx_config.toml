@@ -7,7 +7,7 @@
 device_family = "F9R"
 description = "ZED-F9R with sensor fusion"
 version = "1.0"
-parameter_count = 138
+parameter_count = 102
 
 [parameters]
 include = [
@@ -57,6 +57,9 @@ include = [
     "CFG_RATE_NAV_PRIO",
     "CFG_RATE_TIMEREF",
     "CFG_SEC_JAMDET_SENSITIVITY_HI",
+    "CFG_SFCORE_IMU2CRP_LA_X",
+    "CFG_SFCORE_IMU2CRP_LA_Y",
+    "CFG_SFCORE_IMU2CRP_LA_Z",
     "CFG_SFIMU_AUTO_MNTALG_ENA",
     "CFG_SFIMU_IMU_MNTALG_PITCH",
     "CFG_SFIMU_IMU_MNTALG_ROLL",
