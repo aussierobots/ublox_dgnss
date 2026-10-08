@@ -42,6 +42,7 @@ struct flags_t
       l_t alm_avail : 1;
       l_t ano_avail : 1;
       l_t aop_avail : 1;
+      u1_t reserved1 : 1;   // bit 15, reserved
       l_t sbas_corr_used : 1;
       l_t rtcm_corr_used : 1;
       l_t slas_corr_used : 1;
