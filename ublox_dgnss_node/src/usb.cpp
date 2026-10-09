@@ -191,13 +191,13 @@ libusb_device_handle * Connection::open_device_with_serial_string(
     auto device_info = ublox_dgnss::get_device_family_info(device_family_);
     bool reliable_iserial = false;
 
-    if (device_family_ == ublox_dgnss::DeviceFamily::X20P) {
-      // X20P: Serial behavior depends on which USB device we're using
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20P || device_family_ == ublox_dgnss::DeviceFamily::X20D) {
+      // X20P/X20D: Serial behavior depends on which USB device we're using
       if (desc.idProduct == 0x01ab) {
         // 0x01ab: F9P/F9R-compatible behavior (IDENTICAL serial handling)
         reliable_iserial = false;  // User-programmed via u-center, may be empty
       } else {
-        // 0x050c/0x050d: Vendor-specific behavior (DIFFERENT serial handling)
+        // 0x050c/0x050d/0x0513: Vendor-specific behavior (DIFFERENT serial handling)
         reliable_iserial = true;  // Factory programmed, always reliable
       }
     } else {
@@ -207,10 +207,10 @@ libusb_device_handle * Connection::open_device_with_serial_string(
 
     if (rc < 0) {
       if (reliable_iserial) {
-        // Factory iSerial should be reliable (X20P 0x050c/0x050d)
+        // Factory iSerial should be reliable (X20P/X20D 0x050c/0x050d/0x0513)
         throw std::string("Serial string read failed (unexpected): ") + libusb_error_name(rc);
       } else {
-        // User-programmed iSerial may not be reliable (F9P/F9R + X20P 0x01ab)
+        // User-programmed iSerial may not be reliable (F9P/F9R + X20P/X20D 0x01ab)
         if (rc != LIBUSB_ERROR_INVALID_PARAM) {
           throw std::string("Serial string read failed: ") + libusb_error_name(rc);
         }
