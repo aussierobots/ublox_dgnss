@@ -42,6 +42,7 @@ const msg_id_t UBX_MON_COMMS = 0x36;
 const msg_class_t UBX_NAV = 0x01;
 const msg_id_t UBX_NAV_CLOCK = 0x22;
 const msg_id_t UBX_NAV_COV = 0x36;
+const msg_id_t UBX_NAV_DAHEADING = 0x45;
 const msg_id_t UBX_NAV_DOP = 0x04;
 const msg_id_t UBX_NAV_EOE = 0x61;
 const msg_id_t UBX_NAV_POSECEF = 0x01;

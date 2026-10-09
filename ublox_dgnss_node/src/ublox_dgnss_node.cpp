@@ -41,6 +41,7 @@
 #include "ublox_dgnss_node/ubx/ubx_sec.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_clock.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_cov.hpp"
+#include "ublox_ubx_msgs/msg/ubx_nav_da_heading.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_dop.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_eoe.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_hp_pos_ecef.hpp"
@@ -223,6 +224,11 @@ public:
       "ubx_nav_clock", qos, pub_options);
     ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>(
       "ubx_nav_cov", qos, pub_options);
+    // UBX-NAV-DAHEADING is only supported on the X20D
+    if (device_family_ == ublox_dgnss::DeviceFamily::X20D) {
+      ubx_nav_da_heading_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDAHeading>(
+        "ubx_nav_da_heading", qos, pub_options);
+    }
     ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>(
       "ubx_nav_dop", qos, pub_options);
     ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>(
@@ -695,6 +701,7 @@ private:
 
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavClock>::SharedPtr ubx_nav_clock_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavCov>::SharedPtr ubx_nav_cov_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavDAHeading>::SharedPtr ubx_nav_da_heading_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavDOP>::SharedPtr ubx_nav_dop_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavEOE>::SharedPtr ubx_nav_eoe_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>::SharedPtr ubx_nav_hp_pos_ecef_pub_;
@@ -2252,6 +2259,12 @@ private:
           f->ubx_frame->msg_class,
           f->ubx_frame->msg_id);
         break;
+      case ubx::UBX_NAV_DAHEADING:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x nav daheading poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
       case ubx::UBX_NAV_DOP:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x nav dop poll sent to usb device",
@@ -2705,6 +2718,9 @@ private:
         break;
       case ubx::UBX_NAV_COV:
         ubx_nav_cov_pub(f, ubx_nav_->cov()->payload());
+        break;
+      case ubx::UBX_NAV_DAHEADING:
+        ubx_nav_da_heading_pub(f, ubx_nav_->daheading()->payload());
         break;
       case ubx::UBX_NAV_DOP:
         ubx_nav_dop_pub(f, ubx_nav_->dop()->payload());
@@ -3459,6 +3475,44 @@ private:
     msg->vel_cov_dd = payload->velCovDD;
 
     ubx_nav_cov_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_nav_da_heading_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::daheading::NavDAHeadingPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x nav daheading polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXNavDAHeading>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->version = payload->version;
+    msg->itow = payload->itow;
+
+    msg->rel_pos_n = payload->rel_pos_n;
+    msg->rel_pos_e = payload->rel_pos_e;
+    msg->rel_pos_d = payload->rel_pos_d;
+    msg->rel_pos_length = payload->rel_pos_length;
+    msg->rel_pos_heading = payload->rel_pos_heading;
+
+    msg->acc_n = payload->acc_n;
+    msg->acc_e = payload->acc_e;
+    msg->acc_d = payload->acc_d;
+    msg->acc_length = payload->acc_length;
+    msg->acc_heading = payload->acc_heading;
+
+    // Expanding DualAntFlags
+    msg->flags.gnss_fix_ok = payload->flags.bits.gnss_fix_ok;
+    msg->flags.diff_soln = payload->flags.bits.diff_soln;
+    msg->flags.rel_pos_valid = payload->flags.bits.rel_pos_valid;
+    msg->flags.carr_soln = payload->flags.bits.carr_soln;
+    msg->flags.rel_pos_heading_valid = payload->flags.bits.rel_pos_heading_valid;
+
+    ubx_nav_da_heading_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

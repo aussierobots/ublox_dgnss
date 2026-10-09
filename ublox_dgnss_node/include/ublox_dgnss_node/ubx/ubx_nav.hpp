@@ -22,6 +22,7 @@
 #include "ublox_dgnss_node/ubx/utils.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_clock.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_cov.hpp"
+#include "ublox_dgnss_node/ubx/nav/ubx_nav_daheading.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_dop.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_eoe.hpp"
 #include "ublox_dgnss_node/ubx/nav/ubx_nav_posecef.hpp"
@@ -46,6 +47,8 @@ namespace ubx::nav
 
 typedef UBXFrameComms<nav::clock::NavClockPayload, usb::Connection> UbxNavClockFrameComms;
 typedef UBXFrameComms<nav::cov::NavCovPayload, usb::Connection> UbxNavCovFrameComms;
+typedef UBXFrameComms<nav::daheading::NavDAHeadingPayload,
+    usb::Connection> UbxNavDAHeadingFrameComms;
 typedef UBXFrameComms<nav::dop::NavDOPPayload, usb::Connection> UbxNavDOPFrameComms;
 typedef UBXFrameComms<nav::eoe::NavEOEPayload, usb::Connection> UbxNavEOEFrameComms;
 typedef UBXFrameComms<nav::posecef::NavPosECEFPayload, usb::Connection> UbxNavPosECEFFrameComms;
@@ -74,6 +77,7 @@ private:
 
   std::shared_ptr<UbxNavClockFrameComms> clock_;
   std::shared_ptr<UbxNavCovFrameComms> cov_;
+  std::shared_ptr<UbxNavDAHeadingFrameComms> daheading_;
   std::shared_ptr<UbxNavDOPFrameComms> dop_;
   std::shared_ptr<UbxNavEOEFrameComms> eoe_;
   std::shared_ptr<UbxNavPosECEFFrameComms> posecef_;
@@ -99,6 +103,7 @@ public:
     usbc_ = usbc;
     clock_ = std::make_shared<UbxNavClockFrameComms>(usbc_);
     cov_ = std::make_shared<UbxNavCovFrameComms>(usbc_);
+    daheading_ = std::make_shared<UbxNavDAHeadingFrameComms>(usbc_);
     dop_ = std::make_shared<UbxNavDOPFrameComms>(usbc_);
     eoe_ = std::make_shared<UbxNavEOEFrameComms>(usbc_);
     posecef_ = std::make_shared<UbxNavPosECEFFrameComms>(usbc_);
@@ -126,6 +131,10 @@ public:
   std::shared_ptr<UbxNavCovFrameComms> cov()
   {
     return cov_;
+  }
+  std::shared_ptr<UbxNavDAHeadingFrameComms> daheading()
+  {
+    return daheading_;
   }
   std::shared_ptr<UbxNavDOPFrameComms> dop()
   {
@@ -207,6 +216,9 @@ public:
         break;
       case ubx::UBX_NAV_COV:
         cov_->frame(frame);
+        break;
+      case ubx::UBX_NAV_DAHEADING:
+        daheading_->frame(frame);
         break;
       case ubx::UBX_NAV_DOP:
         dop_->frame(frame);
