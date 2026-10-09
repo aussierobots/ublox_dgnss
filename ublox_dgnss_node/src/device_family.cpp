@@ -43,13 +43,22 @@ const std::map<DeviceFamily, DeviceFamilyInfo> DEVICE_FAMILY_MAP = {
       false,  // sensor_fusion_capable
       true,  // reliable_iserial (factory set for 0x050c/0x050d, user-programmed for 0x01ab)
       true   // dual_uart_capable
+    }},
+  {DeviceFamily::X20D, {
+      "X20D",
+      {0x01ac, 0x050e, 0x050f},  // THREE separate USB devices: F9P-compatible + UART1 + UART2
+      "X20D - All-band Dual GNSS (multiple interfaces)",
+      false,  // sensor_fusion_capable
+      true,  // reliable_iserial (factory set for 0x050e/0x050f, user-programmed for 0x01ac)
+      true   // dual_uart_capable
     }}
 };
 
 const std::map<std::string, DeviceFamily> DEVICE_FAMILY_LOOKUP = {
   {"F9P", DeviceFamily::F9P},
   {"F9R", DeviceFamily::F9R},
-  {"X20P", DeviceFamily::X20P}
+  {"X20P", DeviceFamily::X20P},
+  {"X20D", DeviceFamily::X20D}
 };
 
 DeviceFamily string_to_device_family(const std::string & family_str)

@@ -31,11 +31,14 @@ This driver follows the UBX standards used for the ZED-X20P/F9P/F9R as documente
 
 It implements a subset of the specification related to achieving high precision output as a rover and base station. U-center can be used to alter settings. Any configuration parameter changed by this driver, will be applied only in RAM. Upon a restart (hot, cold or warm) or after a hot plug usb attach event, the configuration stored in the driver will be sent to the device.
 
-## ZED-X20P support
+## ZED-X20P/X20D support
 
 The UBLOX ZED-X20P has only just been released. There are some differences between the F9P and X20P. On the whole the UBX messages are the same specification but there are some like `/ubx_rxm_rtcm` that have been deprecated, on the device, in the manual, in favor of the newer `/ubx_rxm_cor`.
 
-**⚠️ Important: X20P Interface Limitations**
+X20D firmware includes a new msg UBX-NAV-DAHEADING and is an older firmware version than
+the X20P. Initial changes implemented but I am unable to test directly.
+
+**⚠️ Important: X20P/X20D Interface Limitations**
 
 The X20P device presents multiple USB interfaces:
 - **✅ Main Interface (0x01ab)**: Fully supported with F9P/F9R compatibility

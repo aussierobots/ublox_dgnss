@@ -48,6 +48,7 @@ struct rec_stat_t
     {
       l_t leap_sec : 1;
       l_t clk_reset : 1;
+      u1_t msg_source : 2;
     } bits;
   };
 };

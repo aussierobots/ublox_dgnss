@@ -3619,6 +3619,7 @@ private:
     msg->num_meas = payload->num_meas;
     msg->rec_stat.leap_sec = payload->rec_stat.bits.leap_sec;
     msg->rec_stat.clk_reset = payload->rec_stat.bits.clk_reset;
+    msg->rec_stat.msg_source = payload->rec_stat.bits.msg_source;
     msg->version = payload->version;
 
     // Populate the repeated measurement data

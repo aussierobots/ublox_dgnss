@@ -82,7 +82,7 @@ const ubx_cfg_item_t CFG_USBOUTPROT_NMEA = {"CFG_USBOUTPROT_NMEA", 0x10780002, L
 const ubx_cfg_item_t CFG_USBOUTPROT_RTCM3X = {"CFG_USBOUTPROT_RTCM3X", 0x10780004, L, 1, NA};
 
 // cfg i2c - I2C interface configuration
-// @only: X20P
+// @only: X20P, X20D
 const ubx_cfg_item_t CFG_I2C_PULL_UPS_DISABLED =
 {"CFG_I2C_PULL_UPS_DISABLED", 0x1051000b, L, 1, NA};
 
@@ -121,11 +121,13 @@ const ubx_cfg_item_t CFG_SIGNAL_GAL_E6_ENA = {"CFG_SIGNAL_GAL_E6_ENA", 0x1031000
 const ubx_cfg_item_t CFG_SIGNAL_BDS_B2A_ENA = {"CFG_SIGNAL_BDS_B2A_ENA", 0x10310028, L, 1, NA};
 const ubx_cfg_item_t CFG_SIGNAL_BDS_B3_ENA = {"CFG_SIGNAL_BDS_B3_ENA", 0x10310010, L, 1, NA};
 const ubx_cfg_item_t CFG_SIGNAL_QZSS_L5_ENA = {"CFG_SIGNAL_QZSS_L5_ENA", 0x10310017, L, 1, NA};
+
+// @only: X20P
 const ubx_cfg_item_t CFG_SIGNAL_QZSS_L1CB_ENA =
 {"CFG_SIGNAL_QZSS_L1CB_ENA", 0x10310039, L, 1, NA};
 
 // cfg signal NavIC since X20P
-// @only: X20P
+// @only: X20P,X20D
 const ubx_cfg_item_t CFG_SIGNAL_NAVIC_ENA = {"CFG_SIGNAL_NAVIC_ENA", 0x10310026, L, 1, NA};
 const ubx_cfg_item_t CFG_SIGNAL_NAVIC_L5_ENA = {"CFG_SIGNAL_NAVIC_L5_ENA", 0x1031001d, L, 1, NA};
 
@@ -137,9 +139,11 @@ const ubx_cfg_item_t CFG_BDS_USE_GEO_PRN = {"CFG_BDS_USE_GEO_PRN", 0x10340014, L
 
 // cfg navcor - navigation corrections configuration since X20P
 // @only: X20P
-const ubx_cfg_item_t CFG_NAVCOR_ENABLE_HOST = {"CFG_NAVCOR_ENABLE_HOST", 0x100d0001, L, 1, NA};
 const ubx_cfg_item_t CFG_NAVCOR_ENABLE_GAL_HAS =
 {"CFG_NAVCOR_ENABLE_GAL_HAS", 0x100d0002, L, 1, NA};
+
+// enable host disabled in HPG 2.11 as automatic if HAS enabled
+// const ubx_cfg_item_t CFG_NAVCOR_ENABLE_HOST = {"CFG_NAVCOR_ENABLE_HOST", 0x100d0001, L, 1, NA};
 
 // cfg spartn
 const ubx_cfg_item_t CFG_SPARTN_USE_SOURCE = {"CFG_SPARTN_USE_SOURCE", 0x20a70001, E1, 1, NA};
@@ -341,7 +345,7 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIG_USB =
 const ubx_cfg_item_t CFG_MSGOUT_UBX_SEC_SIGLOG_USB =
 {"CFG_MSGOUT_UBX_SEC_SIGLOG_USB", 0x2091068c, U1, 0, NA};
 
-// @exclude: X20P
+// @exclude: X20P,X20D
 const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RTCM_USB =
 {"CFG_MSGOUT_UBX_RXM_RTCM_USB", 0x2091026b, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_SPARTN_USB =
@@ -397,7 +401,7 @@ const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1230_UART2 =
 {"CFG_MSGOUT_RTCM_3X_TYPE1230_UART2", 0x20910305, U1, 0, NA};
 
 // RTCM-3X-TYPE1006 stationary antenna reference point (ARP) - USB only enabled
-// @only: X20P
+// @only: X20P,X20D
 const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE1006_USB =
 {"CFG_MSGOUT_RTCM_3X_TYPE1006_USB", 0x209102c5, U1, 0, NA};
 // Other TYPE1006 ports retained but disabled. To use a port: uncomment the const here
@@ -427,7 +431,7 @@ const ubx_cfg_item_t CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB =
 
 // cfg rtcm - RTCM protocol configuration
 // DF028 antenna reference point height above marker, used with RTCM 1006 in/out (0..6.5535 m)
-// @only: X20P
+// @only: X20P,X20D
 const ubx_cfg_item_t CFG_RTCM_DF028_OUT =
 {"CFG_RTCM_DF028_OUT", 0x30090010, U2, 0.0001, M};
 
@@ -526,7 +530,7 @@ ubx_cfg_item_map_t ubxKeyCfgItemMap = {
   {CFG_SIGNAL_NAVIC_L5_ENA.ubx_key_id, CFG_SIGNAL_NAVIC_L5_ENA},
   {CFG_BDS_D1D2_NAVDATA.ubx_key_id, CFG_BDS_D1D2_NAVDATA},
   {CFG_BDS_USE_GEO_PRN.ubx_key_id, CFG_BDS_USE_GEO_PRN},
-  {CFG_NAVCOR_ENABLE_HOST.ubx_key_id, CFG_NAVCOR_ENABLE_HOST},
+  // {CFG_NAVCOR_ENABLE_HOST.ubx_key_id, CFG_NAVCOR_ENABLE_HOST},
   {CFG_NAVCOR_ENABLE_GAL_HAS.ubx_key_id, CFG_NAVCOR_ENABLE_GAL_HAS},
   {CFG_SIGNAL_PLAN.ubx_key_id, CFG_SIGNAL_PLAN},
 

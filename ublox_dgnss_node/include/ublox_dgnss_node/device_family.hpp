@@ -27,7 +27,8 @@ enum class DeviceFamily
 {
   F9P,    // High-precision GNSS (product ID 0x01a9)
   F9R,    // High-precision GNSS with sensor fusion (product ID 0x01a9)
-  X20P    // All-band GNSS with three USB interfaces (product IDs 0x01ab, 0x050c, 0x050d)
+  X20P,   // All-band GNSS with three USB interfaces (product IDs 0x01ab, 0x050c, 0x050d)
+  X20D    // All-band GNSS with three USB interfaces (product IDs 0x01ab, 0x050c, 0x050d)
 };
 
 struct DeviceFamilyInfo

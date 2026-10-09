@@ -4,3 +4,4 @@
 # Fields
 bool leap_sec       # Leap seconds have been determined
 bool clk_reset      # Clock reset applied
+uint8 msg_source    # Message source antenna (0: single, 1: RF_IN_1, 2: RF_IN_2)

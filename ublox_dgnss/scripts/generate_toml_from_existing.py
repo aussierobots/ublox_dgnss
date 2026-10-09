@@ -145,12 +145,22 @@ def main():
         'ZED-X20P full configuration'
     )
 
+    # X20D: parameters
+    x20d_params = filter_params_for_family(params_with_rules, 'X20D')
+    write_toml(
+        x20d_params,
+        config_dir / 'x20d_ubx_config.toml',
+        'X20D',
+        'ZED-X20D full configuration'
+    )
+
     # Summary
     print(f'\n=== Summary ===')
     print(f'Total parameters in map: {len(params_with_rules)}')
     print(f'F9P parameters: {len(f9p_params)}')
     print(f'F9R parameters: {len(f9r_params)} (+{len(f9r_params)-len(f9p_params)} vs F9P)')
     print(f'X20P parameters: {len(x20p_params)} (+{len(x20p_params)-len(f9p_params)} vs F9P)')
+    print(f'X20D parameters: {len(x20d_params)} (+{len(x20d_params)-len(x20p_params)} vs X20P)')
 
 if __name__ == '__main__':
     main()
