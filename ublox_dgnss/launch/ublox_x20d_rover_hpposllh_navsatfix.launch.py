@@ -44,6 +44,7 @@ def generate_launch_description():
             {'CFG_MSGOUT_UBX_NAV_STATUS_USB': 5},
             {'CFG_MSGOUT_UBX_NAV_COV_USB': 1},
             {'CFG_MSGOUT_UBX_RXM_RTCM_USB': 1},
+            {'CFG_MSGOUT_UBX_NAV_DAHEADING_USB': 1},
             # # UART1 output (for 0x050c vendor-specific interface)
             # {'CFG_UART1INPROT_UBX': True},
             # {'CFG_UART1OUTPROT_UBX': True},
